@@ -1,0 +1,12 @@
+﻿bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.csproj.user
+*.fsproj.user
+*.dbmdl
+*.log
+.vs/
+.idea/
+*.swp
