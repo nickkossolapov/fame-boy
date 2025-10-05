@@ -15,7 +15,7 @@ let fetchAndDecode (Memory memory) (PC pc) : DecodedInstruction =
 
         { Instruction = Load (Reg16Word (SP, word))
           Length = 3
-          MCycles = 5 }
+          MCycles = 3 }
     | _ ->
         { Instruction = Unknown
           Length = 1
