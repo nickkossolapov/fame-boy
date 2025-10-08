@@ -1,4 +1,4 @@
-﻿module FameBoy.Instructions
+﻿module FameBoy.Cpu.Instructions
 
 type Reg8 =
     | A
@@ -17,10 +17,10 @@ type Reg16 =
     | PC
     | SP
 
-type Load = Reg16Word of Reg16 * uint16
+type LoadInstr = Reg16Word of Reg16 * uint16
 
 type Instruction =
-    | Load of Load
+    | Load of LoadInstr
     | Unknown
 
 type DecodedInstruction =

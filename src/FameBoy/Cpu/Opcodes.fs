@@ -1,12 +1,11 @@
-﻿module FameBoy.Opcodes
+﻿module FameBoy.Cpu.Opcodes
 
-open FameBoy.Instructions
-open FameBoy.Types
+open FameBoy.Cpu.Instructions
 
 let private getWord (memory: uint8 array) (pc: int) =
     ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
 
-let fetchAndDecode (Memory memory) (PC pc) : DecodedInstruction =
+let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     let opcode = int memory[pc]
 
     match opcode with
