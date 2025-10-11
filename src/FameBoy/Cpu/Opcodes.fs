@@ -14,8 +14,12 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
 
         { Instruction = Load (Reg16Word (SP, word))
           Length = 3
-          MCycles = 3 }
+          MCycles = Fixed 3 }
+    | 0xAF ->
+        { Instruction = Logic (Xor8 A)
+          Length = 1
+          MCycles = Fixed 1 }
     | _ ->
         { Instruction = Unknown
           Length = 1
-          MCycles = 1 }
+          MCycles = Fixed 1 }

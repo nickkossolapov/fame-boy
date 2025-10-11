@@ -9,8 +9,9 @@ let bytes = readRom "D:/gb/bootroms/dmg_boot.bin"
 
 let cpu = createCpu bytes
 
-let instruction = fetchAndDecode cpu.Memory cpu.Pc
 
-execute cpu instruction
+for _ in 0..1 do
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
 
 printfn "Done"
