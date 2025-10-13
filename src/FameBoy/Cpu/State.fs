@@ -68,7 +68,7 @@ type Cpu =
     member this.setFlag flag value =
         this.Registers.F <- Flags.applyFlag flag this.Registers.F value
 
-    member this.getFlag flag = Flags.getFlag flag
+    member this.getFlag flag = Flags.getFlag flag this.Registers.F
 
     /// <summary>
     /// Sets the F register to the given 4-bit value (only last 4 bits of the input int are used).

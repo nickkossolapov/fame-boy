@@ -2,11 +2,15 @@
 
 open FameBoy.Cpu.Instructions
 
+
+let private getWord (memory: uint8 array) (pc: int) =
+    ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
+
 module private Create =
     let load16Instr (memory: uint8 array) (pc: int) (reg: Reg16) =
-        let word = ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
+        let word = getWord memory pc
 
-        { Instruction = Load (Reg16Word (reg, word))
+        { Instruction = Load (ToReg16 (reg, word))
           Length = 3
           MCycles = Fixed 3 }
 
@@ -29,6 +33,10 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     let opcode = int memory[pc]
 
     match opcode with
+    | 0x20 ->
+        { Instruction = Control (JumpRelativeConditional (Condition.NotZero, int8 memory[pc + 1]))
+          Length = 2
+          MCycles = Conditional { Met = 3; NotMet = 2 } }
     | 0x21 -> Create.load16Instr memory pc HL
     | 0x31 -> Create.load16Instr memory pc SP
     | 0x32 ->

@@ -10,6 +10,7 @@
         <Compile Include="Cpu\Instructions.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
         <Compile Include="Cpu\Executors\Bit.fs" />
+        <Compile Include="Cpu\Executors\Control.fs" />
         <Compile Include="Cpu\Executors\Load.fs" />
         <Compile Include="Cpu\Executors\Logic.fs" />
         <Compile Include="Cpu\Execute.fs" />

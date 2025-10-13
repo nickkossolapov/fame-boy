@@ -32,16 +32,25 @@ type Reg16 =
     | PC
     | SP
 
+type Condition =
+    | Zero
+    | NotZero
+    | Carry
+    | NoCarry
+
 type BitInstr = TestBit of uint3 * Reg8
 
+type ControlInstr = JumpRelativeConditional of Condition * int8
+
 type LoadInstr =
-    | Reg16Word of Reg16 * uint16
+    | ToReg16 of Reg16 * uint16
     | HLToADecrement
 
 type LogicInstr = Xor8 of Reg8
 
 type Instruction =
     | Bit of BitInstr
+    | Control of ControlInstr
     | Load of LoadInstr
     | Logic of LogicInstr
     | Unknown

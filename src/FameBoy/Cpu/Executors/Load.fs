@@ -22,7 +22,7 @@ let private loadReg16 (cpu: Cpu) reg value =
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | Reg16Word (reg16, s) -> loadReg16 cpu reg16 s
+    | ToReg16 (reg16, s) -> loadReg16 cpu reg16 s
     | HLToADecrement ->
         cpu.Registers.A <- cpu.Memory[int (cpu.Registers.getHL ())]
         cpu.Registers.setHL (cpu.Registers.getHL () - 1us)
