@@ -10,5 +10,5 @@ let executeBit (cpu: Cpu) (instr: BitInstr) =
         let bitIsZero = ((regVal >>> (int u3)) &&& 1uy) = 0uy
 
         cpu.setFlag Zero bitIsZero
-        cpu.setFlag Subtraction false
+        cpu.setFlag Subtract false
         cpu.setFlag HalfCarry true

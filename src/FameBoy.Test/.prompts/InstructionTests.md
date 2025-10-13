@@ -34,7 +34,7 @@ public void TestExampleOpcode()
     * The double width registers can be accessed with `cpu.Registers.getBC`, `cpu.Registers.getDE`, `cpu.Registers.getHL`
     * They can also be written with `cpu.Registers.setBC`, `cpu.Registers.setDE`, `cpu.Registers.setHL`
     * PC and SP can be accessed with `cpu.Pc` and `cpu.Sp`.
-    * Additionally, the flags can also be read and written like `cpu.getFlag Flags.Zero` and `cpu.setFlag Flags.Zero true`.
+    * Additionally, the flags can also be read and written like `cpu.getFlag Flag.Zero` and `cpu.setFlag Flag.Zero true`.
 * Test instructions that span multiple bytes.
 * Test behavior at memory boundaries (e.g., 0xFFFF).
 * Include edge cases such as invalid opcodes or unaligned memory accesses.

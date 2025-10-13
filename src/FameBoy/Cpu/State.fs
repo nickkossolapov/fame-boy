@@ -4,7 +4,7 @@ let private memorySize = 65536
 
 type Flag =
     | Zero // z
-    | Subtraction // n
+    | Subtract // n
     | HalfCarry // h
     | Carry // c
 
@@ -17,7 +17,7 @@ module private Flags =
     let getFlag flag (reg: uint8) : bool =
         match flag with
         | Zero -> (reg &&& ZMask) <> 0uy
-        | Subtraction -> (reg &&& NMask) <> 0uy
+        | Subtract -> (reg &&& NMask) <> 0uy
         | HalfCarry -> (reg &&& HMask) <> 0uy
         | Carry -> (reg &&& CMask) <> 0uy
 
@@ -25,7 +25,7 @@ module private Flags =
         let mask =
             match flag with
             | Zero -> ZMask
-            | Subtraction -> NMask
+            | Subtract -> NMask
             | HalfCarry -> HMask
             | Carry -> CMask
 

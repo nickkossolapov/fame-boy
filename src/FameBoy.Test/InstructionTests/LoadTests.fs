@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.CpuTests.LoadTests
+﻿module FameBoy.Test.InstructionTests.LoadTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
