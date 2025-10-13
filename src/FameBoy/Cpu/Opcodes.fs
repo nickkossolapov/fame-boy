@@ -33,6 +33,10 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     let opcode = int memory[pc]
 
     match opcode with
+    | 0x0E ->
+        { Instruction = Load (ToReg8 (C, memory[pc + 1]))
+          Length = 2
+          MCycles = Fixed 2 }
     | 0x20 ->
         { Instruction = Control (JumpRelativeConditional (Condition.NotZero, int8 memory[pc + 1]))
           Length = 2

@@ -43,6 +43,7 @@ type BitInstr = TestBit of uint3 * Reg8
 type ControlInstr = JumpRelativeConditional of Condition * int8
 
 type LoadInstr =
+    | ToReg8 of Reg8 * uint8
     | ToReg16 of Reg16 * uint16
     | StoreAToHLDecrement
 
