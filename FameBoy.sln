@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{6B2313EE-9
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Test", "src\FameBoy.Test\FameBoy.Test.fsproj", "{BBB139AD-12DF-4FE1-86DA-5271403F0A48}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{227F3F28-D2BC-4FA7-BAA2-8E4EA7750A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{227F3F28-D2BC-4FA7-BAA2-8E4EA7750A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{227F3F28-D2BC-4FA7-BAA2-8E4EA7750A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBB139AD-12DF-4FE1-86DA-5271403F0A48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBB139AD-12DF-4FE1-86DA-5271403F0A48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBB139AD-12DF-4FE1-86DA-5271403F0A48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBB139AD-12DF-4FE1-86DA-5271403F0A48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
