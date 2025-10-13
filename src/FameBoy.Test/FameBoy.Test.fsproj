@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Prompts\InstructionTests.md" />
+        <Content Include=".prompts\InstructionTests.md" />
         <Compile Include="InstructionTests\LoadTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
