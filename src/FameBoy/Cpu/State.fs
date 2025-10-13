@@ -41,6 +41,23 @@ type Registers =
       mutable H: uint8
       mutable L: uint8 }
 
+    member this.getBC() = (uint16 this.B <<< 8) ||| uint16 this.C
+
+    member this.setBC(value: uint16) =
+        this.B <- uint8 (value >>> 8)
+        this.C <- uint8 (value &&& 0xFFus)
+
+    member this.getDE() = (uint16 this.D <<< 8) ||| uint16 this.E
+
+    member this.setDE(value: uint16) =
+        this.D <- uint8 (value >>> 8)
+        this.E <- uint8 (value &&& 0xFFus)
+
+    member this.getHL() = (uint16 this.H <<< 8) ||| uint16 this.L
+
+    member this.setHL(value: uint16) =
+        this.H <- uint8 (value >>> 8)
+        this.L <- uint8 (value &&& 0xFFus)
 
 type Cpu =
     { Memory: uint8 array
@@ -59,6 +76,7 @@ type Cpu =
     /// </summary>
     member this.setFlags(value: int) =
         this.Registers.F <- (uint8 (value &&& 0b1111) <<< 4)
+
 
 let createCpu (bootRom: uint8 array) : Cpu =
     let memory = Array.zeroCreate memorySize

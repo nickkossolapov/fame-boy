@@ -2,6 +2,8 @@
 
 open FameBoy.Cpu.State
 
+type uint3 = uint8 // todo maybe expand on this type for additional type safety
+
 type Reg8 =
     | A
     | B
@@ -30,11 +32,16 @@ type Reg16 =
     | PC
     | SP
 
-type LoadInstr = Reg16Word of Reg16 * uint16
+type BitInstr = TestBit of uint3 * Reg8
+
+type LoadInstr =
+    | Reg16Word of Reg16 * uint16
+    | HLToADecrement
 
 type LogicInstr = Xor8 of Reg8
 
 type Instruction =
+    | Bit of BitInstr
     | Load of LoadInstr
     | Logic of LogicInstr
     | Unknown

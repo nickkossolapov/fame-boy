@@ -1,4 +1,4 @@
-﻿module FameBoy.State.Executors.Load
+﻿module FameBoy.Cpu.Executors.Load
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
@@ -23,3 +23,6 @@ let private loadReg16 (cpu: Cpu) reg value =
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
     | Reg16Word (reg16, s) -> loadReg16 cpu reg16 s
+    | HLToADecrement ->
+        cpu.Registers.A <- cpu.Memory[int (cpu.Registers.getHL ())]
+        cpu.Registers.setHL (cpu.Registers.getHL () - 1us)
