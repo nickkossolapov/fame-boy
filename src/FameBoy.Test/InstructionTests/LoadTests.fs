@@ -6,7 +6,7 @@ open FameBoy.Cpu.State
 open NUnit.Framework
 
 [<Test>]
-let ``Test Load 16-bit register - ld sp,n16`` () =
+let ``Load 16-bit register - ld sp,n16`` () =
     // Setup
     let opcode = 0x31uy
     let length = 3
