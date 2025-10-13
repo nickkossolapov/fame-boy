@@ -30,9 +30,11 @@ public void TestExampleOpcode()
 * You will be given an example opcode and a reference implementation in pseudocode.
 * The requested opcode is inserted at 0x100.
 * Any data needed for the test may be inserted into any location in memory or any of the registers.
-  * A through F can be accessed like `cpu.Registers.A`.
-  * PC and SP can be accessed with `cpu.Pc` and `cpu.Sp`.
-  * Additionally, the flags can also be read and written like `cpu.getFlag Flags.Zero` and `cpu.setFlag Flags.Zero true`.
+    * A through F can be accessed like `cpu.Registers.A`.
+    * The double width registers can be accessed with `cpu.Registers.getBC`, `cpu.Registers.getDE`, `cpu.Registers.getHL`
+    * They can also be written with `cpu.Registers.setBC`, `cpu.Registers.setDE`, `cpu.Registers.setHL`
+    * PC and SP can be accessed with `cpu.Pc` and `cpu.Sp`.
+    * Additionally, the flags can also be read and written like `cpu.getFlag Flags.Zero` and `cpu.setFlag Flags.Zero true`.
 * Test instructions that span multiple bytes.
 * Test behavior at memory boundaries (e.g., 0xFFFF).
 * Include edge cases such as invalid opcodes or unaligned memory accesses.

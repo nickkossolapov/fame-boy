@@ -40,7 +40,7 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     | 0x21 -> Create.load16Instr memory pc HL
     | 0x31 -> Create.load16Instr memory pc SP
     | 0x32 ->
-        { Instruction = Load HLToADecrement
+        { Instruction = Load StoreAToHLDecrement
           Length = 1
           MCycles = Fixed 2 }
     | 0xAF ->

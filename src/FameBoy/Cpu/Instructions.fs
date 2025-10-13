@@ -44,7 +44,7 @@ type ControlInstr = JumpRelativeConditional of Condition * int8
 
 type LoadInstr =
     | ToReg16 of Reg16 * uint16
-    | HLToADecrement
+    | StoreAToHLDecrement
 
 type LogicInstr = Xor8 of Reg8
 
