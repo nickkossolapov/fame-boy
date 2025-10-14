@@ -41,3 +41,6 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | LdAFromAtHLDec ->
         cpu.Memory[int (cpu.Registers.getHL ())] <- cpu.Registers.A
         cpu.Registers.setHL (cpu.Registers.getHL () - 1us)
+    | LdhAtCFromA ->
+        let address = 0xFF00 + int cpu.Registers.C
+        cpu.Memory[address] <- cpu.Registers.A

@@ -59,6 +59,7 @@ type LoadInstr =
     | LdRegFromByte of Reg8 * uint8
     | LdRegFromWord of Reg16 * uint16
     | LdAFromAtHLDec
+    | LdhAtCFromA
 
 type LogicInstr = Xor8 of Reg8
 
