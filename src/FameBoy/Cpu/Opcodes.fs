@@ -3,6 +3,10 @@
 open FameBoy.Cpu.Instructions
 
 module private LengthsAndCycles =
+    let forArithmetic =
+        function
+        | IncReg _ -> 1, Fixed 1
+
     let forBit =
         function
         | Bit _ -> 2, Fixed 2
@@ -24,6 +28,7 @@ module private LengthsAndCycles =
 let private withLengthAndCycles (instr: Instruction) =
     let length, cycles =
         match instr with
+        | Arithmetic arithmeticInstr -> LengthsAndCycles.forArithmetic arithmeticInstr
         | Bitwise bitInstr -> LengthsAndCycles.forBit bitInstr
         | Control controlInstr -> LengthsAndCycles.forControl controlInstr
         | Load loadInstr -> LengthsAndCycles.forLoad loadInstr
@@ -54,6 +59,7 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
         ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
 
     match opcode with
+    | 0x0C -> IncReg C |> Arithmetic
     | 0x0E -> LdRegFromByte (C, withUint8 ()) |> Load
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
     | 0x21 -> LdRegFromWord (HL, withUint16 ()) |> Load

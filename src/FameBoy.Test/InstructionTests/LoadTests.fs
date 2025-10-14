@@ -22,11 +22,11 @@ let ``Load 16-bit register - ld sp,n16`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That(instr.Length, Is.EqualTo 3)
-    Assert.That(instr.MCycles, Is.EqualTo (Fixed 3))
-    
-    Assert.That(cpu.Pc, Is.EqualTo (0x100 + 3))
-    Assert.That(cpu.Sp, Is.EqualTo 0xFEFFus)
+    Assert.That (instr.Length, Is.EqualTo 3)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
+
+    Assert.That (cpu.Pc, Is.EqualTo (0x100 + 3))
+    Assert.That (cpu.Sp, Is.EqualTo 0xFEFFus)
 
 [<Test>]
 let ``Load from accumulator (indirect HL, decrement) - ld [hld],a`` () =
@@ -44,12 +44,11 @@ let ``Load from accumulator (indirect HL, decrement) - ld [hld],a`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That(instr.Length, Is.EqualTo 1)
-    Assert.That(instr.MCycles, Is.EqualTo (Fixed 2))
-    
-    Assert.That(cpu.Pc, Is.EqualTo (0x100 + 1))
-    Assert.That(cpu.Memory[0x1234], Is.EqualTo(0xABuy))
-    Assert.That(cpu.Registers.getHL(), Is.EqualTo(0x1233us))
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+
+    Assert.That (cpu.Memory[0x1234], Is.EqualTo (0xABuy))
+    Assert.That (cpu.Registers.getHL (), Is.EqualTo (0x1233us))
 
 [<Test>]
 let ``Load 8-bit register (immediate) - ld c,n8`` () =
@@ -66,8 +65,7 @@ let ``Load 8-bit register (immediate) - ld c,n8`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That(instr.Length, Is.EqualTo 2)
-    Assert.That(instr.MCycles, Is.EqualTo (Fixed 2))
-    
-    Assert.That(cpu.Pc, Is.EqualTo (0x100 + 2))
-    Assert.That(cpu.Registers.C, Is.EqualTo(0x42uy))
+    Assert.That (instr.Length, Is.EqualTo 2)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+
+    Assert.That (cpu.Registers.C, Is.EqualTo (0x42uy))

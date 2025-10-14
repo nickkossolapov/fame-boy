@@ -43,6 +43,8 @@ public void TestExampleOpcode()
   e.g., `` `Load 16-bit register - ld sp,n16` ``.
 * Ensure to validate all side effects, including flags, memory, and registers.
 * Ensure to validate the length and machine cycles (`MCycles`) of the instruction.
-* Only create the tests and do not attempt to fix code. The implementation of the CPU should be treated as a black box.
+* The implementation of the CPU should be treated as a black box.
+    * Only create the tests and do not attempt to fix code.
+    * Do not look at the code implementation, create the test case only based on the provided pseudocode.
 * Outside of `Setup`, `Execute`, and `Evaluate`, do not include any other comments like `Upper half` or `Lower half`.
 * Write two tests for any conditional instructions, testing both the met and not met cases. 

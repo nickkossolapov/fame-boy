@@ -3,7 +3,7 @@
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
-let executeBit (cpu: Cpu) (instr: BitwiseInstr) =
+let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     match instr with
     | Bit (u3, reg) ->
         let regVal = reg.readFromCpu cpu

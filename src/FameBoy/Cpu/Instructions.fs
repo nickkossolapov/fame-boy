@@ -25,6 +25,17 @@ type Reg8 =
         | L -> cpu.Registers.L
         | F -> cpu.Registers.F
 
+    member this.writeToCpu (cpu: Cpu) (value: uint8) =
+        match this with
+        | A -> cpu.Registers.A <- value
+        | B -> cpu.Registers.B <- value
+        | C -> cpu.Registers.C <- value
+        | D -> cpu.Registers.D <- value
+        | E -> cpu.Registers.E <- value
+        | H -> cpu.Registers.H <- value
+        | L -> cpu.Registers.L <- value
+        | F -> cpu.Registers.F <- value
+
 type Reg16 =
     | AF
     | BC
@@ -38,8 +49,7 @@ type Condition =
     | Carry
     | NoCarry
 
-type ArithmeticInstr =
-    | AddReg
+type ArithmeticInstr = IncReg of Reg8
 
 type BitwiseInstr = Bit of uint3 * Reg8
 
@@ -57,6 +67,7 @@ type UnknownInstr =
     | TwoByte
 
 type Instruction =
+    | Arithmetic of ArithmeticInstr
     | Bitwise of BitwiseInstr
     | Control of ControlInstr
     | Load of LoadInstr

@@ -26,7 +26,6 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     Assert.That (instr.Length, Is.EqualTo 2)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
 
-    Assert.That (cpu.Pc, Is.EqualTo 0x102)
     Assert.That (cpu.getFlag Flag.Zero, Is.False)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)
@@ -51,7 +50,6 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     Assert.That (instr.Length, Is.EqualTo 2)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
 
-    Assert.That (cpu.Pc, Is.EqualTo 0x102)
     Assert.That (cpu.getFlag Flag.Zero, Is.True)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)

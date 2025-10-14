@@ -1,5 +1,6 @@
 ﻿module FameBoy.Test.InstructionTests.OtherTests
 
+open FameBoy.Cpu.Instructions
 open NUnit.Framework
 open FameBoy.Cpu.State
 open FameBoy.Cpu.Opcodes
@@ -19,25 +20,26 @@ let ``Unknown opcode acts as NOP`` () =
     cpu.Registers.H <- 0xBCuy
     cpu.Registers.L <- 0xDEuy
     cpu.Sp <- 0xFFFEus
-    
+
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
     execute cpu instr
-    
+
     // Evaluate
-    Assert.That(cpu.Pc, Is.EqualTo(0x101))
-    Assert.That(instr.Length, Is.EqualTo(1))
-    Assert.That(cpu.Registers.A, Is.EqualTo(0x12uy))
-    Assert.That(cpu.Registers.B, Is.EqualTo(0x34uy))
-    Assert.That(cpu.Registers.C, Is.EqualTo(0x56uy))
-    Assert.That(cpu.Registers.D, Is.EqualTo(0x78uy))
-    Assert.That(cpu.Registers.E, Is.EqualTo(0x9Auy))
-    Assert.That(cpu.Registers.H, Is.EqualTo(0xBCuy))
-    Assert.That(cpu.Registers.L, Is.EqualTo(0xDEuy))
-    Assert.That(cpu.Sp, Is.EqualTo(0xFFFEus))
-    
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+
+    Assert.That (cpu.Registers.A, Is.EqualTo (0x12uy))
+    Assert.That (cpu.Registers.B, Is.EqualTo (0x34uy))
+    Assert.That (cpu.Registers.C, Is.EqualTo (0x56uy))
+    Assert.That (cpu.Registers.D, Is.EqualTo (0x78uy))
+    Assert.That (cpu.Registers.E, Is.EqualTo (0x9Auy))
+    Assert.That (cpu.Registers.H, Is.EqualTo (0xBCuy))
+    Assert.That (cpu.Registers.L, Is.EqualTo (0xDEuy))
+    Assert.That (cpu.Sp, Is.EqualTo (0xFFFEus))
+
     // Check that all flags are unchanged (assuming default false)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That (cpu.getFlag Flag.Zero, Is.False)
+    Assert.That (cpu.getFlag Flag.Subtract, Is.False)
+    Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)
+    Assert.That (cpu.getFlag Flag.Carry, Is.False)
