@@ -15,4 +15,4 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
     | Control i -> executeControl cpu i
     | Load i -> executeLoad cpu i
     | Logic i -> executeLogic cpu i
-    | Unknown -> ()
+    | Unknown _ -> ()
