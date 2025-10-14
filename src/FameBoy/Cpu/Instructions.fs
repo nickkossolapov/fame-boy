@@ -49,12 +49,16 @@ type LoadInstr =
 
 type LogicInstr = Xor8 of Reg8
 
+type UnknownInstr =
+    | OneByte
+    | TwoByte
+
 type Instruction =
     | Bit of BitInstr
     | Control of ControlInstr
     | Load of LoadInstr
     | Logic of LogicInstr
-    | Unknown
+    | Unknown of UnknownInstr
 
 type ConditionalCycle = { Met: int; NotMet: int }
 

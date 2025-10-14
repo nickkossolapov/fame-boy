@@ -2,63 +2,65 @@
 
 open FameBoy.Cpu.Instructions
 
+module private LengthsAndCycles =
+    let forBit =
+        function
+        | TestBit _ -> 2, Fixed 2
 
-let private getWord (memory: uint8 array) (pc: int) =
-    ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
+    let forControl =
+        function
+        | JumpRelativeConditional _ -> 2, Conditional { Met = 3; NotMet = 2 }
 
-module private Create =
-    let load16Instr (memory: uint8 array) (pc: int) (reg: Reg16) =
-        let word = getWord memory pc
+    let forLoad =
+        function
+        | ToReg16 _ -> 3, Fixed 3
+        | ToReg8 _ -> 2, Fixed 2
+        | StoreAToHLDecrement -> 1, Fixed 2
 
-        { Instruction = Load (ToReg16 (reg, word))
-          Length = 3
-          MCycles = Fixed 3 }
+    let forLogic =
+        function
+        | Xor8 _ -> 1, Fixed 1
 
-    let load8ImmedateInstr (memory: uint8 array) (pc: int) (reg: Reg8) =
-        { Instruction = Load (ToReg8 (reg, memory[pc + 1]))
-          Length = 2
-          MCycles = Fixed 2 }
+let private withLengthAndCycles (instr: Instruction) =
+    let length, cycles =
+        match instr with
+        | Bit bitInstr -> LengthsAndCycles.forBit bitInstr
+        | Control controlInstr -> LengthsAndCycles.forControl controlInstr
+        | Load loadInstr -> LengthsAndCycles.forLoad loadInstr
+        | Logic logicInstr -> LengthsAndCycles.forLogic logicInstr
+        | Unknown unknownInstr ->
+            match unknownInstr with
+            | OneByte -> 1, Fixed 1
+            | TwoByte -> 2, Fixed 2
 
-    let testBit value reg =
-        { Instruction = Bit (TestBit (value, reg))
-          Length = 2
-          MCycles = Fixed 2 }
+    { Instruction = instr
+      Length = length
+      MCycles = cycles }
 
-let private fetchAndDecode2Byte (memory: uint8 array) (pc: int) : DecodedInstruction =
+let private fetchAndDecode2Byte (memory: uint8 array) (pc: int) =
     let opcode = int memory[pc + 1]
 
     match opcode with
-    | 0x7C -> Create.testBit 7uy H
-    | _ ->
-        { Instruction = Unknown
-          Length = 2
-          MCycles = Fixed 1 }
+    | 0x7C -> TestBit (7uy, H) |> Bit
+    | _ -> Unknown TwoByte
 
 let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     let opcode = int memory[pc]
 
+    let withUint8 () = memory[pc + 1]
+    let withInt8 () = int8 memory[pc + 1]
+
+    let withUint16 () =
+        ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
+
     match opcode with
-    | 0x0E ->
-        { Instruction = Load (ToReg8 (C, memory[pc + 1]))
-          Length = 2
-          MCycles = Fixed 2 }
-    | 0x20 ->
-        { Instruction = Control (JumpRelativeConditional (Condition.NotZero, int8 memory[pc + 1]))
-          Length = 2
-          MCycles = Conditional { Met = 3; NotMet = 2 } }
-    | 0x21 -> Create.load16Instr memory pc HL
-    | 0x31 -> Create.load16Instr memory pc SP
-    | 0x32 ->
-        { Instruction = Load StoreAToHLDecrement
-          Length = 1
-          MCycles = Fixed 2 }
-    | 0x3
-    | 0xAF ->
-        { Instruction = Logic (Xor8 A)
-          Length = 1
-          MCycles = Fixed 1 }
+    | 0x0E -> ToReg8 (C, withUint8 ()) |> Load
+    | 0x20 -> JumpRelativeConditional (Condition.NotZero, withInt8 ()) |> Control
+    | 0x21 -> ToReg16 (HL, withUint16 ()) |> Load
+    | 0x31 -> ToReg16 (SP, withUint16 ()) |> Load
+    | 0x32 -> StoreAToHLDecrement |> Load
+    | 0x3E -> ToReg8 (A, withUint8 ()) |> Load
+    | 0xAF -> Xor8 A |> Logic
     | 0xCB -> fetchAndDecode2Byte memory pc
-    | _ ->
-        { Instruction = Unknown
-          Length = 1
-          MCycles = Fixed 1 }
+    | _ -> Unknown OneByte
+    |> withLengthAndCycles
