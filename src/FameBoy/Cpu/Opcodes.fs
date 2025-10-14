@@ -20,6 +20,7 @@ module private LengthsAndCycles =
         | LdRegFromByte _ -> 2, Fixed 2
         | LdRegFromWord _ -> 3, Fixed 3
         | LdAFromAtHLDec -> 1, Fixed 2
+        | LdhAtCFromA -> 1, Fixed 2
 
     let forLogic =
         function
@@ -56,7 +57,7 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     let withInt8 () = int8 memory[pc + 1]
 
     let withUint16 () =
-        ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
+        ((uint16 memory[pc + 2]) <<< 8) + uint16 memory[pc + 1]
 
     match opcode with
     | 0x0C -> IncReg C |> Arithmetic
@@ -68,5 +69,6 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
     | 0x3E -> LdRegFromByte (A, withUint8 ()) |> Load
     | 0xAF -> Xor8 A |> Logic
     | 0xCB -> fetchAndDecode2Byte memory pc
+    | 0xE2 -> LdhAtCFromA |> Load
     | _ -> Unknown OneByte
     |> withLengthAndCycles

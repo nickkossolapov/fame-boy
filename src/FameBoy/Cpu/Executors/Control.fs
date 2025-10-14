@@ -10,7 +10,6 @@ let private evaluateCondition (cpu: Cpu) (condition: Condition) =
     | Condition.Carry -> cpu.getFlag Flag.Carry
     | Condition.NoCarry -> not (cpu.getFlag Flag.Carry)
 
-
 let executeControl (cpu: Cpu) (instr: ControlInstr) =
     match instr with
     | JrCond (condition, b) ->

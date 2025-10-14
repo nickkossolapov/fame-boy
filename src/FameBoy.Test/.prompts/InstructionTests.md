@@ -1,19 +1,18 @@
 ﻿# filepath: d:\personal\fame-boy\src\FameBoy.Test\Prompts\InstructionTests.md
 
-Your goal is to create unit tests for a Game Boy emulator in F# using NUnit. The test will have the general body:
+Your goal is to create unit tests for a Game Boy emulator in F# using NUnit. The test will have the general body like:
 
-``` cs
-[Test]
-public void TestExampleOpcode()
-{
+``` fsharp
+[<Test>]
+let ``Load 16-bit register - ld sp,n16`` () = 
     // Setup
-    let opcode = <opcode>
+    let opcode = 0x31uy
     let cpu = createCpu [||]
 
     cpu.Pc <- 0x100
-    cpu.Memory[0x100] <- 0x21 
-    cpu.Memory[0x101] <- 0xFF
-    cpu.Memory[0x102] <- 0xFE
+    cpu.Memory[0x100] <- opcode
+    cpu.Memory[0x101] <- 0xFFuy
+    cpu.Memory[0x102] <- 0xFEuy
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -22,10 +21,9 @@ public void TestExampleOpcode()
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
-    
-    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus ) 
+
+    Assert.That (cpu.Sp, Is.EqualTo 0xFEFFus)
     // other checks
-}
 ```
 
 * You will be given an example opcode and a reference implementation in pseudocode.
@@ -46,5 +44,4 @@ public void TestExampleOpcode()
 * The implementation of the CPU should be treated as a black box.
     * Only create the tests and do not attempt to fix code.
     * Do not look at the code implementation, create the test case only based on the provided pseudocode.
-* Outside of `Setup`, `Execute`, and `Evaluate`, do not include any other comments like `Upper half` or `Lower half`.
-* Write two tests for any conditional instructions, testing both the met and not met cases. 
+* Write multiple tests for any conditional instructions, testing both the met and not met cases.
