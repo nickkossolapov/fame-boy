@@ -1,6 +1,6 @@
 ﻿module FameBoy.Cpu.Execute
 
-open FameBoy.Cpu.Executors.Bit
+open FameBoy.Cpu.Executors.Bitwise
 open FameBoy.Cpu.Executors.Control
 open FameBoy.Cpu.Executors.Logic
 open FameBoy.Cpu.Executors.Load
@@ -11,7 +11,7 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
     cpu.Pc <- cpu.Pc + instr.Length
 
     match instr.Instruction with
-    | Bit i -> executeBit cpu i
+    | Bitwise i -> executeBit cpu i
     | Control i -> executeControl cpu i
     | Load i -> executeLoad cpu i
     | Logic i -> executeLogic cpu i

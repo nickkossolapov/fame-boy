@@ -15,11 +15,14 @@ let private loadReg8 (cpu: Cpu) (reg: Reg8) (value: uint8) =
     | L -> cpu.Registers.L <- value
     | F -> cpu.Registers.F <- value
 
-let private loadReg16 (cpu: Cpu) reg value =
+let private loadReg16 (cpu: Cpu) (reg: Reg16) (value: uint16) =
     let high = uint8 (value >>> 8)
     let low = uint8 (value &&& 0xFFus)
 
     match reg with
+    | AF ->
+        cpu.Registers.A <- high
+        cpu.Registers.F <- low
     | BC ->
         cpu.Registers.B <- high
         cpu.Registers.C <- low
@@ -29,13 +32,12 @@ let private loadReg16 (cpu: Cpu) reg value =
     | HL ->
         cpu.Registers.H <- high
         cpu.Registers.L <- low
-    | PC -> cpu.Pc <- int value
     | SP -> cpu.Sp <- value
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | ToReg8 (reg8, b) -> loadReg8 cpu reg8 b
-    | ToReg16 (reg16, w) -> loadReg16 cpu reg16 w
-    | StoreAToHLDecrement ->
+    | LdRegFromN (reg8, b) -> loadReg8 cpu reg8 b
+    | LdRegFromNN (reg16, w) -> loadReg16 cpu reg16 w
+    | LdAFromAtHLDec ->
         cpu.Memory[int (cpu.Registers.getHL ())] <- cpu.Registers.A
         cpu.Registers.setHL (cpu.Registers.getHL () - 1us)

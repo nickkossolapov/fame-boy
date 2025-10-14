@@ -1,11 +1,11 @@
-﻿module FameBoy.Cpu.Executors.Bit
+﻿module FameBoy.Cpu.Executors.Bitwise
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
-let executeBit (cpu: Cpu) (instr: BitInstr) =
+let executeBit (cpu: Cpu) (instr: BitwiseInstr) =
     match instr with
-    | TestBit (u3, reg) ->
+    | Bit (u3, reg) ->
         let regVal = reg.readFromCpu cpu
         let bitIsZero = ((regVal >>> (int u3)) &&& 1uy) = 0uy
 

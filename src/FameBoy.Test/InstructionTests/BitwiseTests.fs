@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.BitTests
+﻿module FameBoy.Test.InstructionTests.BitwiseTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions

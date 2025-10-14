@@ -8,7 +8,7 @@
     <ItemGroup>
         <Compile Include="Cpu\State.fs" />
         <Compile Include="Cpu\Instructions.fs" />
-        <Compile Include="Cpu\Executors\Bit.fs" />
+        <Compile Include="Cpu\Executors\Bitwise.fs" />
         <Compile Include="Cpu\Executors\Control.fs" />
         <Compile Include="Cpu\Executors\Load.fs" />
         <Compile Include="Cpu\Executors\Logic.fs" />

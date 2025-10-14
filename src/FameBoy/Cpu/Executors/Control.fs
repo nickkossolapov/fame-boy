@@ -13,7 +13,7 @@ let private evaluateCondition (cpu: Cpu) (condition: Condition) =
 
 let executeControl (cpu: Cpu) (instr: ControlInstr) =
     match instr with
-    | JumpRelativeConditional (condition, b) ->
+    | JrCond (condition, b) ->
         let shouldJump = evaluateCondition cpu condition
 
         if shouldJump then

@@ -26,10 +26,10 @@ type Reg8 =
         | F -> cpu.Registers.F
 
 type Reg16 =
+    | AF
     | BC
     | DE
     | HL
-    | PC
     | SP
 
 type Condition =
@@ -38,14 +38,14 @@ type Condition =
     | Carry
     | NoCarry
 
-type BitInstr = TestBit of uint3 * Reg8
+type BitwiseInstr = Bit of uint3 * Reg8
 
-type ControlInstr = JumpRelativeConditional of Condition * int8
+type ControlInstr = JrCond of Condition * int8
 
 type LoadInstr =
-    | ToReg8 of Reg8 * uint8
-    | ToReg16 of Reg16 * uint16
-    | StoreAToHLDecrement
+    | LdRegFromN of Reg8 * uint8
+    | LdRegFromNN of Reg16 * uint16
+    | LdAFromAtHLDec
 
 type LogicInstr = Xor8 of Reg8
 
@@ -54,7 +54,7 @@ type UnknownInstr =
     | TwoByte
 
 type Instruction =
-    | Bit of BitInstr
+    | Bitwise of BitwiseInstr
     | Control of ControlInstr
     | Load of LoadInstr
     | Logic of LogicInstr
