@@ -14,6 +14,11 @@ module private Create =
           Length = 3
           MCycles = Fixed 3 }
 
+    let load8ImmedateInstr (memory: uint8 array) (pc: int) (reg: Reg8) =
+        { Instruction = Load (ToReg8 (reg, memory[pc + 1]))
+          Length = 2
+          MCycles = Fixed 2 }
+
     let testBit value reg =
         { Instruction = Bit (TestBit (value, reg))
           Length = 2
@@ -47,6 +52,7 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
         { Instruction = Load StoreAToHLDecrement
           Length = 1
           MCycles = Fixed 2 }
+    | 0x3
     | 0xAF ->
         { Instruction = Logic (Xor8 A)
           Length = 1

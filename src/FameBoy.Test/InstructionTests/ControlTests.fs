@@ -3,6 +3,7 @@
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.Instructions
 open NUnit.Framework
 
 [<Test>]
@@ -19,8 +20,10 @@ let ``Jump relative if not zero, taken - jr nz,s8`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That (cpu.Pc, Is.EqualTo (0x107)) // 0x100 + 2 + 5
-    Assert.That (instr.Length, Is.EqualTo (2))
+    Assert.That(instr.Length, Is.EqualTo 2)
+    Assert.That(instr.MCycles, Is.EqualTo (Conditional { Met = 3; NotMet = 2 }))
+    
+    Assert.That(cpu.Pc, Is.EqualTo 0x107) // 0x100 + 2 + 5
 
 [<Test>]
 let ``Jump relative if not zero, not taken - jr nz,s8`` () =
@@ -36,5 +39,7 @@ let ``Jump relative if not zero, not taken - jr nz,s8`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That (cpu.Pc, Is.EqualTo (0x102)) // PC just advances past instruction
-    Assert.That (instr.Length, Is.EqualTo (2))
+    Assert.That(instr.Length, Is.EqualTo 2)
+    Assert.That(instr.MCycles, Is.EqualTo (Conditional { Met = 3; NotMet = 2 }))
+    
+    Assert.That(cpu.Pc, Is.EqualTo 0x102) // PC just advances past instruction

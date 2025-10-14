@@ -1,6 +1,7 @@
 ﻿module FameBoy.Test.InstructionTests.BitTests
 
 open FameBoy.Cpu.Execute
+open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open NUnit.Framework
@@ -22,8 +23,10 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That (cpu.Pc, Is.EqualTo (0x102))
-    Assert.That (instr.Length, Is.EqualTo (2))
+    Assert.That (instr.Length, Is.EqualTo 2)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+
+    Assert.That (cpu.Pc, Is.EqualTo 0x102)
     Assert.That (cpu.getFlag Flag.Zero, Is.False)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)
@@ -45,8 +48,10 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     execute cpu instr
 
     // Evaluate
-    Assert.That (cpu.Pc, Is.EqualTo (0x102))
-    Assert.That (instr.Length, Is.EqualTo (2))
+    Assert.That (instr.Length, Is.EqualTo 2)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+
+    Assert.That (cpu.Pc, Is.EqualTo 0x102)
     Assert.That (cpu.getFlag Flag.Zero, Is.True)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)

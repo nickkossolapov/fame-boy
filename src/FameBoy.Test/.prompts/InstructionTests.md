@@ -8,21 +8,22 @@ public void TestExampleOpcode()
 {
     // Setup
     let opcode = <opcode>
-    let length = 3
     let cpu = createCpu [||]
 
     cpu.Pc <- 0x100
     cpu.Memory[0x100] <- 0x21 
-    cpu.Memory[0x101] <- 0x34 // Upper half
-    cpu.Memory[0x102] <- 0x12 // Lower half
+    cpu.Memory[0x101] <- 0xFF
+    cpu.Memory[0x102] <- 0xFE
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
     execute cpu instr
 
     // Evaluate
-    Assert.That(cpu.Pc, Is.EqualTo(0x100 + length))
-    Assert.That(cpu.Sp, Is.EqualTo(0xFFFEus)) 
+    Assert.That (instr.Length, Is.EqualTo 3)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
+    
+    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus ) 
     // other checks
 }
 ```
@@ -41,7 +42,7 @@ public void TestExampleOpcode()
 * Use descriptive names for tests in the format `` `[description] - [assembly]` ``,
   e.g., `` `Load 16-bit register - ld sp,n16` ``.
 * Ensure to validate all side effects, including flags, memory, and registers.
-* Ensure to validate the length of the instruction.
+* Ensure to validate the length and machine cycles (`MCycles`) of the instruction.
 * Only create the tests and do not attempt to fix code. The implementation of the CPU should be treated as a black box.
 * Outside of `Setup`, `Execute`, and `Evaluate`, do not include any other comments like `Upper half` or `Lower half`.
 * Write two tests for any conditional instructions, testing both the met and not met cases. 
