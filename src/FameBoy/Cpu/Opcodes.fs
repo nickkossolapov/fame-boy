@@ -13,8 +13,8 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
-        | LdRegFromN _ -> 2, Fixed 2
-        | LdRegFromNN _ -> 3, Fixed 3
+        | LdRegFromByte _ -> 2, Fixed 2
+        | LdRegFromWord _ -> 3, Fixed 3
         | LdAFromAtHLDec -> 1, Fixed 2
 
     let forLogic =
@@ -54,12 +54,12 @@ let fetchAndDecode (memory: uint8 array) (pc: int) : DecodedInstruction =
         ((uint16 memory[pc + 1]) <<< 8) + uint16 memory[pc + 2]
 
     match opcode with
-    | 0x0E -> LdRegFromN (C, withUint8 ()) |> Load
+    | 0x0E -> LdRegFromByte (C, withUint8 ()) |> Load
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
-    | 0x21 -> LdRegFromNN (HL, withUint16 ()) |> Load
-    | 0x31 -> LdRegFromNN (SP, withUint16 ()) |> Load
+    | 0x21 -> LdRegFromWord (HL, withUint16 ()) |> Load
+    | 0x31 -> LdRegFromWord (SP, withUint16 ()) |> Load
     | 0x32 -> LdAFromAtHLDec |> Load
-    | 0x3E -> LdRegFromN (A, withUint8 ()) |> Load
+    | 0x3E -> LdRegFromByte (A, withUint8 ()) |> Load
     | 0xAF -> Xor8 A |> Logic
     | 0xCB -> fetchAndDecode2Byte memory pc
     | _ -> Unknown OneByte

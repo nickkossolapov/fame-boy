@@ -38,13 +38,16 @@ type Condition =
     | Carry
     | NoCarry
 
+type ArithmeticInstr =
+    | AddReg
+
 type BitwiseInstr = Bit of uint3 * Reg8
 
 type ControlInstr = JrCond of Condition * int8
 
 type LoadInstr =
-    | LdRegFromN of Reg8 * uint8
-    | LdRegFromNN of Reg16 * uint16
+    | LdRegFromByte of Reg8 * uint8
+    | LdRegFromWord of Reg16 * uint16
     | LdAFromAtHLDec
 
 type LogicInstr = Xor8 of Reg8

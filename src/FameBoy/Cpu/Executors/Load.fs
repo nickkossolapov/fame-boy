@@ -36,8 +36,8 @@ let private loadReg16 (cpu: Cpu) (reg: Reg16) (value: uint16) =
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | LdRegFromN (reg8, b) -> loadReg8 cpu reg8 b
-    | LdRegFromNN (reg16, w) -> loadReg16 cpu reg16 w
+    | LdRegFromByte (reg8, b) -> loadReg8 cpu reg8 b
+    | LdRegFromWord (reg16, w) -> loadReg16 cpu reg16 w
     | LdAFromAtHLDec ->
         cpu.Memory[int (cpu.Registers.getHL ())] <- cpu.Registers.A
         cpu.Registers.setHL (cpu.Registers.getHL () - 1us)
