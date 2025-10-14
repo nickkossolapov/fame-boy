@@ -16,4 +16,4 @@ let executeControl (cpu: Cpu) (instr: ControlInstr) =
         let shouldJump = evaluateCondition cpu condition
 
         if shouldJump then
-            cpu.Pc <- cpu.Pc + int b
+            cpu.Pc <- cpu.Pc + uint16 b

@@ -14,7 +14,7 @@ type Reg8 =
     | L
     | F
 
-    member this.readFromCpu(cpu: Cpu) =
+    member this.GetFromCpu(cpu: Cpu) =
         match this with
         | A -> cpu.Registers.A
         | B -> cpu.Registers.B
@@ -25,7 +25,7 @@ type Reg8 =
         | L -> cpu.Registers.L
         | F -> cpu.Registers.F
 
-    member this.writeToCpu (cpu: Cpu) (value: uint8) =
+    member this.SetToCpu (cpu: Cpu) (value: uint8) =
         match this with
         | A -> cpu.Registers.A <- value
         | B -> cpu.Registers.B <- value
@@ -58,6 +58,7 @@ type ControlInstr = JrCond of Condition * int8
 type LoadInstr =
     | LdRegFromByte of Reg8 * uint8
     | LdRegFromWord of Reg16 * uint16
+    | LdAtHLFromReg of Reg8
     | LdAFromAtHLDec
     | LdhAtCFromA
 

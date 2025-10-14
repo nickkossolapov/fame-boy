@@ -6,9 +6,9 @@ open FameBoy.Cpu.State
 let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
     match instr with
     | IncReg reg ->
-        let result = reg.readFromCpu cpu + 1uy
+        let result = reg.GetFromCpu cpu + 1uy
 
         cpu.setFlag Zero (result = 0uy)
         cpu.setFlag Subtract false
-        cpu.setFlag HalfCarry ((reg.readFromCpu cpu &&& 0xFuy) = 0xFuy)
-        reg.writeToCpu cpu result
+        cpu.setFlag HalfCarry ((reg.GetFromCpu cpu &&& 0xFuy) = 0xFuy)
+        reg.SetToCpu cpu result

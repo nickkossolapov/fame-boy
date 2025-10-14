@@ -1,6 +1,13 @@
 ﻿module FameBoy.Cpu.State
 
-let private memorySize = 65536
+let private memorySize = 65535us
+
+type Memory(arr: uint8 array) =
+    member _.Item
+        with get (i: uint16) = arr[int i]
+        and set (i: uint16) (v: uint8) = arr[int i] <- v
+
+    member _.Array = arr
 
 type Flag =
     | Zero // z
@@ -41,28 +48,35 @@ type Registers =
       mutable H: uint8
       mutable L: uint8 }
 
-    member this.getBC() = (uint16 this.B <<< 8) ||| uint16 this.C
+    member this.AF
+        with get () = (uint16 this.A <<< 8) ||| uint16 this.F
+        and set (value: uint16) =
+            this.A <- uint8 (value >>> 8)
+            this.F <- uint8 (value &&& 0xFFus)
 
-    member this.setBC(value: uint16) =
-        this.B <- uint8 (value >>> 8)
-        this.C <- uint8 (value &&& 0xFFus)
+    member this.BC
+        with get () = (uint16 this.B <<< 8) ||| uint16 this.C
+        and set (value: uint16) =
+            this.B <- uint8 (value >>> 8)
+            this.C <- uint8 (value &&& 0xFFus)
 
-    member this.getDE() = (uint16 this.D <<< 8) ||| uint16 this.E
+    member this.DE
+        with get () = (uint16 this.D <<< 8) ||| uint16 this.E
+        and set (value: uint16) =
+            this.D <- uint8 (value >>> 8)
+            this.E <- uint8 (value &&& 0xFFus)
 
-    member this.setDE(value: uint16) =
-        this.D <- uint8 (value >>> 8)
-        this.E <- uint8 (value &&& 0xFFus)
+    member this.HL
+        with get () = (uint16 this.H <<< 8) ||| uint16 this.L
+        and set (value: uint16) =
+            this.H <- uint8 (value >>> 8)
+            this.L <- uint8 (value &&& 0xFFus)
 
-    member this.getHL() = (uint16 this.H <<< 8) ||| uint16 this.L
-
-    member this.setHL(value: uint16) =
-        this.H <- uint8 (value >>> 8)
-        this.L <- uint8 (value &&& 0xFFus)
 
 type Cpu =
-    { Memory: uint8 array
+    { Memory: Memory
       Registers: Registers
-      mutable Pc: int // Actually a 16-bit unsigned int, but making it an int for easier use in array indexing
+      mutable Pc: uint16
       mutable Sp: uint16 }
 
     member this.setFlag flag value =
@@ -79,7 +93,7 @@ type Cpu =
 
 
 let createCpu (bootRom: uint8 array) : Cpu =
-    let memory = Array.zeroCreate memorySize
+    let memory = Array.zeroCreate (int memorySize)
     Array.blit bootRom 0 memory 0 bootRom.Length
 
     let registers =
@@ -92,7 +106,7 @@ let createCpu (bootRom: uint8 array) : Cpu =
           H = 0uy
           L = 0uy }
 
-    { Memory = memory
+    { Memory = Memory (memory)
       Registers = registers
-      Pc = 0
+      Pc = 0us
       Sp = 0us }

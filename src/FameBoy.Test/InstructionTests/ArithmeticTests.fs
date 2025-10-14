@@ -13,13 +13,13 @@ let ``Increment 8-bit register (no zero) - inc c`` () =
     let opcode = 0x0Cuy
     let cpu = createCpu [||]
 
-    cpu.Pc <- 0x100
+    cpu.Pc <- 0x100us
     cpu.Registers.C <- 0x0Fuy // will become 0x10
     cpu.setFlag Carry true // ensure carry unaffected
     cpu.setFlag Zero true // will be cleared
     cpu.setFlag Subtract true // will be cleared
     cpu.setFlag HalfCarry false // will be set due to low nibble overflow
-    cpu.Memory[0x100] <- opcode
+    cpu.Memory[0x100us] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -41,13 +41,13 @@ let ``Increment 8-bit register (wrap to zero) - inc c`` () =
     let opcode = 0x0Cuy
     let cpu = createCpu [||]
 
-    cpu.Pc <- 0x100
+    cpu.Pc <- 0x100us
     cpu.Registers.C <- 0xFFuy // will wrap to 0x00
     cpu.setFlag Carry false // ensure carry unaffected
     cpu.setFlag Zero false // will be set
     cpu.setFlag Subtract true // will be cleared
     cpu.setFlag HalfCarry false // will be set (0xF -> 0x0)
-    cpu.Memory[0x100] <- opcode
+    cpu.Memory[0x100us] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc

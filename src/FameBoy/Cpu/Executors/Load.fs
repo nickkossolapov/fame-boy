@@ -4,8 +4,8 @@ open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
 
-let private loadReg8 (cpu: Cpu) (reg: Reg8) (value: uint8) =
-    match reg with
+let private loadReg8 (cpu: Cpu) (value: uint8) =
+    function
     | A -> cpu.Registers.A <- value
     | B -> cpu.Registers.B <- value
     | C -> cpu.Registers.C <- value
@@ -15,32 +15,22 @@ let private loadReg8 (cpu: Cpu) (reg: Reg8) (value: uint8) =
     | L -> cpu.Registers.L <- value
     | F -> cpu.Registers.F <- value
 
-let private loadReg16 (cpu: Cpu) (reg: Reg16) (value: uint16) =
-    let high = uint8 (value >>> 8)
-    let low = uint8 (value &&& 0xFFus)
-
-    match reg with
-    | AF ->
-        cpu.Registers.A <- high
-        cpu.Registers.F <- low
-    | BC ->
-        cpu.Registers.B <- high
-        cpu.Registers.C <- low
-    | DE ->
-        cpu.Registers.D <- high
-        cpu.Registers.E <- low
-    | HL ->
-        cpu.Registers.H <- high
-        cpu.Registers.L <- low
+let private loadReg16 (cpu: Cpu) (value: uint16) =
+    function
+    | AF -> cpu.Registers.AF <- value
+    | BC -> cpu.Registers.BC <- value
+    | DE -> cpu.Registers.DE <- value
+    | HL -> cpu.Registers.HL <- value
     | SP -> cpu.Sp <- value
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | LdRegFromByte (reg8, b) -> loadReg8 cpu reg8 b
-    | LdRegFromWord (reg16, w) -> loadReg16 cpu reg16 w
+    | LdRegFromByte (reg8, b) -> loadReg8 cpu b reg8
+    | LdRegFromWord (reg16, w) -> loadReg16 cpu w reg16
+    | LdAtHLFromReg reg8 -> cpu.Memory[cpu.Registers.HL] <- reg8.GetFromCpu cpu
     | LdAFromAtHLDec ->
-        cpu.Memory[int (cpu.Registers.getHL ())] <- cpu.Registers.A
-        cpu.Registers.setHL (cpu.Registers.getHL () - 1us)
+        cpu.Memory.[cpu.Registers.HL] <- cpu.Registers.A
+        cpu.Registers.HL <- cpu.Registers.HL - 1us
     | LdhAtCFromA ->
-        let address = 0xFF00 + int cpu.Registers.C
-        cpu.Memory[address] <- cpu.Registers.A
+        let address = 0xFF00us + uint16 cpu.Registers.C
+        cpu.Memory.[address] <- cpu.Registers.A

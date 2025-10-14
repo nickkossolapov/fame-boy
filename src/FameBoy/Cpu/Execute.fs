@@ -9,7 +9,7 @@ open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
 let execute (cpu: Cpu) (instr: DecodedInstruction) =
-    cpu.Pc <- cpu.Pc + instr.Length
+    cpu.Pc <- cpu.Pc + uint16 instr.Length
 
     match instr.Instruction with
     | Arithmetic i -> executeArithmetic cpu i

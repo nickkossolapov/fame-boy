@@ -59,7 +59,7 @@ let headerBitmapCheck = // Needed to test boot without loading a rom. Please don
 
 let cpu = createCpu bytes
 
-Array.blit headerBitmapCheck 0 cpu.Memory 0x104 headerBitmapCheck.Length
+Array.blit headerBitmapCheck 0 cpu.Memory.Array 0x104 headerBitmapCheck.Length
 
 
 while true do

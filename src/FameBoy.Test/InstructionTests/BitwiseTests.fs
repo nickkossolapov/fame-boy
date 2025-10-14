@@ -10,9 +10,9 @@ open NUnit.Framework
 let ``Test bit 7 of H register - bit 7,h`` () =
     // Setup
     let cpu = createCpu [||]
-    cpu.Pc <- 0x100
-    cpu.Memory[0x100] <- 0xCBuy
-    cpu.Memory[0x101] <- 0x7Cuy // CB7C = BIT 7,H
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xCBuy
+    cpu.Memory[0x101us] <- 0x7Cuy // CB7C = BIT 7,H
     cpu.Registers.H <- 0b10000000uy // bit 7 set
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
@@ -34,9 +34,9 @@ let ``Test bit 7 of H register - bit 7,h`` () =
 let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     // Setup
     let cpu = createCpu [||]
-    cpu.Pc <- 0x100
-    cpu.Memory[0x100] <- 0xCBuy
-    cpu.Memory[0x101] <- 0x7Cuy // CB7C = BIT 7,H
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xCBuy
+    cpu.Memory[0x101us] <- 0x7Cuy // CB7C = BIT 7,H
     cpu.Registers.H <- 0b00000000uy // bit 7 not set
     cpu.setFlag Flag.Zero false
     cpu.setFlag Flag.Subtract true

@@ -6,7 +6,7 @@ open FameBoy.Cpu.State
 let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     match instr with
     | Bit (u3, reg) ->
-        let regVal = reg.readFromCpu cpu
+        let regVal = reg.GetFromCpu cpu
         let bitIsZero = ((regVal >>> (int u3)) &&& 1uy) = 0uy
 
         cpu.setFlag Zero bitIsZero

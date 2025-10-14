@@ -10,8 +10,8 @@ open FameBoy.Cpu.Execute
 let ``Unknown opcode acts as NOP`` () =
     // Setup
     let cpu = createCpu [||]
-    cpu.Pc <- 0x100
-    cpu.Memory[0x100] <- 0xEBuy // 0xEB is unused/unknown
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xEBuy // 0xEB is unused/unknown
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
@@ -29,14 +29,14 @@ let ``Unknown opcode acts as NOP`` () =
     Assert.That (instr.Length, Is.EqualTo 1)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
 
-    Assert.That (cpu.Registers.A, Is.EqualTo (0x12uy))
-    Assert.That (cpu.Registers.B, Is.EqualTo (0x34uy))
-    Assert.That (cpu.Registers.C, Is.EqualTo (0x56uy))
-    Assert.That (cpu.Registers.D, Is.EqualTo (0x78uy))
-    Assert.That (cpu.Registers.E, Is.EqualTo (0x9Auy))
-    Assert.That (cpu.Registers.H, Is.EqualTo (0xBCuy))
-    Assert.That (cpu.Registers.L, Is.EqualTo (0xDEuy))
-    Assert.That (cpu.Sp, Is.EqualTo (0xFFFEus))
+    Assert.That (cpu.Registers.A, Is.EqualTo 0x12uy)
+    Assert.That (cpu.Registers.B, Is.EqualTo 0x34uy)
+    Assert.That (cpu.Registers.C, Is.EqualTo 0x56uy)
+    Assert.That (cpu.Registers.D, Is.EqualTo 0x78uy)
+    Assert.That (cpu.Registers.E, Is.EqualTo 0x9Auy)
+    Assert.That (cpu.Registers.H, Is.EqualTo 0xBCuy)
+    Assert.That (cpu.Registers.L, Is.EqualTo 0xDEuy)
+    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
 
     // Check that all flags are unchanged (assuming default false)
     Assert.That (cpu.getFlag Flag.Zero, Is.False)

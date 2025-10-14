@@ -10,8 +10,8 @@ open NUnit.Framework
 let ``Bitwise XOR A with itself - xor a`` () =
     // Setup
     let cpu = createCpu [||]
-    cpu.Pc <- 0x100
-    cpu.Memory[0x100] <- 0xAFuy
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xAFuy
     cpu.Registers.A <- 0xABuy
 
     // Execute
