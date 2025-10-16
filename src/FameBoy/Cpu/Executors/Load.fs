@@ -28,9 +28,13 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | LdRegFromByte (reg8, b) -> loadReg8 cpu b reg8
     | LdRegFromWord (reg16, w) -> loadReg16 cpu w reg16
     | LdAtHLFromReg reg8 -> cpu.Memory[cpu.Registers.HL] <- reg8.GetFromCpu cpu
+    | LdAFromAtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
     | LdAFromAtHLDec ->
-        cpu.Memory.[cpu.Registers.HL] <- cpu.Registers.A
+        cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
         cpu.Registers.HL <- cpu.Registers.HL - 1us
     | LdhAtCFromA ->
         let address = 0xFF00us + uint16 cpu.Registers.C
-        cpu.Memory.[address] <- cpu.Registers.A
+        cpu.Memory[address] <- cpu.Registers.A
+    | LdhAtByteFromA b ->
+        let address = 0xFF00us + (uint16 b)
+        cpu.Memory[address] <- cpu.Registers.A

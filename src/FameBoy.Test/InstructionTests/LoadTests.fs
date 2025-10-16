@@ -112,3 +112,50 @@ let ``Load from register (indirect HL) - ld [hl],a`` () =
     Assert.That (cpu.Memory[0xC123us], Is.EqualTo 0x5Auy)
     Assert.That (cpu.Registers.HL, Is.EqualTo 0xC123us)
     Assert.That (cpu.Registers.A, Is.EqualTo 0x5Auy)
+
+[<Test>]
+let ``Load from accumulator (direct 0xFF00+n) - ldh [n],a`` () =
+    // Setup
+    let opcode = 0xE0uy
+    let n = 0x42uy
+    let cpu = createCpu [||]
+
+    cpu.Pc <- 0x100us
+    cpu.Registers.A <- 0xABuy
+    cpu.Memory[0x100us] <- opcode
+    cpu.Memory[0x101us] <- n
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 2)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
+
+    Assert.That (cpu.Memory[0xFF42us], Is.EqualTo 0xABuy)
+    Assert.That (cpu.Pc, Is.EqualTo 0x102us)
+    Assert.That (cpu.Registers.A, Is.EqualTo 0xABuy)
+
+[<Test>]
+let ``Load accumulator (indirect DE) - ld a,[de]`` () =
+    // Setup
+    let opcode = 0x1Auy
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Registers.DE <- 0xC123us
+    cpu.Memory[0x100us] <- opcode
+    cpu.Memory[0xC123us] <- 0x77uy
+    cpu.Registers.A <- 0x00uy // clear A
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+    Assert.That (cpu.Registers.A, Is.EqualTo 0x77uy)
+    Assert.That (cpu.Pc, Is.EqualTo 0x101us)
+
+

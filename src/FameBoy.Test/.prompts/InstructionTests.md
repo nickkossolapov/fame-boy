@@ -34,8 +34,6 @@ let ``Load 16-bit register - ld sp,n16`` () =
     * They can also be written with `cpu.Registers.setBC`, `cpu.Registers.setDE`, `cpu.Registers.setHL`
     * PC and SP can be accessed with `cpu.Pc` and `cpu.Sp`.
     * Additionally, the flags can also be read and written like `cpu.getFlag Flag.Zero` and `cpu.setFlag Flag.Zero true`.
-* Test instructions that span multiple bytes.
-* Test behavior at memory boundaries (e.g., 0xFFFF).
 * Use descriptive names for tests in the format `` `[description] - [assembly]` ``,
   e.g., `` `Load 16-bit register - ld sp,n16` ``.
 * Ensure to validate all side effects, including flags, memory, and registers.
