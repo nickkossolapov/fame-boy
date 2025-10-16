@@ -43,26 +43,38 @@ type Reg16 =
     | HL
     | SP
 
+    member this.GetFromCpu(cpu: Cpu) =
+        match this with
+        | AF -> cpu.Registers.AF
+        | BC -> cpu.Registers.BC
+        | DE -> cpu.Registers.DE
+        | HL -> cpu.Registers.HL
+        | SP -> cpu.Sp
+
 type Condition =
     | Zero
     | NotZero
     | Carry
     | NoCarry
 
-type ArithmeticInstr = IncReg of Reg8
+type ArithmeticInstr = IncReg8 of Reg8
 
 type BitwiseInstr = Bit of uint3 * Reg8
 
-type ControlInstr = JrCond of Condition * int8
+type ControlInstr =
+    | Call of uint16
+    | JrCond of Condition * int8
 
 type LoadInstr =
-    | LdRegFromByte of Reg8 * uint8
-    | LdRegFromWord of Reg16 * uint16
-    | LdAtHLFromReg of Reg8
+    | LdReg8FromByte of Reg8 * uint8
+    | LdReg8FromReg of Reg8 * Reg8
+    | LdReg16FromWord of Reg16 * uint16
+    | LdAtHLFromReg8 of Reg8
     | LdAFromAtDE
     | LdAFromAtHLDec
     | LdhAtCFromA
     | LdhAtByteFromA of uint8
+    | Push of Reg16
 
 type LogicInstr = Xor8 of Reg8
 
@@ -88,7 +100,7 @@ type DecodedInstruction =
 module private LengthsAndCycles =
     let forArithmetic =
         function
-        | IncReg _ -> 1, Fixed 1
+        | IncReg8 _ -> 1, Fixed 1
 
     let forBit =
         function
@@ -96,22 +108,24 @@ module private LengthsAndCycles =
 
     let forControl =
         function
+        | Call _ -> 3, Fixed 6
         | JrCond _ -> 2, Conditional { Met = 3; NotMet = 2 }
 
     let forLoad =
         function
-        | LdRegFromByte _ -> 2, Fixed 2
-        | LdRegFromWord _ -> 3, Fixed 3
-        | LdAtHLFromReg _ -> 1, Fixed 2
+        | LdReg8FromByte _ -> 2, Fixed 2
+        | LdReg8FromReg _ -> 1, Fixed 1
+        | LdReg16FromWord _ -> 3, Fixed 3
+        | LdAtHLFromReg8 _ -> 1, Fixed 2
         | LdAFromAtDE -> 1, Fixed 2
         | LdAFromAtHLDec -> 1, Fixed 2
         | LdhAtCFromA -> 1, Fixed 2
         | LdhAtByteFromA _ -> 2, Fixed 3
+        | Push _ -> 1, Fixed 4
 
     let forLogic =
         function
         | Xor8 _ -> 1, Fixed 1
-
 
 let withLengthAndCycles (instr: Instruction) =
     let length, cycles =

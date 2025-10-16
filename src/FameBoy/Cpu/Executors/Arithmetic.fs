@@ -5,7 +5,7 @@ open FameBoy.Cpu.State
 
 let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
     match instr with
-    | IncReg reg ->
+    | IncReg8 reg ->
         let result = reg.GetFromCpu cpu + 1uy
 
         cpu.setFlag Zero (result = 0uy)

@@ -2,6 +2,7 @@
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
+open FameBoy.Cpu.Utils
 
 let private evaluateCondition (cpu: Cpu) (condition: Condition) =
     match condition with
@@ -12,6 +13,9 @@ let private evaluateCondition (cpu: Cpu) (condition: Condition) =
 
 let executeControl (cpu: Cpu) (instr: ControlInstr) =
     match instr with
+    | Call w ->
+        pushToStack cpu cpu.Pc
+        cpu.Pc <- w
     | JrCond (condition, b) ->
         let shouldJump = evaluateCondition cpu condition
 

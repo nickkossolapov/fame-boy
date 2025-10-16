@@ -43,3 +43,26 @@ let ``Jump relative if not zero, not taken - jr nz,s8`` () =
     Assert.That (instr.MCycles, Is.EqualTo (Conditional { Met = 3; NotMet = 2 }))
 
     Assert.That (cpu.Pc, Is.EqualTo 0x102) // PC just advances past instruction
+
+[<Test>]
+let ``Call function - call nn`` () =
+    // Setup
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Sp <- 0xFFFEus
+    cpu.Memory[0x100us] <- 0xCDuy // CALL nn opcode
+    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
+    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 3)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 6))
+
+    Assert.That (cpu.Pc, Is.EqualTo 0x1234us)
+    Assert.That (cpu.Sp, Is.EqualTo 0xFFFCus)
+    Assert.That (cpu.Memory[0xFFFDus], Is.EqualTo 0x01uy) // MSB of 0x103
+    Assert.That (cpu.Memory[0xFFFCus], Is.EqualTo 0x03uy) // LSB of 0x103

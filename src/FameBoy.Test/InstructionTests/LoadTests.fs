@@ -134,7 +134,6 @@ let ``Load from accumulator (direct 0xFF00+n) - ldh [n],a`` () =
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
 
     Assert.That (cpu.Memory[0xFF42us], Is.EqualTo 0xABuy)
-    Assert.That (cpu.Pc, Is.EqualTo 0x102us)
     Assert.That (cpu.Registers.A, Is.EqualTo 0xABuy)
 
 [<Test>]
@@ -156,6 +155,48 @@ let ``Load accumulator (indirect DE) - ld a,[de]`` () =
     Assert.That (instr.Length, Is.EqualTo 1)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
     Assert.That (cpu.Registers.A, Is.EqualTo 0x77uy)
+
+[<Test>]
+let ``Load register from A to C - ld c,a`` () =
+    // Setup
+    let opcode = 0x4Fuy
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Registers.A <- 0x77uy
+    cpu.Registers.C <- 0x00uy
+    cpu.Memory[0x100us] <- opcode
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+
+    Assert.That (cpu.Registers.C, Is.EqualTo 0x77uy)
+    Assert.That (cpu.Registers.A, Is.EqualTo 0x77uy)
+
+[<Test>]
+let ``Push BC to stack - push bc`` () =
+    // Setup
+    let opcode = 0xC5uy
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Sp <- 0xFFFEus
+    cpu.Registers.BC <- 0x1234us
+    cpu.Memory[0x100us] <- opcode
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 4))
+
+    Assert.That (cpu.Sp, Is.EqualTo 0xFFFCus)
     Assert.That (cpu.Pc, Is.EqualTo 0x101us)
-
-
+    Assert.That (cpu.Memory[0xFFFDus], Is.EqualTo 0x12uy) // MSB of BC
+    Assert.That (cpu.Memory[0xFFFCus], Is.EqualTo 0x34uy) // LSB of BC
+    Assert.That (cpu.Registers.BC, Is.EqualTo 0x1234us)

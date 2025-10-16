@@ -30,8 +30,7 @@ let ``Load 16-bit register - ld sp,n16`` () =
 * The requested opcode is inserted at 0x100.
 * Any data needed for the test may be inserted into any location in memory or any of the registers.
     * A through F can be accessed like `cpu.Registers.A`.
-    * The double width registers can be accessed with `cpu.Registers.BC`, `cpu.Registers.DE`, `cpu.Registers.HL`
-    * They can also be written with `cpu.Registers.setBC`, `cpu.Registers.setDE`, `cpu.Registers.setHL`
+    * The double width registers can be accessed with `cpu.Registers.BC`, `cpu.Registers.DE`, `cpu.Registers.HL`.
     * PC and SP can be accessed with `cpu.Pc` and `cpu.Sp`.
     * Additionally, the flags can also be read and written like `cpu.getFlag Flag.Zero` and `cpu.setFlag Flag.Zero true`.
 * Use descriptive names for tests in the format `` `[description] - [assembly]` ``,
