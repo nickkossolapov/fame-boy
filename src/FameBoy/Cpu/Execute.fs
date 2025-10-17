@@ -12,6 +12,7 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
     cpu.Pc <- cpu.Pc + uint16 instr.Length
 
     match instr.Instruction with
+    | Nop -> ()
     | Arithmetic i -> executeArithmetic cpu i
     | Bitwise i -> executeBitwise cpu i
     | Control i -> executeControl cpu i

@@ -1,6 +1,4 @@
-﻿# filepath: d:\personal\fame-boy\src\FameBoy.Test\Prompts\InstructionTests.md
-
-Your goal is to create unit tests for a Game Boy emulator in F# using NUnit. The test will have the general body like:
+﻿Your goal is to create unit tests for a Game Boy emulator in F# using NUnit. The test will have the general body like:
 
 ``` fsharp
 [<Test>]

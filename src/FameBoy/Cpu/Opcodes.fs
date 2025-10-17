@@ -275,17 +275,17 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
         ((uint16 memory[pc + 2us]) <<< 8) + uint16 memory[pc + 1us]
 
     match opcode with
-    | 0x00 -> failwith "0x00 <nop> not implemented"
-    | 0x01 -> failwith "0x01 <ld bc,d16> not implemented"
-    | 0x02 -> failwith "0x02 <ld (bc),a> not implemented"
+    | 0x00 -> Nop
+    | 0x01 -> LdReg16FromWord (BC, withUint16 ()) |> Load
+    | 0x02 -> LdAtBCFromA |> Load
     | 0x03 -> failwith "0x03 <inc bc> not implemented"
     | 0x04 -> failwith "0x04 <inc b> not implemented"
     | 0x05 -> DecReg8 B |> Arithmetic
     | 0x06 -> LdReg8FromByte (B, withUint8 ()) |> Load
     | 0x07 -> failwith "0x07 <rlca> not implemented"
-    | 0x08 -> failwith "0x08 <ld (a16),sp> not implemented"
+    | 0x08 -> LdAtWordFromSP (withUint16 ()) |> Load
     | 0x09 -> failwith "0x09 <add hl,bc> not implemented"
-    | 0x0A -> failwith "0x0A <ld a,(bc)> not implemented"
+    | 0x0A -> LdAFromAtBC |> Load
     | 0x0B -> failwith "0x0B <dec bc> not implemented"
     | 0x0C -> IncReg8 C |> Arithmetic
     | 0x0D -> failwith "0x0D <dec c> not implemented"
@@ -293,11 +293,11 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x0F -> failwith "0x0F <rrca> not implemented"
     | 0x10 -> failwith "0x10 <stop 0> not implemented"
     | 0x11 -> LdReg16FromWord (DE, withUint16 ()) |> Load
-    | 0x12 -> failwith "0x12 <ld (de),a> not implemented"
+    | 0x12 -> LdAtDEFromA |> Load
     | 0x13 -> failwith "0x13 <inc de> not implemented"
     | 0x14 -> failwith "0x14 <inc d> not implemented"
     | 0x15 -> failwith "0x15 <dec d> not implemented"
-    | 0x16 -> failwith "0x16 <ld d,d8> not implemented"
+    | 0x16 -> LdReg8FromByte (D, withUint8 ()) |> Load
     | 0x17 -> RlA |> Bitwise
     | 0x18 -> failwith "0x18 <jr r8> not implemented"
     | 0x19 -> failwith "0x19 <add hl,de> not implemented"
@@ -305,104 +305,104 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x1B -> failwith "0x1B <dec de> not implemented"
     | 0x1C -> failwith "0x1C <inc e> not implemented"
     | 0x1D -> failwith "0x1D <dec e> not implemented"
-    | 0x1E -> failwith "0x1E <ld e,d8> not implemented"
+    | 0x1E -> LdReg8FromByte (E, withUint8 ()) |> Load
     | 0x1F -> failwith "0x1F <rra> not implemented"
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
     | 0x21 -> LdReg16FromWord (HL, withUint16 ()) |> Load
-    | 0x22 -> failwith "0x22 <ld (hl+),a> not implemented"
+    | 0x22 -> LdAtHLIncFromA |> Load
     | 0x23 -> failwith "0x23 <inc hl> not implemented"
     | 0x24 -> failwith "0x24 <inc h> not implemented"
     | 0x25 -> failwith "0x25 <dec h> not implemented"
-    | 0x26 -> failwith "0x26 <ld h,d8> not implemented"
+    | 0x26 -> LdReg8FromByte (H, withUint8 ()) |> Load
     | 0x27 -> failwith "0x27 <daa> not implemented"
     | 0x28 -> failwith "0x28 <jr z,r8> not implemented"
     | 0x29 -> failwith "0x29 <add hl,hl> not implemented"
-    | 0x2A -> failwith "0x2A <ld a,(hl+)> not implemented"
+    | 0x2A -> LdAFromAtHLInc |> Load
     | 0x2B -> failwith "0x2B <dec hl> not implemented"
     | 0x2C -> failwith "0x2C <inc l> not implemented"
     | 0x2D -> failwith "0x2D <dec l> not implemented"
-    | 0x2E -> failwith "0x2E <ld l,d8> not implemented"
+    | 0x2E -> LdReg8FromByte (L, withUint8 ()) |> Load
     | 0x2F -> failwith "0x2F <cpl> not implemented"
     | 0x30 -> failwith "0x30 <jr nc,r8> not implemented"
     | 0x31 -> LdReg16FromWord (SP, withUint16 ()) |> Load
-    | 0x32 -> LdAFromAtHLDec |> Load
+    | 0x32 -> LdAtHLDecFromA |> Load
     | 0x33 -> failwith "0x33 <inc sp> not implemented"
     | 0x34 -> failwith "0x34 <inc (hl)> not implemented"
     | 0x35 -> failwith "0x35 <dec (hl)> not implemented"
-    | 0x36 -> failwith "0x36 <ld (hl),d8> not implemented"
+    | 0x36 -> LdAtHLFromByte (withUint8 ()) |> Load
     | 0x37 -> failwith "0x37 <scf> not implemented"
     | 0x38 -> failwith "0x38 <jr c,r8> not implemented"
     | 0x39 -> failwith "0x39 <add hl,sp> not implemented"
-    | 0x3A -> failwith "0x3A <ld a,(hl-)> not implemented"
+    | 0x3A -> LdAFromAtHLDec |> Load
     | 0x3B -> failwith "0x3B <dec sp> not implemented"
     | 0x3C -> failwith "0x3C <inc a> not implemented"
     | 0x3D -> failwith "0x3D <dec a> not implemented"
     | 0x3E -> LdReg8FromByte (A, withUint8 ()) |> Load
     | 0x3F -> failwith "0x3F <ccf> not implemented"
-    | 0x40 -> failwith "0x40 <ld b,b> not implemented"
-    | 0x41 -> failwith "0x41 <ld b,c> not implemented"
-    | 0x42 -> failwith "0x42 <ld b,d> not implemented"
-    | 0x43 -> failwith "0x43 <ld b,e> not implemented"
-    | 0x44 -> failwith "0x44 <ld b,h> not implemented"
-    | 0x45 -> failwith "0x45 <ld b,l> not implemented"
-    | 0x46 -> failwith "0x46 <ld b,(hl)> not implemented"
-    | 0x47 -> failwith "0x47 <ld b,a> not implemented"
-    | 0x48 -> failwith "0x48 <ld c,b> not implemented"
-    | 0x49 -> failwith "0x49 <ld c,c> not implemented"
-    | 0x4A -> failwith "0x4A <ld c,d> not implemented"
-    | 0x4B -> failwith "0x4B <ld c,e> not implemented"
-    | 0x4C -> failwith "0x4C <ld c,h> not implemented"
-    | 0x4D -> failwith "0x4D <ld c,l> not implemented"
-    | 0x4E -> failwith "0x4E <ld c,(hl)> not implemented"
-    | 0x4F -> LdReg8FromReg (C, A) |> Load
-    | 0x50 -> failwith "0x50 <ld d,b> not implemented"
-    | 0x51 -> failwith "0x51 <ld d,c> not implemented"
-    | 0x52 -> failwith "0x52 <ld d,d> not implemented"
-    | 0x53 -> failwith "0x53 <ld d,e> not implemented"
-    | 0x54 -> failwith "0x54 <ld d,h> not implemented"
-    | 0x55 -> failwith "0x55 <ld d,l> not implemented"
-    | 0x56 -> failwith "0x56 <ld d,(hl)> not implemented"
-    | 0x57 -> failwith "0x57 <ld d,a> not implemented"
-    | 0x58 -> failwith "0x58 <ld e,b> not implemented"
-    | 0x59 -> failwith "0x59 <ld e,c> not implemented"
-    | 0x5A -> failwith "0x5A <ld e,d> not implemented"
-    | 0x5B -> failwith "0x5B <ld e,e> not implemented"
-    | 0x5C -> failwith "0x5C <ld e,h> not implemented"
-    | 0x5D -> failwith "0x5D <ld e,l> not implemented"
-    | 0x5E -> failwith "0x5E <ld e,(hl)> not implemented"
-    | 0x5F -> failwith "0x5F <ld e,a> not implemented"
-    | 0x60 -> failwith "0x60 <ld h,b> not implemented"
-    | 0x61 -> failwith "0x61 <ld h,c> not implemented"
-    | 0x62 -> failwith "0x62 <ld h,d> not implemented"
-    | 0x63 -> failwith "0x63 <ld h,e> not implemented"
-    | 0x64 -> failwith "0x64 <ld h,h> not implemented"
-    | 0x65 -> failwith "0x65 <ld h,l> not implemented"
-    | 0x66 -> failwith "0x66 <ld h,(hl)> not implemented"
-    | 0x67 -> failwith "0x67 <ld h,a> not implemented"
-    | 0x68 -> failwith "0x68 <ld l,b> not implemented"
-    | 0x69 -> failwith "0x69 <ld l,c> not implemented"
-    | 0x6A -> failwith "0x6A <ld l,d> not implemented"
-    | 0x6B -> failwith "0x6B <ld l,e> not implemented"
-    | 0x6C -> failwith "0x6C <ld l,h> not implemented"
-    | 0x6D -> failwith "0x6D <ld l,l> not implemented"
-    | 0x6E -> failwith "0x6E <ld l,(hl)> not implemented"
-    | 0x6F -> failwith "0x6F <ld l,a> not implemented"
-    | 0x70 -> failwith "0x70 <ld (hl),b> not implemented"
-    | 0x71 -> failwith "0x71 <ld (hl),c> not implemented"
-    | 0x72 -> failwith "0x72 <ld (hl),d> not implemented"
-    | 0x73 -> failwith "0x73 <ld (hl),e> not implemented"
-    | 0x74 -> failwith "0x74 <ld (hl),h> not implemented"
-    | 0x75 -> failwith "0x75 <ld (hl),l> not implemented"
+    | 0x40 -> LdReg8FromReg8 (B, B) |> Load
+    | 0x41 -> LdReg8FromReg8 (B, C) |> Load
+    | 0x42 -> LdReg8FromReg8 (B, D) |> Load
+    | 0x43 -> LdReg8FromReg8 (B, E) |> Load
+    | 0x44 -> LdReg8FromReg8 (B, H) |> Load
+    | 0x45 -> LdReg8FromReg8 (B, L) |> Load
+    | 0x46 -> LdReg8FromAtHL B |> Load
+    | 0x47 -> LdReg8FromReg8 (B, A) |> Load
+    | 0x48 -> LdReg8FromReg8 (C, B) |> Load
+    | 0x49 -> LdReg8FromReg8 (C, C) |> Load
+    | 0x4A -> LdReg8FromReg8 (C, D) |> Load
+    | 0x4B -> LdReg8FromReg8 (C, E) |> Load
+    | 0x4C -> LdReg8FromReg8 (C, H) |> Load
+    | 0x4D -> LdReg8FromReg8 (C, L) |> Load
+    | 0x4E -> LdReg8FromAtHL C |> Load
+    | 0x4F -> LdReg8FromReg8 (C, A) |> Load
+    | 0x50 -> LdReg8FromReg8 (D, B) |> Load
+    | 0x51 -> LdReg8FromReg8 (D, C) |> Load
+    | 0x52 -> LdReg8FromReg8 (D, D) |> Load
+    | 0x53 -> LdReg8FromReg8 (D, E) |> Load
+    | 0x54 -> LdReg8FromReg8 (D, H) |> Load
+    | 0x55 -> LdReg8FromReg8 (D, L) |> Load
+    | 0x56 -> LdReg8FromAtHL D |> Load
+    | 0x57 -> LdReg8FromReg8 (D, A) |> Load
+    | 0x58 -> LdReg8FromReg8 (E, B) |> Load
+    | 0x59 -> LdReg8FromReg8 (E, C) |> Load
+    | 0x5A -> LdReg8FromReg8 (E, D) |> Load
+    | 0x5B -> LdReg8FromReg8 (E, E) |> Load
+    | 0x5C -> LdReg8FromReg8 (E, H) |> Load
+    | 0x5D -> LdReg8FromReg8 (E, L) |> Load
+    | 0x5E -> LdReg8FromAtHL E |> Load
+    | 0x5F -> LdReg8FromReg8 (E, A) |> Load
+    | 0x60 -> LdReg8FromReg8 (H, B) |> Load
+    | 0x61 -> LdReg8FromReg8 (H, C) |> Load
+    | 0x62 -> LdReg8FromReg8 (H, D) |> Load
+    | 0x63 -> LdReg8FromReg8 (H, E) |> Load
+    | 0x64 -> LdReg8FromReg8 (H, H) |> Load
+    | 0x65 -> LdReg8FromReg8 (H, L) |> Load
+    | 0x66 -> LdReg8FromAtHL H |> Load
+    | 0x67 -> LdReg8FromReg8 (H, A) |> Load
+    | 0x68 -> LdReg8FromReg8 (L, B) |> Load
+    | 0x69 -> LdReg8FromReg8 (L, C) |> Load
+    | 0x6A -> LdReg8FromReg8 (L, D) |> Load
+    | 0x6B -> LdReg8FromReg8 (L, E) |> Load
+    | 0x6C -> LdReg8FromReg8 (L, H) |> Load
+    | 0x6D -> LdReg8FromReg8 (L, L) |> Load
+    | 0x6E -> LdReg8FromAtHL L |> Load
+    | 0x6F -> LdReg8FromReg8 (L, A) |> Load
+    | 0x70 -> LdAtHLFromReg8 B |> Load
+    | 0x71 -> LdAtHLFromReg8 C |> Load
+    | 0x72 -> LdAtHLFromReg8 D |> Load
+    | 0x73 -> LdAtHLFromReg8 E |> Load
+    | 0x74 -> LdAtHLFromReg8 H |> Load
+    | 0x75 -> LdAtHLFromReg8 L |> Load
     | 0x76 -> failwith "0x76 <halt> not implemented"
     | 0x77 -> LdAtHLFromReg8 A |> Load
-    | 0x78 -> failwith "0x78 <ld a,b> not implemented"
-    | 0x79 -> failwith "0x79 <ld a,c> not implemented"
-    | 0x7A -> failwith "0x7A <ld a,d> not implemented"
-    | 0x7B -> failwith "0x7B <ld a,e> not implemented"
-    | 0x7C -> failwith "0x7C <ld a,h> not implemented"
-    | 0x7D -> failwith "0x7D <ld a,l> not implemented"
-    | 0x7E -> failwith "0x7E <ld a,(hl)> not implemented"
-    | 0x7F -> failwith "0x7F <ld a,a> not implemented"
+    | 0x78 -> LdReg8FromReg8 (A, B) |> Load
+    | 0x79 -> LdReg8FromReg8 (A, C) |> Load
+    | 0x7A -> LdReg8FromReg8 (A, D) |> Load
+    | 0x7B -> LdReg8FromReg8 (A, E) |> Load
+    | 0x7C -> LdReg8FromReg8 (A, H) |> Load
+    | 0x7D -> LdReg8FromReg8 (A, L) |> Load
+    | 0x7E -> LdReg8FromAtHL A |> Load
+    | 0x7F -> LdReg8FromReg8 (A, A) |> Load
     | 0x80 -> failwith "0x80 <add a,b> not implemented"
     | 0x81 -> failwith "0x81 <add a,c> not implemented"
     | 0x82 -> failwith "0x82 <add a,d> not implemented"
@@ -484,10 +484,10 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xCE -> failwith "0xCE <adc a,d8> not implemented"
     | 0xCF -> failwith "0xCF <rst 08h> not implemented"
     | 0xD0 -> failwith "0xD0 <ret nc> not implemented"
-    | 0xD1 -> failwith "0xD1 <pop de> not implemented"
+    | 0xD1 -> Pop DE |> Load
     | 0xD2 -> failwith "0xD2 <jp nc,a16> not implemented"
     | 0xD4 -> failwith "0xD4 <call nc,a16> not implemented"
-    | 0xD5 -> failwith "0xD5 <push de> not implemented"
+    | 0xD5 -> Push DE |> Load
     | 0xD6 -> failwith "0xD6 <sub d8> not implemented"
     | 0xD7 -> failwith "0xD7 <rst 10h> not implemented"
     | 0xD8 -> failwith "0xD8 <ret c> not implemented"
@@ -497,26 +497,26 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xDE -> failwith "0xDE <sbc a,d8> not implemented"
     | 0xDF -> failwith "0xDF <rst 18h> not implemented"
     | 0xE0 -> LdhAtByteFromA (withUint8 ()) |> Load
-    | 0xE1 -> failwith "0xE1 <pop hl> not implemented"
+    | 0xE1 -> Pop HL |> Load
     | 0xE2 -> LdhAtCFromA |> Load
-    | 0xE5 -> failwith "0xE5 <push hl> not implemented"
+    | 0xE5 -> Push HL |> Load
     | 0xE6 -> failwith "0xE6 <and d8> not implemented"
     | 0xE7 -> failwith "0xE7 <rst 20h> not implemented"
     | 0xE8 -> failwith "0xE8 <add sp,r8> not implemented"
     | 0xE9 -> failwith "0xE9 <jp (hl)> not implemented"
-    | 0xEA -> failwith "0xEA <ld (a16),a> not implemented"
+    | 0xEA -> LdAtWordFromA (withUint16 ()) |> Load
     | 0xEE -> failwith "0xEE <xor d8> not implemented"
     | 0xEF -> failwith "0xEF <rst 28h> not implemented"
-    | 0xF0 -> failwith "0xF0 <ldh a,(a8)> not implemented"
-    | 0xF1 -> failwith "0xF1 <pop af> not implemented"
-    | 0xF2 -> failwith "0xF2 <ld a,(c)> not implemented"
+    | 0xF0 -> LdhAFromAByte (withUint8 ()) |> Load
+    | 0xF1 -> Pop AF |> Load
+    | 0xF2 -> LdhAFromAtC |> Load
     | 0xF3 -> failwith "0xF3 <di> not implemented"
-    | 0xF5 -> failwith "0xF5 <push af> not implemented"
+    | 0xF5 -> Push AF |> Load
     | 0xF6 -> failwith "0xF6 <or d8> not implemented"
     | 0xF7 -> failwith "0xF7 <rst 30h> not implemented"
-    | 0xF8 -> failwith "0xF8 <ld hl,sp+r8> not implemented"
-    | 0xF9 -> failwith "0xF9 <ld sp,hl> not implemented"
-    | 0xFA -> failwith "0xFA <ld a,(a16)> not implemented"
+    | 0xF8 -> LdHLFromSPe (withInt8 ()) |> Load
+    | 0xF9 -> LdSPFromHL |> Load
+    | 0xFA -> LdAFromAtWord (withUint16 ()) |> Load
     | 0xFB -> failwith "0xFB <ei> not implemented"
     | 0xFE -> failwith "0xFE <cp d8> not implemented"
     | 0xFF -> failwith "0xFF <rst 38h> not implemented"

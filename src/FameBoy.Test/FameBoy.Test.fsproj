@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Content Include=".prompts\InstructionTests.md" />
+        <Content Include=".prompts\OpcodeTests.md" />
         <Compile Include="OpcodeTests.fs" />
         <Compile Include="InstructionTests\ArithmeticTests.fs" />
         <Compile Include="InstructionTests\BitwiseTests.fs" />

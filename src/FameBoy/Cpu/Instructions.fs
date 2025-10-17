@@ -79,20 +79,36 @@ type ControlInstr =
     | JrCond of Condition * int8
 
 type LoadInstr =
+    | LdReg8FromReg8 of Reg8 * Reg8
     | LdReg8FromByte of Reg8 * uint8
-    | LdReg8FromReg of Reg8 * Reg8
-    | LdReg16FromWord of Reg16 * uint16
+    | LdReg8FromAtHL of Reg8
     | LdAtHLFromReg8 of Reg8
+    | LdAtHLFromByte of uint8
+    | LdAFromAtBC
     | LdAFromAtDE
-    | LdAFromAtHLDec
+    | LdAtBCFromA
+    | LdAtDEFromA
+    | LdAFromAtWord of uint16
+    | LdAtWordFromA of uint16
+    | LdhAFromAtC
     | LdhAtCFromA
+    | LdhAFromAByte of uint8
     | LdhAtByteFromA of uint8
+    | LdAFromAtHLDec
+    | LdAtHLDecFromA
+    | LdAFromAtHLInc
+    | LdAtHLIncFromA
+    | LdReg16FromWord of Reg16 * uint16
+    | LdAtWordFromSP of uint16
+    | LdSPFromHL
     | Push of Reg16
     | Pop of Reg16
+    | LdHLFromSPe of int8
 
 type LogicInstr = Xor8 of Reg8
 
 type Instruction =
+    | Nop
     | Arithmetic of ArithmeticInstr
     | Bitwise of BitwiseInstr
     | Control of ControlInstr
@@ -130,16 +146,31 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
+        | LdReg8FromReg8 _ -> 1, Fixed 1
         | LdReg8FromByte _ -> 2, Fixed 2
-        | LdReg8FromReg _ -> 1, Fixed 1
-        | LdReg16FromWord _ -> 3, Fixed 3
+        | LdReg8FromAtHL _ -> 1, Fixed 2
         | LdAtHLFromReg8 _ -> 1, Fixed 2
+        | LdAtHLFromByte _ -> 2, Fixed 3
+        | LdAFromAtBC -> 1, Fixed 2
         | LdAFromAtDE -> 1, Fixed 2
-        | LdAFromAtHLDec -> 1, Fixed 2
+        | LdAtBCFromA -> 1, Fixed 2
+        | LdAtDEFromA -> 1, Fixed 2
+        | LdAFromAtWord _ -> 3, Fixed 4
+        | LdAtWordFromA _ -> 3, Fixed 4
+        | LdhAFromAtC -> 1, Fixed 2
         | LdhAtCFromA -> 1, Fixed 2
         | LdhAtByteFromA _ -> 2, Fixed 3
+        | LdhAFromAByte _ -> 2, Fixed 3
+        | LdAFromAtHLDec -> 1, Fixed 2
+        | LdAtHLDecFromA -> 1, Fixed 2
+        | LdAFromAtHLInc -> 1, Fixed 2
+        | LdAtHLIncFromA -> 1, Fixed 2
+        | LdReg16FromWord _ -> 3, Fixed 3
+        | LdAtWordFromSP _ -> 3, Fixed 5
+        | LdSPFromHL -> 1, Fixed 2
         | Push _ -> 1, Fixed 4
         | Pop _ -> 1, Fixed 3
+        | LdHLFromSPe _ -> 2, Fixed 3
 
     let forLogic =
         function
@@ -148,6 +179,7 @@ module private LengthsAndCycles =
 let withLengthAndCycles (instr: Instruction) =
     let length, cycles =
         match instr with
+        | Nop -> 1, Fixed 1
         | Arithmetic arithmeticInstr -> LengthsAndCycles.forArithmetic arithmeticInstr
         | Bitwise bitInstr -> LengthsAndCycles.forBit bitInstr
         | Control controlInstr -> LengthsAndCycles.forControl controlInstr
