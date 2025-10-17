@@ -126,9 +126,7 @@ let instructionMappingCases =
        0xF8, "ld hl,sp+r8", LdHLFromSPe 0x01y |> Load
        0xF9, "ld sp,hl", LdSPFromHL |> Load
        0xFA, "ld a,(a16)", LdAFromAtWord 0x0101us |> Load |]
-    |> Array.map (fun (opcode, label, instr) ->
-        TestCaseData(uint8 opcode, instr)
-            .SetName $"Check 0x{opcode:X2} to {label} mapping")
+    |> Array.map (fun (opcode, label, instr) -> TestCaseData(uint8 opcode, instr).SetName $"Check 0x{opcode:X2} to {label} mapping")
 
 [<Test>]
 [<TestCaseSource(nameof instructionMappingCases)>]
