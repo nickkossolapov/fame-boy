@@ -26,10 +26,10 @@ let private loadReg16 (cpu: Cpu) (value: uint16) =
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | LdReg8FromByte (reg8, b) -> loadReg8 cpu b reg8
-    | LdReg16FromWord (reg16, w) -> loadReg16 cpu w reg16
+    | LdReg8FromByte (reg, b) -> loadReg8 cpu b reg
+    | LdReg16FromWord (reg, w) -> loadReg16 cpu w reg
     | LdReg8FromReg (regTo, regFrom) -> loadReg8 cpu (regFrom.GetFromCpu cpu) regTo
-    | LdAtHLFromReg8 reg8 -> cpu.Memory[cpu.Registers.HL] <- reg8.GetFromCpu cpu
+    | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFromCpu cpu
     | LdAFromAtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
     | LdAFromAtHLDec ->
         cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
@@ -40,4 +40,5 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | LdhAtByteFromA b ->
         let address = 0xFF00us + (uint16 b)
         cpu.Memory[address] <- cpu.Registers.A
-    | Push reg16 -> pushToStack cpu (reg16.GetFromCpu cpu)
+    | Push reg -> pushToStack cpu (reg.GetFromCpu cpu)
+    | Pop reg -> popFromStack cpu reg

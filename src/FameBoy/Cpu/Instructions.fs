@@ -51,13 +51,23 @@ type Reg16 =
         | HL -> cpu.Registers.HL
         | SP -> cpu.Sp
 
+    member this.SetToCpu (cpu: Cpu) (value: uint16) =
+        match this with
+        | AF -> cpu.Registers.AF <- value
+        | BC -> cpu.Registers.BC <- value
+        | DE -> cpu.Registers.DE <- value
+        | HL -> cpu.Registers.HL <- value
+        | SP -> cpu.Sp <- value
+
 type Condition =
     | Zero
     | NotZero
     | Carry
     | NoCarry
 
-type ArithmeticInstr = IncReg8 of Reg8
+type ArithmeticInstr =
+    | IncReg8 of Reg8
+    | DecReg8 of Reg8
 
 type BitwiseInstr =
     | Bit of uint3 * Reg8
@@ -78,6 +88,7 @@ type LoadInstr =
     | LdhAtCFromA
     | LdhAtByteFromA of uint8
     | Push of Reg16
+    | Pop of Reg16
 
 type LogicInstr = Xor8 of Reg8
 
@@ -104,6 +115,7 @@ module private LengthsAndCycles =
     let forArithmetic =
         function
         | IncReg8 _ -> 1, Fixed 1
+        | DecReg8 _ -> 1, Fixed 1
 
     let forBit =
         function
@@ -127,6 +139,7 @@ module private LengthsAndCycles =
         | LdhAtCFromA -> 1, Fixed 2
         | LdhAtByteFromA _ -> 2, Fixed 3
         | Push _ -> 1, Fixed 4
+        | Pop _ -> 1, Fixed 3
 
     let forLogic =
         function

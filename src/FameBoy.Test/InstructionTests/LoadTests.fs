@@ -196,7 +196,29 @@ let ``Push BC to stack - push bc`` () =
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 4))
 
     Assert.That (cpu.Sp, Is.EqualTo 0xFFFCus)
-    Assert.That (cpu.Pc, Is.EqualTo 0x101us)
     Assert.That (cpu.Memory[0xFFFDus], Is.EqualTo 0x12uy) // MSB of BC
     Assert.That (cpu.Memory[0xFFFCus], Is.EqualTo 0x34uy) // LSB of BC
+    Assert.That (cpu.Registers.BC, Is.EqualTo 0x1234us)
+
+[<Test>]
+let ``Pop from stack to BC - pop bc`` () =
+    // Setup
+    let opcode = 0xC1uy
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Sp <- 0xFFFCus
+    cpu.Registers.BC <- 0x0000us
+    cpu.Memory[0x100us] <- opcode
+    cpu.Memory[0xFFFCus] <- 0x34uy // LSB
+    cpu.Memory[0xFFFDus] <- 0x12uy // MSB
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
+
+    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
     Assert.That (cpu.Registers.BC, Is.EqualTo 0x1234us)
