@@ -59,7 +59,10 @@ type Condition =
 
 type ArithmeticInstr = IncReg8 of Reg8
 
-type BitwiseInstr = Bit of uint3 * Reg8
+type BitwiseInstr =
+    | Bit of uint3 * Reg8
+    | RlA
+    | RlReg8 of Reg8
 
 type ControlInstr =
     | Call of uint16
@@ -105,6 +108,8 @@ module private LengthsAndCycles =
     let forBit =
         function
         | Bit _ -> 2, Fixed 2
+        | RlReg8 _ -> 2, Fixed 2
+        | RlA -> 1, Fixed 1
 
     let forControl =
         function

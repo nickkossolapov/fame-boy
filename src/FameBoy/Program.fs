@@ -4,7 +4,7 @@ open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 
 let readRom path = File.ReadAllBytes path
-let bytes = readRom "D:/gb/bootroms/dmg_boot.bin"
+let bytes = readRom "D:/personal/gb/bootroms/dmg_boot.bin"
 
 let headerBitmapCheck = // Needed to test boot without loading a rom. Please don't sue me Nintendo
     [| 0xCE

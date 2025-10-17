@@ -8,7 +8,9 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
     | IncReg8 reg ->
         let result = reg.GetFromCpu cpu + 1uy
 
-        cpu.setFlag Zero (result = 0uy)
-        cpu.setFlag Subtract false
-        cpu.setFlag HalfCarry ((reg.GetFromCpu cpu &&& 0xFuy) = 0xFuy)
+        cpu.setFlags
+            [ Zero, result = 0uy
+              Subtract, false
+              HalfCarry, (reg.GetFromCpu cpu &&& 0xFuy) = 0xFuy ]
+
         reg.SetToCpu cpu result

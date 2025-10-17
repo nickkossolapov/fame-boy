@@ -8,6 +8,7 @@ let private fetchAndDecode2Byte (memory: Memory) (pc: uint16) =
 
     match opcode with
     | 0x7C -> Bit (7uy, H) |> Bitwise
+    | 0x11 -> RlReg8 C |> Bitwise
     | _ -> failwith $"There are no unused 2-byte opcodes. {opcode:X2} is unimplemented."
 
 let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
@@ -24,6 +25,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x0C -> IncReg8 C |> Arithmetic
     | 0x0E -> LdReg8FromByte (C, withUint8 ()) |> Load
     | 0x11 -> LdReg16FromWord (DE, withUint16 ()) |> Load
+    | 0x17 -> RlA |> Bitwise
     | 0x1A -> LdAFromAtDE |> Load
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
     | 0x21 -> LdReg16FromWord (HL, withUint16 ()) |> Load

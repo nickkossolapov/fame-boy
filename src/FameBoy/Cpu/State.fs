@@ -84,6 +84,13 @@ type Cpu =
 
     member this.getFlag flag = Flags.getFlag flag this.Registers.F
 
+    member this.getFlagBit flag =
+        if (Flags.getFlag flag this.Registers.F) then 1uy else 0uy
+
+    member this.setFlags(flags: (Flag * bool) list) =
+        for flag, value in flags do
+            this.setFlag flag value
+
     /// <summary>
     /// Sets the F register to the given 4-bit value (only last 4 bits of the input int are used).
     /// Bits are in the order ZNHC (zero, negative, half-carry, carry).
