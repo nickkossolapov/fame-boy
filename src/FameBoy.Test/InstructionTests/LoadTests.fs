@@ -261,6 +261,26 @@ let ``Load accumulator (indirect 0xFF00+C) - ldh a,(c)`` () =
     Assert.That (cpu.Registers.A, Is.EqualTo 0xDEuy)
 
 [<Test>]
+let ``Load from accumulator (indirect 0xFF00+C) - ldh (c),a`` () =
+    // Setup
+    let opcode = 0xE2uy
+    let cpu = createCpu [||]
+
+    cpu.Pc <- 0x100us
+    cpu.Registers.A <- 0xDEuy
+    cpu.Registers.C <- 0x80uy
+    cpu.Memory[0x100us] <- opcode
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+    Assert.That (cpu.Memory[0xFF80us], Is.EqualTo 0xDEuy)
+    
+[<Test>]
 let ``Load accumulator (direct 0xFF00+n) - ldh a,(n)`` () =
     // Setup
     let opcode = 0xF0uy

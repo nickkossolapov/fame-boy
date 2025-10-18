@@ -11,7 +11,7 @@ let getWordFromMemory (memory: Memory) (p: uint16) =
 let popFromStack (cpu: Cpu) (reg: Reg16) =
     let value = getWordFromMemory cpu.Memory cpu.Sp
 
-    reg.SetToCpu cpu value
+    reg.SetTo cpu value
     cpu.Sp <- cpu.Sp + 2us
 
 let pushToStack (cpu: Cpu) (value: uint16) =

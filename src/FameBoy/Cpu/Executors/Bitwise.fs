@@ -7,7 +7,7 @@ open FameBoy.Cpu.State
 let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     match instr with
     | Bit (u3, reg) ->
-        let regVal = reg.GetFromCpu cpu
+        let regVal = reg.GetFrom cpu
         let bitIsZero = ((regVal >>> (int u3)) &&& 1uy) = 0uy
 
         cpu.setFlags [ Zero, bitIsZero; Subtract, false; HalfCarry, true ]
@@ -18,10 +18,10 @@ let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
         cpu.Registers.A <- rotated
         cpu.setFlags [ Zero, false; Subtract, false; HalfCarry, false; Carry, newCarry <> 0uy ]
     | RlReg8 reg ->
-        let rotated = uint8 ((reg.GetFromCpu cpu) <<< 1) + cpu.getFlagBit Carry
-        let newCarry = (reg.GetFromCpu cpu) >>> 7 &&& 1uy
+        let rotated = uint8 ((reg.GetFrom cpu) <<< 1) + cpu.getFlagBit Carry
+        let newCarry = (reg.GetFrom cpu) >>> 7 &&& 1uy
 
-        reg.SetToCpu cpu rotated
+        reg.SetTo cpu rotated
 
         cpu.setFlags
             [ Zero, rotated = 0uy

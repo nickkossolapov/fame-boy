@@ -4,32 +4,10 @@ open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 open FameBoy.Cpu.Utils
 
-
-let private loadReg8 (cpu: Cpu) (value: uint8) =
-    function
-    | A -> cpu.Registers.A <- value
-    | B -> cpu.Registers.B <- value
-    | C -> cpu.Registers.C <- value
-    | D -> cpu.Registers.D <- value
-    | E -> cpu.Registers.E <- value
-    | H -> cpu.Registers.H <- value
-    | L -> cpu.Registers.L <- value
-    | F -> cpu.Registers.F <- value
-
-let private loadReg16 (cpu: Cpu) (value: uint16) =
-    function
-    | AF -> cpu.Registers.AF <- value
-    | BC -> cpu.Registers.BC <- value
-    | DE -> cpu.Registers.DE <- value
-    | HL -> cpu.Registers.HL <- value
-    | SP -> cpu.Sp <- value
-
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | LdReg8FromReg8 (regTo, regFrom) -> loadReg8 cpu (regFrom.GetFromCpu cpu) regTo
-    | LdReg8FromByte (reg, b) -> loadReg8 cpu b reg
-    | LdReg8FromAtHL reg -> reg.SetToCpu cpu (cpu.Memory[cpu.Registers.HL])
-    | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFromCpu cpu
+    | LdReg8 (reg, source) -> source.GetValue cpu |> reg.SetTo cpu
+    | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFrom cpu
     | LdAtHLFromByte b -> cpu.Memory[cpu.Registers.HL] <- b
     | LdAFromAtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]
     | LdAFromAtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
@@ -61,14 +39,14 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | LdAtHLIncFromA ->
         cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
         cpu.Registers.HL <- cpu.Registers.HL + 1us
-    | LdReg16FromWord (reg, w) -> loadReg16 cpu w reg
+    | LdReg16FromWord (reg, w) -> reg.SetTo cpu w
     | LdAtWordFromSP w ->
         let msb, lsb = uint8 (cpu.Sp >>> 8), uint8 cpu.Sp
 
         cpu.Memory[w] <- lsb
         cpu.Memory[w + 1us] <- msb
     | LdSPFromHL -> cpu.Sp <- cpu.Registers.HL
-    | Push reg -> pushToStack cpu (reg.GetFromCpu cpu)
+    | Push reg -> pushToStack cpu (reg.GetFrom cpu)
     | Pop reg -> popFromStack cpu reg
     | LdHLFromSPe b ->
         let offset = int16 b

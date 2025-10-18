@@ -1,6 +1,7 @@
 ﻿module FameBoy.Cpu.Executors.Control
 
 open FameBoy.Cpu.Instructions
+open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.State
 open FameBoy.Cpu.Utils
 

@@ -14,7 +14,7 @@ type Reg8 =
     | L
     | F
 
-    member this.GetFromCpu(cpu: Cpu) =
+    member this.GetFrom(cpu: Cpu) =
         match this with
         | A -> cpu.Registers.A
         | B -> cpu.Registers.B
@@ -25,7 +25,7 @@ type Reg8 =
         | L -> cpu.Registers.L
         | F -> cpu.Registers.F
 
-    member this.SetToCpu (cpu: Cpu) (value: uint8) =
+    member this.SetTo (cpu: Cpu) (value: uint8) =
         match this with
         | A -> cpu.Registers.A <- value
         | B -> cpu.Registers.B <- value
@@ -43,7 +43,7 @@ type Reg16 =
     | HL
     | SP
 
-    member this.GetFromCpu(cpu: Cpu) =
+    member this.GetFrom(cpu: Cpu) =
         match this with
         | AF -> cpu.Registers.AF
         | BC -> cpu.Registers.BC
@@ -51,7 +51,7 @@ type Reg16 =
         | HL -> cpu.Registers.HL
         | SP -> cpu.Sp
 
-    member this.SetToCpu (cpu: Cpu) (value: uint16) =
+    member this.SetTo (cpu: Cpu) (value: uint16) =
         match this with
         | AF -> cpu.Registers.AF <- value
         | BC -> cpu.Registers.BC <- value
@@ -59,11 +59,25 @@ type Reg16 =
         | HL -> cpu.Registers.HL <- value
         | SP -> cpu.Sp <- value
 
-type Condition =
-    | Zero
-    | NotZero
-    | Carry
-    | NoCarry
+module LoadTypes =
+    type Condition =
+        | Zero
+        | NotZero
+        | Carry
+        | NoCarry
+
+    type ByteSource =
+        | Immediate of uint8
+        | RegDirect of Reg8
+        | HLIndirect
+
+        member this.GetValue(cpu: Cpu) =
+            match this with
+            | Immediate b -> b
+            | RegDirect reg ->  reg.GetFrom cpu
+            | HLIndirect -> cpu.Memory[cpu.Registers.HL]
+
+open LoadTypes
 
 type ArithmeticInstr =
     | IncReg8 of Reg8
@@ -88,9 +102,7 @@ type ControlInstr =
     | Rst of uint8
 
 type LoadInstr =
-    | LdReg8FromReg8 of Reg8 * Reg8
-    | LdReg8FromByte of Reg8 * uint8
-    | LdReg8FromAtHL of Reg8
+    | LdReg8 of Reg8 * ByteSource
     | LdAtHLFromReg8 of Reg8
     | LdAtHLFromByte of uint8
     | LdAFromAtBC
@@ -164,9 +176,11 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
-        | LdReg8FromReg8 _ -> 1, Fixed 1
-        | LdReg8FromByte _ -> 2, Fixed 2
-        | LdReg8FromAtHL _ -> 1, Fixed 2
+        | LdReg8 (_, s) ->
+            match s with
+            | Immediate _ -> 2, Fixed 2
+            | RegDirect _ -> 1, Fixed 1
+            | HLIndirect -> 1, Fixed 2
         | LdAtHLFromReg8 _ -> 1, Fixed 2
         | LdAtHLFromByte _ -> 2, Fixed 3
         | LdAFromAtBC -> 1, Fixed 2

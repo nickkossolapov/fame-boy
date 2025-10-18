@@ -2,6 +2,7 @@
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
+open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open NUnit.Framework
@@ -29,78 +30,78 @@ let instructionMappingCases =
     [| 0x00, "nop", Nop
        0x01, "ld bc,d16", LdReg16FromWord (BC, 0x0101us) |> Load
        0x02, "ld (bc),a", LdAtBCFromA |> Load
-       0x06, "ld b,d8", LdReg8FromByte (B, 0x01uy) |> Load
+       0x06, "ld b,d8", LdReg8 (B, Immediate 0x01uy) |> Load
        0x08, "ld (a16),sp", LdAtWordFromSP 0x0101us |> Load
        0x0A, "ld a,(bc)", LdAFromAtBC |> Load
-       0x0E, "ld c,d8", LdReg8FromByte (C, 0x01uy) |> Load
+       0x0E, "ld c,d8", LdReg8 (C, Immediate 0x01uy) |> Load
        0x11, "ld de,d16", LdReg16FromWord (DE, 0x0101us) |> Load
        0x12, "ld (de),a", LdAtDEFromA |> Load
-       0x16, "ld d,d8", LdReg8FromByte (D, 0x01uy) |> Load
+       0x16, "ld d,d8", LdReg8 (D, Immediate 0x01uy) |> Load
        0x18, "jr r8", Jr 0x01y |> Control
        0x1A, "ld a,(de)", LdAFromAtDE |> Load
-       0x1E, "ld e,d8", LdReg8FromByte (E, 0x01uy) |> Load
+       0x1E, "ld e,d8", LdReg8 (E, Immediate 0x01uy) |> Load
        0x20, "jr nz,r8", JrCond (Condition.NotZero, 0x01y) |> Control
        0x21, "ld hl,d16", LdReg16FromWord (HL, 0x0101us) |> Load
        0x22, "ld (hl+),a", LdAtHLIncFromA |> Load
-       0x26, "ld h,d8", LdReg8FromByte (H, 0x01uy) |> Load
+       0x26, "ld h,d8", LdReg8 (H, Immediate 0x01uy) |> Load
        0x28, "jr z,r8", JrCond (Condition.Zero, 0x01y) |> Control
        0x2A, "ld a,(hl+)", LdAFromAtHLInc |> Load
-       0x2E, "ld l,d8", LdReg8FromByte (L, 0x01uy) |> Load
+       0x2E, "ld l,d8", LdReg8 (L, Immediate 0x01uy) |> Load
        0x30, "jr nc,r8", JrCond (Condition.NoCarry, 0x01y) |> Control
        0x31, "ld sp,d16", LdReg16FromWord (SP, 0x0101us) |> Load
        0x32, "ld (hl-),a", LdAtHLDecFromA |> Load
        0x36, "ld (hl),d8", LdAtHLFromByte 0x01uy |> Load
        0x38, "jr c,r8", JrCond (Condition.Carry, 0x01y) |> Control
        0x3A, "ld a,(hl-)", LdAFromAtHLDec |> Load
-       0x3E, "ld a,d8", LdReg8FromByte (A, 0x01uy) |> Load
-       0x40, "ld b,b", LdReg8FromReg8 (B, B) |> Load
-       0x41, "ld b,c", LdReg8FromReg8 (B, C) |> Load
-       0x42, "ld b,d", LdReg8FromReg8 (B, D) |> Load
-       0x43, "ld b,e", LdReg8FromReg8 (B, E) |> Load
-       0x44, "ld b,h", LdReg8FromReg8 (B, H) |> Load
-       0x45, "ld b,l", LdReg8FromReg8 (B, L) |> Load
-       0x46, "ld b,(hl)", LdReg8FromAtHL B |> Load
-       0x47, "ld b,a", LdReg8FromReg8 (B, A) |> Load
-       0x48, "ld c,b", LdReg8FromReg8 (C, B) |> Load
-       0x49, "ld c,c", LdReg8FromReg8 (C, C) |> Load
-       0x4A, "ld c,d", LdReg8FromReg8 (C, D) |> Load
-       0x4B, "ld c,e", LdReg8FromReg8 (C, E) |> Load
-       0x4C, "ld c,h", LdReg8FromReg8 (C, H) |> Load
-       0x4D, "ld c,l", LdReg8FromReg8 (C, L) |> Load
-       0x4E, "ld c,(hl)", LdReg8FromAtHL C |> Load
-       0x4F, "ld c,a", LdReg8FromReg8 (C, A) |> Load
-       0x50, "ld d,b", LdReg8FromReg8 (D, B) |> Load
-       0x51, "ld d,c", LdReg8FromReg8 (D, C) |> Load
-       0x52, "ld d,d", LdReg8FromReg8 (D, D) |> Load
-       0x53, "ld d,e", LdReg8FromReg8 (D, E) |> Load
-       0x54, "ld d,h", LdReg8FromReg8 (D, H) |> Load
-       0x55, "ld d,l", LdReg8FromReg8 (D, L) |> Load
-       0x56, "ld d,(hl)", LdReg8FromAtHL D |> Load
-       0x57, "ld d,a", LdReg8FromReg8 (D, A) |> Load
-       0x58, "ld e,b", LdReg8FromReg8 (E, B) |> Load
-       0x59, "ld e,c", LdReg8FromReg8 (E, C) |> Load
-       0x5A, "ld e,d", LdReg8FromReg8 (E, D) |> Load
-       0x5B, "ld e,e", LdReg8FromReg8 (E, E) |> Load
-       0x5C, "ld e,h", LdReg8FromReg8 (E, H) |> Load
-       0x5D, "ld e,l", LdReg8FromReg8 (E, L) |> Load
-       0x5E, "ld e,(hl)", LdReg8FromAtHL E |> Load
-       0x5F, "ld e,a", LdReg8FromReg8 (E, A) |> Load
-       0x60, "ld h,b", LdReg8FromReg8 (H, B) |> Load
-       0x61, "ld h,c", LdReg8FromReg8 (H, C) |> Load
-       0x62, "ld h,d", LdReg8FromReg8 (H, D) |> Load
-       0x63, "ld h,e", LdReg8FromReg8 (H, E) |> Load
-       0x64, "ld h,h", LdReg8FromReg8 (H, H) |> Load
-       0x65, "ld h,l", LdReg8FromReg8 (H, L) |> Load
-       0x66, "ld h,(hl)", LdReg8FromAtHL H |> Load
-       0x67, "ld h,a", LdReg8FromReg8 (H, A) |> Load
-       0x68, "ld l,b", LdReg8FromReg8 (L, B) |> Load
-       0x69, "ld l,c", LdReg8FromReg8 (L, C) |> Load
-       0x6A, "ld l,d", LdReg8FromReg8 (L, D) |> Load
-       0x6B, "ld l,e", LdReg8FromReg8 (L, E) |> Load
-       0x6C, "ld l,h", LdReg8FromReg8 (L, H) |> Load
-       0x6D, "ld l,l", LdReg8FromReg8 (L, L) |> Load
-       0x6E, "ld l,(hl)", LdReg8FromAtHL L |> Load
-       0x6F, "ld l,a", LdReg8FromReg8 (L, A) |> Load
+       0x3E, "ld a,d8", LdReg8 (A, Immediate 0x01uy) |> Load
+       0x40, "ld b,b", LdReg8 (B, RegDirect B) |> Load
+       0x41, "ld b,c", LdReg8 (B, RegDirect C) |> Load
+       0x42, "ld b,d", LdReg8 (B, RegDirect D) |> Load
+       0x43, "ld b,e", LdReg8 (B, RegDirect E) |> Load
+       0x44, "ld b,h", LdReg8 (B, RegDirect H) |> Load
+       0x45, "ld b,l", LdReg8 (B, RegDirect L) |> Load
+       0x46, "ld b,(hl)", LdReg8 (B, HLIndirect) |> Load
+       0x47, "ld b,a", LdReg8 (B, RegDirect A) |> Load
+       0x48, "ld c,b", LdReg8 (C, RegDirect B) |> Load
+       0x49, "ld c,c", LdReg8 (C, RegDirect C) |> Load
+       0x4A, "ld c,d", LdReg8 (C, RegDirect D) |> Load
+       0x4B, "ld c,e", LdReg8 (C, RegDirect E) |> Load
+       0x4C, "ld c,h", LdReg8 (C, RegDirect H) |> Load
+       0x4D, "ld c,l", LdReg8 (C, RegDirect L) |> Load
+       0x4E, "ld c,(hl)", LdReg8 (C, HLIndirect) |> Load
+       0x4F, "ld c,a", LdReg8 (C, RegDirect A) |> Load
+       0x50, "ld d,b", LdReg8 (D, RegDirect B) |> Load
+       0x51, "ld d,c", LdReg8 (D, RegDirect C) |> Load
+       0x52, "ld d,d", LdReg8 (D, RegDirect D) |> Load
+       0x53, "ld d,e", LdReg8 (D, RegDirect E) |> Load
+       0x54, "ld d,h", LdReg8 (D, RegDirect H) |> Load
+       0x55, "ld d,l", LdReg8 (D, RegDirect L) |> Load
+       0x56, "ld d,(hl)", LdReg8 (D, HLIndirect) |> Load
+       0x57, "ld d,a", LdReg8 (D, RegDirect A) |> Load
+       0x58, "ld e,b", LdReg8 (E, RegDirect B) |> Load
+       0x59, "ld e,c", LdReg8 (E, RegDirect C) |> Load
+       0x5A, "ld e,d", LdReg8 (E, RegDirect D) |> Load
+       0x5B, "ld e,e", LdReg8 (E, RegDirect E) |> Load
+       0x5C, "ld e,h", LdReg8 (E, RegDirect H) |> Load
+       0x5D, "ld e,l", LdReg8 (E, RegDirect L) |> Load
+       0x5E, "ld e,(hl)", LdReg8 (E, HLIndirect) |> Load
+       0x5F, "ld e,a", LdReg8 (E, RegDirect A) |> Load
+       0x60, "ld h,b", LdReg8 (H, RegDirect B) |> Load
+       0x61, "ld h,c", LdReg8 (H, RegDirect C) |> Load
+       0x62, "ld h,d", LdReg8 (H, RegDirect D) |> Load
+       0x63, "ld h,e", LdReg8 (H, RegDirect E) |> Load
+       0x64, "ld h,h", LdReg8 (H, RegDirect H) |> Load
+       0x65, "ld h,l", LdReg8 (H, RegDirect L) |> Load
+       0x66, "ld h,(hl)", LdReg8 (H, HLIndirect) |> Load
+       0x67, "ld h,a", LdReg8 (H, RegDirect A) |> Load
+       0x68, "ld l,b", LdReg8 (L, RegDirect B) |> Load
+       0x69, "ld l,c", LdReg8 (L, RegDirect C) |> Load
+       0x6A, "ld l,d", LdReg8 (L, RegDirect D) |> Load
+       0x6B, "ld l,e", LdReg8 (L, RegDirect E) |> Load
+       0x6C, "ld l,h", LdReg8 (L, RegDirect H) |> Load
+       0x6D, "ld l,l", LdReg8 (L, RegDirect L) |> Load
+       0x6E, "ld l,(hl)", LdReg8 (L, HLIndirect) |> Load
+       0x6F, "ld l,a", LdReg8 (L, RegDirect A) |> Load
        0x70, "ld (hl),b", LdAtHLFromReg8 B |> Load
        0x71, "ld (hl),c", LdAtHLFromReg8 C |> Load
        0x72, "ld (hl),d", LdAtHLFromReg8 D |> Load
@@ -108,14 +109,14 @@ let instructionMappingCases =
        0x74, "ld (hl),h", LdAtHLFromReg8 H |> Load
        0x75, "ld (hl),l", LdAtHLFromReg8 L |> Load
        0x77, "ld (hl),a", LdAtHLFromReg8 A |> Load
-       0x78, "ld a,b", LdReg8FromReg8 (A, B) |> Load
-       0x79, "ld a,c", LdReg8FromReg8 (A, C) |> Load
-       0x7A, "ld a,d", LdReg8FromReg8 (A, D) |> Load
-       0x7B, "ld a,e", LdReg8FromReg8 (A, E) |> Load
-       0x7C, "ld a,h", LdReg8FromReg8 (A, H) |> Load
-       0x7D, "ld a,l", LdReg8FromReg8 (A, L) |> Load
-       0x7E, "ld a,(hl)", LdReg8FromAtHL A |> Load
-       0x7F, "ld a,a", LdReg8FromReg8 (A, A) |> Load
+       0x78, "ld a,b", LdReg8 (A, RegDirect B) |> Load
+       0x79, "ld a,c", LdReg8 (A, RegDirect C) |> Load
+       0x7A, "ld a,d", LdReg8 (A, RegDirect D) |> Load
+       0x7B, "ld a,e", LdReg8 (A, RegDirect E) |> Load
+       0x7C, "ld a,h", LdReg8 (A, RegDirect H) |> Load
+       0x7D, "ld a,l", LdReg8 (A, RegDirect L) |> Load
+       0x7E, "ld a,(hl)", LdReg8 (A, HLIndirect) |> Load
+       0x7F, "ld a,a", LdReg8 (A, RegDirect A) |> Load
        0xC0, "ret nz", RetCond Condition.NotZero |> Control
        0xC1, "pop bc", Pop BC |> Load
        0xC2, "jp nz,a16", JpCond (Condition.NotZero, 0x0101us) |> Control

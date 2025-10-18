@@ -1,6 +1,7 @@
 ﻿module FameBoy.Cpu.Opcodes
 
 open FameBoy.Cpu.Instructions
+open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.State
 open FameBoy.Cpu.Utils
 
@@ -270,6 +271,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     let opcode = int memory[pc]
 
     let withUint8 () = memory[pc + 1us]
+    let withImmediate () = Immediate (withUint8 ())
     let withInt8 () = int8 memory[pc + 1us]
 
     let withUint16 () = getWordFromMemory memory (pc + 1us)
@@ -281,7 +283,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x03 -> failwith "0x03 <inc bc> not implemented"
     | 0x04 -> failwith "0x04 <inc b> not implemented"
     | 0x05 -> DecReg8 B |> Arithmetic
-    | 0x06 -> LdReg8FromByte (B, withUint8 ()) |> Load
+    | 0x06 -> LdReg8 (B, withImmediate ()) |> Load
     | 0x07 -> failwith "0x07 <rlca> not implemented"
     | 0x08 -> LdAtWordFromSP (withUint16 ()) |> Load
     | 0x09 -> failwith "0x09 <add hl,bc> not implemented"
@@ -289,7 +291,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x0B -> failwith "0x0B <dec bc> not implemented"
     | 0x0C -> IncReg8 C |> Arithmetic
     | 0x0D -> failwith "0x0D <dec c> not implemented"
-    | 0x0E -> LdReg8FromByte (C, withUint8 ()) |> Load
+    | 0x0E -> LdReg8 (C, withImmediate ()) |> Load
     | 0x0F -> failwith "0x0F <rrca> not implemented"
     | 0x10 -> failwith "0x10 <stop 0> not implemented"
     | 0x11 -> LdReg16FromWord (DE, withUint16 ()) |> Load
@@ -297,7 +299,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x13 -> failwith "0x13 <inc de> not implemented"
     | 0x14 -> failwith "0x14 <inc d> not implemented"
     | 0x15 -> failwith "0x15 <dec d> not implemented"
-    | 0x16 -> LdReg8FromByte (D, withUint8 ()) |> Load
+    | 0x16 -> LdReg8 (D, withImmediate ()) |> Load
     | 0x17 -> RlA |> Bitwise
     | 0x18 -> Jr (withInt8 ()) |> Control // "0x18 <jr r8> not implemented"
     | 0x19 -> failwith "0x19 <add hl,de> not implemented"
@@ -305,7 +307,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x1B -> failwith "0x1B <dec de> not implemented"
     | 0x1C -> failwith "0x1C <inc e> not implemented"
     | 0x1D -> failwith "0x1D <dec e> not implemented"
-    | 0x1E -> LdReg8FromByte (E, withUint8 ()) |> Load
+    | 0x1E -> LdReg8 (E, withImmediate ()) |> Load
     | 0x1F -> failwith "0x1F <rra> not implemented"
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
     | 0x21 -> LdReg16FromWord (HL, withUint16 ()) |> Load
@@ -313,7 +315,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x23 -> failwith "0x23 <inc hl> not implemented"
     | 0x24 -> failwith "0x24 <inc h> not implemented"
     | 0x25 -> failwith "0x25 <dec h> not implemented"
-    | 0x26 -> LdReg8FromByte (H, withUint8 ()) |> Load
+    | 0x26 -> LdReg8 (H, withImmediate ()) |> Load
     | 0x27 -> failwith "0x27 <daa> not implemented"
     | 0x28 -> JrCond (Condition.Zero, withInt8 ()) |> Control // "0x28 <jr z,r8> not implemented"
     | 0x29 -> failwith "0x29 <add hl,hl> not implemented"
@@ -321,7 +323,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x2B -> failwith "0x2B <dec hl> not implemented"
     | 0x2C -> failwith "0x2C <inc l> not implemented"
     | 0x2D -> failwith "0x2D <dec l> not implemented"
-    | 0x2E -> LdReg8FromByte (L, withUint8 ()) |> Load
+    | 0x2E -> LdReg8 (L, withImmediate ()) |> Load
     | 0x2F -> failwith "0x2F <cpl> not implemented"
     | 0x30 -> JrCond (Condition.NoCarry, withInt8 ()) |> Control // "0x30 <jr nc,r8> not implemented"
     | 0x31 -> LdReg16FromWord (SP, withUint16 ()) |> Load
@@ -337,56 +339,56 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x3B -> failwith "0x3B <dec sp> not implemented"
     | 0x3C -> failwith "0x3C <inc a> not implemented"
     | 0x3D -> failwith "0x3D <dec a> not implemented"
-    | 0x3E -> LdReg8FromByte (A, withUint8 ()) |> Load
+    | 0x3E -> LdReg8 (A, withImmediate ()) |> Load
     | 0x3F -> failwith "0x3F <ccf> not implemented"
-    | 0x40 -> LdReg8FromReg8 (B, B) |> Load
-    | 0x41 -> LdReg8FromReg8 (B, C) |> Load
-    | 0x42 -> LdReg8FromReg8 (B, D) |> Load
-    | 0x43 -> LdReg8FromReg8 (B, E) |> Load
-    | 0x44 -> LdReg8FromReg8 (B, H) |> Load
-    | 0x45 -> LdReg8FromReg8 (B, L) |> Load
-    | 0x46 -> LdReg8FromAtHL B |> Load
-    | 0x47 -> LdReg8FromReg8 (B, A) |> Load
-    | 0x48 -> LdReg8FromReg8 (C, B) |> Load
-    | 0x49 -> LdReg8FromReg8 (C, C) |> Load
-    | 0x4A -> LdReg8FromReg8 (C, D) |> Load
-    | 0x4B -> LdReg8FromReg8 (C, E) |> Load
-    | 0x4C -> LdReg8FromReg8 (C, H) |> Load
-    | 0x4D -> LdReg8FromReg8 (C, L) |> Load
-    | 0x4E -> LdReg8FromAtHL C |> Load
-    | 0x4F -> LdReg8FromReg8 (C, A) |> Load
-    | 0x50 -> LdReg8FromReg8 (D, B) |> Load
-    | 0x51 -> LdReg8FromReg8 (D, C) |> Load
-    | 0x52 -> LdReg8FromReg8 (D, D) |> Load
-    | 0x53 -> LdReg8FromReg8 (D, E) |> Load
-    | 0x54 -> LdReg8FromReg8 (D, H) |> Load
-    | 0x55 -> LdReg8FromReg8 (D, L) |> Load
-    | 0x56 -> LdReg8FromAtHL D |> Load
-    | 0x57 -> LdReg8FromReg8 (D, A) |> Load
-    | 0x58 -> LdReg8FromReg8 (E, B) |> Load
-    | 0x59 -> LdReg8FromReg8 (E, C) |> Load
-    | 0x5A -> LdReg8FromReg8 (E, D) |> Load
-    | 0x5B -> LdReg8FromReg8 (E, E) |> Load
-    | 0x5C -> LdReg8FromReg8 (E, H) |> Load
-    | 0x5D -> LdReg8FromReg8 (E, L) |> Load
-    | 0x5E -> LdReg8FromAtHL E |> Load
-    | 0x5F -> LdReg8FromReg8 (E, A) |> Load
-    | 0x60 -> LdReg8FromReg8 (H, B) |> Load
-    | 0x61 -> LdReg8FromReg8 (H, C) |> Load
-    | 0x62 -> LdReg8FromReg8 (H, D) |> Load
-    | 0x63 -> LdReg8FromReg8 (H, E) |> Load
-    | 0x64 -> LdReg8FromReg8 (H, H) |> Load
-    | 0x65 -> LdReg8FromReg8 (H, L) |> Load
-    | 0x66 -> LdReg8FromAtHL H |> Load
-    | 0x67 -> LdReg8FromReg8 (H, A) |> Load
-    | 0x68 -> LdReg8FromReg8 (L, B) |> Load
-    | 0x69 -> LdReg8FromReg8 (L, C) |> Load
-    | 0x6A -> LdReg8FromReg8 (L, D) |> Load
-    | 0x6B -> LdReg8FromReg8 (L, E) |> Load
-    | 0x6C -> LdReg8FromReg8 (L, H) |> Load
-    | 0x6D -> LdReg8FromReg8 (L, L) |> Load
-    | 0x6E -> LdReg8FromAtHL L |> Load
-    | 0x6F -> LdReg8FromReg8 (L, A) |> Load
+    | 0x40 -> LdReg8 (B, RegDirect B) |> Load
+    | 0x41 -> LdReg8 (B, RegDirect C) |> Load
+    | 0x42 -> LdReg8 (B, RegDirect D) |> Load
+    | 0x43 -> LdReg8 (B, RegDirect E) |> Load
+    | 0x44 -> LdReg8 (B, RegDirect H) |> Load
+    | 0x45 -> LdReg8 (B, RegDirect L) |> Load
+    | 0x46 -> LdReg8 (B, HLIndirect) |> Load
+    | 0x47 -> LdReg8 (B, RegDirect A) |> Load
+    | 0x48 -> LdReg8 (C, RegDirect B) |> Load
+    | 0x49 -> LdReg8 (C, RegDirect C) |> Load
+    | 0x4A -> LdReg8 (C, RegDirect D) |> Load
+    | 0x4B -> LdReg8 (C, RegDirect E) |> Load
+    | 0x4C -> LdReg8 (C, RegDirect H) |> Load
+    | 0x4D -> LdReg8 (C, RegDirect L) |> Load
+    | 0x4E -> LdReg8 (C, HLIndirect) |> Load
+    | 0x4F -> LdReg8 (C, RegDirect A) |> Load
+    | 0x50 -> LdReg8 (D, RegDirect B) |> Load
+    | 0x51 -> LdReg8 (D, RegDirect C) |> Load
+    | 0x52 -> LdReg8 (D, RegDirect D) |> Load
+    | 0x53 -> LdReg8 (D, RegDirect E) |> Load
+    | 0x54 -> LdReg8 (D, RegDirect H) |> Load
+    | 0x55 -> LdReg8 (D, RegDirect L) |> Load
+    | 0x56 -> LdReg8 (D, HLIndirect) |> Load
+    | 0x57 -> LdReg8 (D, RegDirect A) |> Load
+    | 0x58 -> LdReg8 (E, RegDirect B) |> Load
+    | 0x59 -> LdReg8 (E, RegDirect C) |> Load
+    | 0x5A -> LdReg8 (E, RegDirect D) |> Load
+    | 0x5B -> LdReg8 (E, RegDirect E) |> Load
+    | 0x5C -> LdReg8 (E, RegDirect H) |> Load
+    | 0x5D -> LdReg8 (E, RegDirect L) |> Load
+    | 0x5E -> LdReg8 (E, HLIndirect) |> Load
+    | 0x5F -> LdReg8 (E, RegDirect A) |> Load
+    | 0x60 -> LdReg8 (H, RegDirect B) |> Load
+    | 0x61 -> LdReg8 (H, RegDirect C) |> Load
+    | 0x62 -> LdReg8 (H, RegDirect D) |> Load
+    | 0x63 -> LdReg8 (H, RegDirect E) |> Load
+    | 0x64 -> LdReg8 (H, RegDirect H) |> Load
+    | 0x65 -> LdReg8 (H, RegDirect L) |> Load
+    | 0x66 -> LdReg8 (H, HLIndirect) |> Load
+    | 0x67 -> LdReg8 (H, RegDirect A) |> Load
+    | 0x68 -> LdReg8 (L, RegDirect B) |> Load
+    | 0x69 -> LdReg8 (L, RegDirect C) |> Load
+    | 0x6A -> LdReg8 (L, RegDirect D) |> Load
+    | 0x6B -> LdReg8 (L, RegDirect E) |> Load
+    | 0x6C -> LdReg8 (L, RegDirect H) |> Load
+    | 0x6D -> LdReg8 (L, RegDirect L) |> Load
+    | 0x6E -> LdReg8 (L, HLIndirect) |> Load
+    | 0x6F -> LdReg8 (L, RegDirect A) |> Load
     | 0x70 -> LdAtHLFromReg8 B |> Load
     | 0x71 -> LdAtHLFromReg8 C |> Load
     | 0x72 -> LdAtHLFromReg8 D |> Load
@@ -395,14 +397,14 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x75 -> LdAtHLFromReg8 L |> Load
     | 0x76 -> failwith "0x76 <halt> not implemented"
     | 0x77 -> LdAtHLFromReg8 A |> Load
-    | 0x78 -> LdReg8FromReg8 (A, B) |> Load
-    | 0x79 -> LdReg8FromReg8 (A, C) |> Load
-    | 0x7A -> LdReg8FromReg8 (A, D) |> Load
-    | 0x7B -> LdReg8FromReg8 (A, E) |> Load
-    | 0x7C -> LdReg8FromReg8 (A, H) |> Load
-    | 0x7D -> LdReg8FromReg8 (A, L) |> Load
-    | 0x7E -> LdReg8FromAtHL A |> Load
-    | 0x7F -> LdReg8FromReg8 (A, A) |> Load
+    | 0x78 -> LdReg8 (A, RegDirect B) |> Load
+    | 0x79 -> LdReg8 (A, RegDirect C) |> Load
+    | 0x7A -> LdReg8 (A, RegDirect D) |> Load
+    | 0x7B -> LdReg8 (A, RegDirect E) |> Load
+    | 0x7C -> LdReg8 (A, RegDirect H) |> Load
+    | 0x7D -> LdReg8 (A, RegDirect L) |> Load
+    | 0x7E -> LdReg8 (A, HLIndirect) |> Load
+    | 0x7F -> LdReg8 (A, RegDirect A) |> Load
     | 0x80 -> failwith "0x80 <add a,b> not implemented"
     | 0x81 -> failwith "0x81 <add a,c> not implemented"
     | 0x82 -> failwith "0x82 <add a,d> not implemented"

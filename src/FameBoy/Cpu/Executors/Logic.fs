@@ -4,7 +4,7 @@ open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
 let xor8 cpu (reg: Reg8) =
-    let regValue = reg.GetFromCpu cpu
+    let regValue = reg.GetFrom cpu
     let result = (cpu.Registers.A ^^^ regValue)
 
     cpu.Registers.A <- result
