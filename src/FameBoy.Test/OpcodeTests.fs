@@ -26,7 +26,8 @@ let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H 
 
 
 let instructionMappingCases =
-    [| 0x01, "ld bc,d16", LdReg16FromWord (BC, 0x0101us) |> Load
+    [| 0x00, "nop", Nop
+       0x01, "ld bc,d16", LdReg16FromWord (BC, 0x0101us) |> Load
        0x02, "ld (bc),a", LdAtBCFromA |> Load
        0x06, "ld b,d8", LdReg8FromByte (B, 0x01uy) |> Load
        0x08, "ld (a16),sp", LdAtWordFromSP 0x0101us |> Load
@@ -35,16 +36,21 @@ let instructionMappingCases =
        0x11, "ld de,d16", LdReg16FromWord (DE, 0x0101us) |> Load
        0x12, "ld (de),a", LdAtDEFromA |> Load
        0x16, "ld d,d8", LdReg8FromByte (D, 0x01uy) |> Load
+       0x18, "jr r8", Jr 0x01y |> Control
        0x1A, "ld a,(de)", LdAFromAtDE |> Load
        0x1E, "ld e,d8", LdReg8FromByte (E, 0x01uy) |> Load
+       0x20, "jr nz,r8", JrCond (Condition.NotZero, 0x01y) |> Control
        0x21, "ld hl,d16", LdReg16FromWord (HL, 0x0101us) |> Load
        0x22, "ld (hl+),a", LdAtHLIncFromA |> Load
        0x26, "ld h,d8", LdReg8FromByte (H, 0x01uy) |> Load
+       0x28, "jr z,r8", JrCond (Condition.Zero, 0x01y) |> Control
        0x2A, "ld a,(hl+)", LdAFromAtHLInc |> Load
        0x2E, "ld l,d8", LdReg8FromByte (L, 0x01uy) |> Load
+       0x30, "jr nc,r8", JrCond (Condition.NoCarry, 0x01y) |> Control
        0x31, "ld sp,d16", LdReg16FromWord (SP, 0x0101us) |> Load
        0x32, "ld (hl-),a", LdAtHLDecFromA |> Load
        0x36, "ld (hl),d8", LdAtHLFromByte 0x01uy |> Load
+       0x38, "jr c,r8", JrCond (Condition.Carry, 0x01y) |> Control
        0x3A, "ld a,(hl-)", LdAFromAtHLDec |> Load
        0x3E, "ld a,d8", LdReg8FromByte (A, 0x01uy) |> Load
        0x40, "ld b,b", LdReg8FromReg8 (B, B) |> Load
@@ -110,22 +116,47 @@ let instructionMappingCases =
        0x7D, "ld a,l", LdReg8FromReg8 (A, L) |> Load
        0x7E, "ld a,(hl)", LdReg8FromAtHL A |> Load
        0x7F, "ld a,a", LdReg8FromReg8 (A, A) |> Load
+       0xC0, "ret nz", RetCond Condition.NotZero |> Control
        0xC1, "pop bc", Pop BC |> Load
+       0xC2, "jp nz,a16", JpCond (Condition.NotZero, 0x0101us) |> Control
+       0xC3, "jp a16", Jp 0x0101us |> Control
+       0xC4, "call nz,a16", CallCond (Condition.NotZero, 0x0101us) |> Control
        0xC5, "push bc", Push BC |> Load
+       0xC7, "rst 00h", Rst 0x00uy |> Control
+       0xC8, "ret z", RetCond Condition.Zero |> Control
+       0xC9, "ret", Ret |> Control
+       0xCA, "jp z,a16", JpCond (Condition.Zero, 0x0101us) |> Control
+       0xCC, "call z,a16", CallCond (Condition.Zero, 0x0101us) |> Control
+       0xCD, "call a16", Call 0x0101us |> Control
+       0xCF, "rst 08h", Rst 0x08uy |> Control
+       0xD0, "ret nc", RetCond Condition.NoCarry |> Control
        0xD1, "pop de", Pop DE |> Load
+       0xD2, "jp nc,a16", JpCond (Condition.NoCarry, 0x0101us) |> Control
+       0xD4, "call nc,a16", CallCond (Condition.NoCarry, 0x0101us) |> Control
        0xD5, "push de", Push DE |> Load
+       0xD7, "rst 10h", Rst 0x10uy |> Control
+       0xD8, "ret c", RetCond Condition.Carry |> Control
+       0xD9, "reti", Reti |> Control
+       0xDA, "jp c,a16", JpCond (Condition.Carry, 0x0101us) |> Control
+       0xDC, "call c,a16", CallCond (Condition.Carry, 0x0101us) |> Control
+       0xDF, "rst 18h", Rst 0x18uy |> Control
        0xE0, "ldh (a8),a", LdhAtByteFromA 0x01uy |> Load
        0xE1, "pop hl", Pop HL |> Load
        0xE2, "ld (c),a", LdhAtCFromA |> Load
        0xE5, "push hl", Push HL |> Load
+       0xE7, "rst 20h", Rst 0x20uy |> Control
+       0xE9, "jp hl", JpHL |> Control
        0xEA, "ld (a16),a", LdAtWordFromA 0x0101us |> Load
+       0xEF, "rst 28h", Rst 0x28uy |> Control
        0xF0, "ldh a,(a8)", LdhAFromAByte 0x01uy |> Load
        0xF1, "pop af", Pop AF |> Load
        0xF2, "ld a,(c)", LdhAFromAtC |> Load
        0xF5, "push af", Push AF |> Load
+       0xF7, "rst 30h", Rst 0x30uy |> Control
        0xF8, "ld hl,sp+r8", LdHLFromSPe 0x01y |> Load
        0xF9, "ld sp,hl", LdSPFromHL |> Load
-       0xFA, "ld a,(a16)", LdAFromAtWord 0x0101us |> Load |]
+       0xFA, "ld a,(a16)", LdAFromAtWord 0x0101us |> Load
+       0xFF, "rst 38h", Rst 0x38uy |> Control |]
     |> Array.map (fun (opcode, label, instr) -> TestCaseData(uint8 opcode, instr).SetName $"Check 0x{opcode:X2} to {label} mapping")
 
 [<Test>]

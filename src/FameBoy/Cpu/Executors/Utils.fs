@@ -3,10 +3,13 @@
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
 
+let getWordFromMemory (memory: Memory) (p: uint16) =
+    let msb, lsb = memory[p + 1us], memory[p]
+
+    (uint16 msb <<< 8) + uint16 lsb
+
 let popFromStack (cpu: Cpu) (reg: Reg16) =
-    let lsb = cpu.Memory[cpu.Sp]
-    let msb = cpu.Memory[cpu.Sp + 1us]
-    let value = (uint16 msb <<< 8) + uint16 lsb
+    let value = getWordFromMemory cpu.Memory cpu.Sp
 
     reg.SetToCpu cpu value
     cpu.Sp <- cpu.Sp + 2us

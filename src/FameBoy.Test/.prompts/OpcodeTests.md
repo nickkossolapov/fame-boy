@@ -248,7 +248,7 @@ The mapping for opcode to unprefixed instructions is:
 0xe6 - AND d8
 0xe7 - RST 20H
 0xe8 - ADD SP, r8
-0xe9 - JP (HL)
+0xe9 - JP HL
 0xea - LD (a16), A
 0xee - XOR d8
 0xef - RST 28H

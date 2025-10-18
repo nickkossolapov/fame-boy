@@ -12,7 +12,7 @@ let ``NOP changes nothing`` () =
     // Setup
     let cpu = createCpu [||]
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0xEBuy // 0xEB is unused/unknown
+    cpu.Memory[0x100us] <- 0x00uy
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
@@ -39,7 +39,6 @@ let ``NOP changes nothing`` () =
     Assert.That (cpu.Registers.L, Is.EqualTo 0xDEuy)
     Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    // Check that all flags are unchanged (assuming default false)
     Assert.That (cpu.getFlag Flag.Zero, Is.False)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)
@@ -77,7 +76,6 @@ let ``Unknown opcode acts as NOP`` () =
     Assert.That (cpu.Registers.L, Is.EqualTo 0xDEuy)
     Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    // Check that all flags are unchanged (assuming default false)
     Assert.That (cpu.getFlag Flag.Zero, Is.False)
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)

@@ -75,8 +75,17 @@ type BitwiseInstr =
     | RlReg8 of Reg8
 
 type ControlInstr =
-    | Call of uint16
+    | Jp of uint16
+    | JpHL
+    | Jr of int8
+    | JpCond of Condition * uint16
     | JrCond of Condition * int8
+    | Call of uint16
+    | CallCond of Condition * uint16
+    | Ret
+    | RetCond of Condition
+    | Reti
+    | Rst of uint8
 
 type LoadInstr =
     | LdReg8FromReg8 of Reg8 * Reg8
@@ -141,8 +150,17 @@ module private LengthsAndCycles =
 
     let forControl =
         function
-        | Call _ -> 3, Fixed 6
+        | Jp _ -> 3, Fixed 4
+        | JpHL -> 1, Fixed 1
+        | JpCond _ -> 3, Conditional { Met = 4; NotMet = 3 }
+        | Jr _ -> 2, Fixed 3
         | JrCond _ -> 2, Conditional { Met = 3; NotMet = 2 }
+        | Call _ -> 3, Fixed 6
+        | CallCond _ -> 3, Conditional { Met = 6; NotMet = 3 }
+        | Ret -> 1, Fixed 4
+        | RetCond _ -> 1, Conditional { Met = 5; NotMet = 2 }
+        | Reti -> 1, Fixed 4
+        | Rst _ -> 1, Fixed 4
 
     let forLoad =
         function

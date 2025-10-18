@@ -77,7 +77,8 @@ type Cpu =
     { Memory: Memory
       Registers: Registers
       mutable Pc: uint16
-      mutable Sp: uint16 }
+      mutable Sp: uint16
+      mutable Ime: bool }
 
     member this.setFlag flag value =
         this.Registers.F <- Flags.applyFlag flag this.Registers.F value
@@ -116,4 +117,5 @@ let createCpu (bootRom: uint8 array) : Cpu =
     { Memory = Memory (memory)
       Registers = registers
       Pc = 0us
-      Sp = 0us }
+      Sp = 0us
+      Ime = true }
