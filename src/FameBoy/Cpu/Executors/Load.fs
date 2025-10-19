@@ -49,12 +49,11 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | Push reg -> pushToStack cpu (reg.GetFrom cpu)
     | Pop reg -> popFromStack cpu reg
     | LdHLFromSPe b ->
-        let offset = int16 b
-        let sp = cpu.Sp
-        let result = uint16 (sp + uint16 offset)
+        let sp, e = cpu.Sp, uint16 b
+        let res = sp + e
 
-        let halfCarry = (((sp &&& 0x0Fus) + (uint16 (offset &&& 0x0Fs))) &&& 0x10us) <> 0us
-        let carry = (((sp &&& 0xFFus) + (uint16 (offset &&& 0xFFs))) &&& 0x100us) <> 0us
+        let halfCarry = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us
+        let carry = ((sp &&& 0xFFus) + (e &&& 0xFFus)) &&& 0x100us <> 0us
 
-        cpu.Registers.HL <- result
+        cpu.Registers.HL <- res
         cpu.setFlags [ Zero, false; Subtract, false; HalfCarry, halfCarry; Carry, carry ]
