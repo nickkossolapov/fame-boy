@@ -6,7 +6,7 @@ open FameBoy.Cpu.Utils
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     match instr with
-    | LdReg8 (reg, source) -> source.GetValue cpu |> reg.SetTo cpu
+    | LdReg8 (reg, source) -> source.GetFrom cpu |> reg.SetTo cpu
     | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFrom cpu
     | LdAtHLFromByte b -> cpu.Memory[cpu.Registers.HL] <- b
     | LdAFromAtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]

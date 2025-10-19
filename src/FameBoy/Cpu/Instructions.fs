@@ -71,17 +71,28 @@ module LoadTypes =
         | RegDirect of Reg8
         | HLIndirect
 
-        member this.GetValue(cpu: Cpu) =
+        member this.GetFrom(cpu: Cpu) =
             match this with
             | Immediate b -> b
-            | RegDirect reg ->  reg.GetFrom cpu
+            | RegDirect reg -> reg.GetFrom cpu
             | HLIndirect -> cpu.Memory[cpu.Registers.HL]
 
 open LoadTypes
 
 type ArithmeticInstr =
+    | Add of ByteSource
+    | Adc of ByteSource
+    | Sub of ByteSource
+    | Sbc of ByteSource
+    | Cp of ByteSource
     | IncReg8 of Reg8
+    | IncAtHL
     | DecReg8 of Reg8
+    | DecAtHL
+    | IncReg16 of Reg16
+    | DecReg16 of Reg16
+    | AddHL of Reg16
+    | AddSPe of int8
 
 type BitwiseInstr =
     | Bit of uint3 * Reg8
@@ -149,12 +160,29 @@ type DecodedInstruction =
       MCycles: MCycles }
 
 module private LengthsAndCycles =
+    let forByteSource =
+        function
+        | Immediate _ -> 2, Fixed 2
+        | HLIndirect -> 1, Fixed 2
+        | RegDirect _ -> 1, Fixed 1
+
     let forArithmetic =
         function
+        | Add bs -> forByteSource bs
+        | Adc bs -> forByteSource bs
+        | Sub bs -> forByteSource bs
+        | Sbc bs -> forByteSource bs
+        | Cp bs -> forByteSource bs
         | IncReg8 _ -> 1, Fixed 1
+        | IncAtHL -> 1, Fixed 3
         | DecReg8 _ -> 1, Fixed 1
+        | DecAtHL -> 1, Fixed 3
+        | IncReg16 _ -> 1, Fixed 2
+        | DecReg16 _ -> 1, Fixed 2
+        | AddHL _ -> 1, Fixed 2
+        | AddSPe _ -> 2, Fixed 4
 
-    let forBit =
+    let forBitwise =
         function
         | Bit _ -> 2, Fixed 2
         | RlReg8 _ -> 2, Fixed 2
@@ -213,7 +241,7 @@ let withLengthAndCycles (instr: Instruction) =
         match instr with
         | Nop -> 1, Fixed 1
         | Arithmetic arithmeticInstr -> LengthsAndCycles.forArithmetic arithmeticInstr
-        | Bitwise bitInstr -> LengthsAndCycles.forBit bitInstr
+        | Bitwise bitwiseInstr -> LengthsAndCycles.forBitwise bitwiseInstr
         | Control controlInstr -> LengthsAndCycles.forControl controlInstr
         | Load loadInstr -> LengthsAndCycles.forLoad loadInstr
         | Logic logicInstr -> LengthsAndCycles.forLogic logicInstr

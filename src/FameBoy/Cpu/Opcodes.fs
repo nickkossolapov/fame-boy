@@ -280,65 +280,65 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x00 -> Nop
     | 0x01 -> LdReg16FromWord (BC, withUint16 ()) |> Load
     | 0x02 -> LdAtBCFromA |> Load
-    | 0x03 -> failwith "0x03 <inc bc> not implemented"
-    | 0x04 -> failwith "0x04 <inc b> not implemented"
+    | 0x03 -> IncReg16 BC |> Arithmetic // "0x03 <inc bc> not implemented"
+    | 0x04 -> IncReg8 B |> Arithmetic // "0x04 <inc b> not implemented"
     | 0x05 -> DecReg8 B |> Arithmetic
     | 0x06 -> LdReg8 (B, withImmediate ()) |> Load
     | 0x07 -> failwith "0x07 <rlca> not implemented"
     | 0x08 -> LdAtWordFromSP (withUint16 ()) |> Load
-    | 0x09 -> failwith "0x09 <add hl,bc> not implemented"
+    | 0x09 -> AddHL BC |> Arithmetic
     | 0x0A -> LdAFromAtBC |> Load
-    | 0x0B -> failwith "0x0B <dec bc> not implemented"
+    | 0x0B -> DecReg16 BC |> Arithmetic // "0x0B <dec bc> not implemented"
     | 0x0C -> IncReg8 C |> Arithmetic
-    | 0x0D -> failwith "0x0D <dec c> not implemented"
+    | 0x0D -> DecReg8 C |> Arithmetic // "0x0D <dec c> not implemented"
     | 0x0E -> LdReg8 (C, withImmediate ()) |> Load
     | 0x0F -> failwith "0x0F <rrca> not implemented"
     | 0x10 -> failwith "0x10 <stop 0> not implemented"
     | 0x11 -> LdReg16FromWord (DE, withUint16 ()) |> Load
     | 0x12 -> LdAtDEFromA |> Load
-    | 0x13 -> failwith "0x13 <inc de> not implemented"
-    | 0x14 -> failwith "0x14 <inc d> not implemented"
-    | 0x15 -> failwith "0x15 <dec d> not implemented"
+    | 0x13 -> IncReg16 DE |> Arithmetic // "0x13 <inc de> not implemented"
+    | 0x14 -> IncReg8 D |> Arithmetic // "0x14 <inc d> not implemented"
+    | 0x15 -> DecReg8 D |> Arithmetic // "0x15 <dec d> not implemented"
     | 0x16 -> LdReg8 (D, withImmediate ()) |> Load
     | 0x17 -> RlA |> Bitwise
-    | 0x18 -> Jr (withInt8 ()) |> Control // "0x18 <jr r8> not implemented"
-    | 0x19 -> failwith "0x19 <add hl,de> not implemented"
+    | 0x18 -> Jr (withInt8 ()) |> Control
+    | 0x19 -> AddHL DE |> Arithmetic
     | 0x1A -> LdAFromAtDE |> Load
-    | 0x1B -> failwith "0x1B <dec de> not implemented"
-    | 0x1C -> failwith "0x1C <inc e> not implemented"
-    | 0x1D -> failwith "0x1D <dec e> not implemented"
+    | 0x1B -> DecReg16 DE |> Arithmetic // "0x1B <dec de> not implemented"
+    | 0x1C -> IncReg8 E |> Arithmetic // "0x1C <inc e> not implemented"
+    | 0x1D -> DecReg8 E |> Arithmetic // "0x1D <dec e> not implemented"
     | 0x1E -> LdReg8 (E, withImmediate ()) |> Load
     | 0x1F -> failwith "0x1F <rra> not implemented"
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
     | 0x21 -> LdReg16FromWord (HL, withUint16 ()) |> Load
     | 0x22 -> LdAtHLIncFromA |> Load
-    | 0x23 -> failwith "0x23 <inc hl> not implemented"
-    | 0x24 -> failwith "0x24 <inc h> not implemented"
-    | 0x25 -> failwith "0x25 <dec h> not implemented"
+    | 0x23 -> IncReg16 HL |> Arithmetic // "0x23 <inc hl> not implemented"
+    | 0x24 -> IncReg8 H |> Arithmetic // "0x24 <inc h> not implemented"
+    | 0x25 -> DecReg8 H |> Arithmetic // "0x25 <dec h> not implemented"
     | 0x26 -> LdReg8 (H, withImmediate ()) |> Load
     | 0x27 -> failwith "0x27 <daa> not implemented"
-    | 0x28 -> JrCond (Condition.Zero, withInt8 ()) |> Control // "0x28 <jr z,r8> not implemented"
-    | 0x29 -> failwith "0x29 <add hl,hl> not implemented"
+    | 0x28 -> JrCond (Condition.Zero, withInt8 ()) |> Control
+    | 0x29 -> AddHL HL |> Arithmetic
     | 0x2A -> LdAFromAtHLInc |> Load
-    | 0x2B -> failwith "0x2B <dec hl> not implemented"
-    | 0x2C -> failwith "0x2C <inc l> not implemented"
-    | 0x2D -> failwith "0x2D <dec l> not implemented"
+    | 0x2B -> DecReg16 HL |> Arithmetic // "0x2B <dec hl> not implemented"
+    | 0x2C -> IncReg8 L |> Arithmetic // "0x2C <inc l> not implemented"
+    | 0x2D -> DecReg8 L |> Arithmetic // "0x2D <dec l> not implemented"
     | 0x2E -> LdReg8 (L, withImmediate ()) |> Load
     | 0x2F -> failwith "0x2F <cpl> not implemented"
-    | 0x30 -> JrCond (Condition.NoCarry, withInt8 ()) |> Control // "0x30 <jr nc,r8> not implemented"
+    | 0x30 -> JrCond (Condition.NoCarry, withInt8 ()) |> Control
     | 0x31 -> LdReg16FromWord (SP, withUint16 ()) |> Load
     | 0x32 -> LdAtHLDecFromA |> Load
-    | 0x33 -> failwith "0x33 <inc sp> not implemented"
-    | 0x34 -> failwith "0x34 <inc (hl)> not implemented"
-    | 0x35 -> failwith "0x35 <dec (hl)> not implemented"
+    | 0x33 -> IncReg16 SP |> Arithmetic // "0x33 <inc sp> not implemented"
+    | 0x34 -> IncAtHL |> Arithmetic // "0x34 <inc (hl)> not implemented"
+    | 0x35 -> DecAtHL |> Arithmetic // "0x35 <dec (hl)> not implemented"
     | 0x36 -> LdAtHLFromByte (withUint8 ()) |> Load
     | 0x37 -> failwith "0x37 <scf> not implemented"
-    | 0x38 -> JrCond (Condition.Carry, withInt8 ()) |> Control // "0x38 <jr c,r8> not implemented"
-    | 0x39 -> failwith "0x39 <add hl,sp> not implemented"
+    | 0x38 -> JrCond (Condition.Carry, withInt8 ()) |> Control
+    | 0x39 -> AddHL SP |> Arithmetic
     | 0x3A -> LdAFromAtHLDec |> Load
-    | 0x3B -> failwith "0x3B <dec sp> not implemented"
-    | 0x3C -> failwith "0x3C <inc a> not implemented"
-    | 0x3D -> failwith "0x3D <dec a> not implemented"
+    | 0x3B -> DecReg16 SP |> Arithmetic // "0x3B <dec sp> not implemented"
+    | 0x3C -> IncReg8 A |> Arithmetic // "0x3C <inc a> not implemented"
+    | 0x3D -> DecReg8 A |> Arithmetic // "0x3D <dec a> not implemented"
     | 0x3E -> LdReg8 (A, withImmediate ()) |> Load
     | 0x3F -> failwith "0x3F <ccf> not implemented"
     | 0x40 -> LdReg8 (B, RegDirect B) |> Load
@@ -405,38 +405,38 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x7D -> LdReg8 (A, RegDirect L) |> Load
     | 0x7E -> LdReg8 (A, HLIndirect) |> Load
     | 0x7F -> LdReg8 (A, RegDirect A) |> Load
-    | 0x80 -> failwith "0x80 <add a,b> not implemented"
-    | 0x81 -> failwith "0x81 <add a,c> not implemented"
-    | 0x82 -> failwith "0x82 <add a,d> not implemented"
-    | 0x83 -> failwith "0x83 <add a,e> not implemented"
-    | 0x84 -> failwith "0x84 <add a,h> not implemented"
-    | 0x85 -> failwith "0x85 <add a,l> not implemented"
-    | 0x86 -> failwith "0x86 <add a,(hl)> not implemented"
-    | 0x87 -> failwith "0x87 <add a,a> not implemented"
-    | 0x88 -> failwith "0x88 <adc a,b> not implemented"
-    | 0x89 -> failwith "0x89 <adc a,c> not implemented"
-    | 0x8A -> failwith "0x8A <adc a,d> not implemented"
-    | 0x8B -> failwith "0x8B <adc a,e> not implemented"
-    | 0x8C -> failwith "0x8C <adc a,h> not implemented"
-    | 0x8D -> failwith "0x8D <adc a,l> not implemented"
-    | 0x8E -> failwith "0x8E <adc a,(hl)> not implemented"
-    | 0x8F -> failwith "0x8F <adc a,a> not implemented"
-    | 0x90 -> failwith "0x90 <sub b> not implemented"
-    | 0x91 -> failwith "0x91 <sub c> not implemented"
-    | 0x92 -> failwith "0x92 <sub d> not implemented"
-    | 0x93 -> failwith "0x93 <sub e> not implemented"
-    | 0x94 -> failwith "0x94 <sub h> not implemented"
-    | 0x95 -> failwith "0x95 <sub l> not implemented"
-    | 0x96 -> failwith "0x96 <sub (hl)> not implemented"
-    | 0x97 -> failwith "0x97 <sub a> not implemented"
-    | 0x98 -> failwith "0x98 <sbc a,b> not implemented"
-    | 0x99 -> failwith "0x99 <sbc a,c> not implemented"
-    | 0x9A -> failwith "0x9A <sbc a,d> not implemented"
-    | 0x9B -> failwith "0x9B <sbc a,e> not implemented"
-    | 0x9C -> failwith "0x9C <sbc a,h> not implemented"
-    | 0x9D -> failwith "0x9D <sbc a,l> not implemented"
-    | 0x9E -> failwith "0x9E <sbc a,(hl)> not implemented"
-    | 0x9F -> failwith "0x9F <sbc a,a> not implemented"
+    | 0x80 -> Add (RegDirect B) |> Arithmetic
+    | 0x81 -> Add (RegDirect C) |> Arithmetic
+    | 0x82 -> Add (RegDirect D) |> Arithmetic
+    | 0x83 -> Add (RegDirect E) |> Arithmetic
+    | 0x84 -> Add (RegDirect H) |> Arithmetic
+    | 0x85 -> Add (RegDirect L) |> Arithmetic
+    | 0x86 -> Add HLIndirect |> Arithmetic
+    | 0x87 -> Add (RegDirect A) |> Arithmetic
+    | 0x88 -> Adc (RegDirect B) |> Arithmetic
+    | 0x89 -> Adc (RegDirect C) |> Arithmetic
+    | 0x8A -> Adc (RegDirect D) |> Arithmetic
+    | 0x8B -> Adc (RegDirect E) |> Arithmetic
+    | 0x8C -> Adc (RegDirect H) |> Arithmetic
+    | 0x8D -> Adc (RegDirect L) |> Arithmetic
+    | 0x8E -> Adc HLIndirect |> Arithmetic
+    | 0x8F -> Adc (RegDirect A) |> Arithmetic
+    | 0x90 -> Sub (RegDirect B) |> Arithmetic
+    | 0x91 -> Sub (RegDirect C) |> Arithmetic
+    | 0x92 -> Sub (RegDirect D) |> Arithmetic
+    | 0x93 -> Sub (RegDirect E) |> Arithmetic
+    | 0x94 -> Sub (RegDirect H) |> Arithmetic
+    | 0x95 -> Sub (RegDirect L) |> Arithmetic
+    | 0x96 -> Sub HLIndirect |> Arithmetic
+    | 0x97 -> Sub (RegDirect A) |> Arithmetic
+    | 0x98 -> Sbc (RegDirect B) |> Arithmetic
+    | 0x99 -> Sbc (RegDirect C) |> Arithmetic
+    | 0x9A -> Sbc (RegDirect D) |> Arithmetic
+    | 0x9B -> Sbc (RegDirect E) |> Arithmetic
+    | 0x9C -> Sbc (RegDirect H) |> Arithmetic
+    | 0x9D -> Sbc (RegDirect L) |> Arithmetic
+    | 0x9E -> Sbc HLIndirect |> Arithmetic
+    | 0x9F -> Sbc (RegDirect A) |> Arithmetic
     | 0xA0 -> failwith "0xA0 <and b> not implemented"
     | 0xA1 -> failwith "0xA1 <and c> not implemented"
     | 0xA2 -> failwith "0xA2 <and d> not implemented"
@@ -461,42 +461,42 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xB5 -> failwith "0xB5 <or l> not implemented"
     | 0xB6 -> failwith "0xB6 <or (hl)> not implemented"
     | 0xB7 -> failwith "0xB7 <or a> not implemented"
-    | 0xB8 -> failwith "0xB8 <cp b> not implemented"
-    | 0xB9 -> failwith "0xB9 <cp c> not implemented"
-    | 0xBA -> failwith "0xBA <cp d> not implemented"
-    | 0xBB -> failwith "0xBB <cp e> not implemented"
-    | 0xBC -> failwith "0xBC <cp h> not implemented"
-    | 0xBD -> failwith "0xBD <cp l> not implemented"
-    | 0xBE -> failwith "0xBE <cp (hl)> not implemented"
-    | 0xBF -> failwith "0xBF <cp a> not implemented"
-    | 0xC0 -> RetCond Condition.NotZero |> Control // "0xC0 <ret nz> not implemented"
+    | 0xB8 -> Cp (RegDirect B) |> Arithmetic
+    | 0xB9 -> Cp (RegDirect C) |> Arithmetic
+    | 0xBA -> Cp (RegDirect D) |> Arithmetic
+    | 0xBB -> Cp (RegDirect E) |> Arithmetic
+    | 0xBC -> Cp (RegDirect H) |> Arithmetic
+    | 0xBD -> Cp (RegDirect L) |> Arithmetic
+    | 0xBE -> Cp HLIndirect |> Arithmetic
+    | 0xBF -> Cp (RegDirect A) |> Arithmetic
+    | 0xC0 -> RetCond Condition.NotZero |> Control
     | 0xC1 -> Pop BC |> Load
-    | 0xC2 -> JpCond (Condition.NotZero, withUint16 ()) |> Control // "0xC2 <jp nz,a16> not implemented"
-    | 0xC3 -> Jp (withUint16 ()) |> Control // "0xC3 <jp a16> not implemented"
-    | 0xC4 -> CallCond (Condition.NotZero, withUint16 ()) |> Control // "0xC4 <call nz,a16> not implemented"
+    | 0xC2 -> JpCond (Condition.NotZero, withUint16 ()) |> Control
+    | 0xC3 -> Jp (withUint16 ()) |> Control
+    | 0xC4 -> CallCond (Condition.NotZero, withUint16 ()) |> Control
     | 0xC5 -> Push BC |> Load
-    | 0xC6 -> failwith "0xC6 <add a,d8> not implemented"
+    | 0xC6 -> Add (withImmediate ()) |> Arithmetic
     | 0xC7 -> Rst 0x00uy |> Control
-    | 0xC8 -> RetCond Condition.Zero |> Control // "0xC8 <ret z> not implemented"
-    | 0xC9 -> Ret |> Control // "0xC9 <ret> not implemented"
-    | 0xCA -> JpCond (Condition.Zero, withUint16 ()) |> Control // "0xCA <jp z,a16> not implemented"
+    | 0xC8 -> RetCond Condition.Zero |> Control
+    | 0xC9 -> Ret |> Control
+    | 0xCA -> JpCond (Condition.Zero, withUint16 ()) |> Control
     | 0xCB -> fetchAndDecode2Byte memory pc
-    | 0xCC -> CallCond (Condition.Zero, withUint16 ()) |> Control // "0xCC <call z,a16> not implemented"
+    | 0xCC -> CallCond (Condition.Zero, withUint16 ()) |> Control
     | 0xCD -> Call (withUint16 ()) |> Control
-    | 0xCE -> failwith "0xCE <adc a,d8> not implemented"
+    | 0xCE -> Adc (withImmediate ()) |> Arithmetic
     | 0xCF -> Rst 0x08uy |> Control
-    | 0xD0 -> RetCond Condition.NoCarry |> Control // "0xD0 <ret nc> not implemented"
+    | 0xD0 -> RetCond Condition.NoCarry |> Control
     | 0xD1 -> Pop DE |> Load
-    | 0xD2 -> JpCond (Condition.NoCarry, withUint16 ()) |> Control // "0xD2 <jp nc,a16> not implemented"
-    | 0xD4 -> CallCond (Condition.NoCarry, withUint16 ()) |> Control // "0xD4 <call nc,a16> not implemented"
+    | 0xD2 -> JpCond (Condition.NoCarry, withUint16 ()) |> Control
+    | 0xD4 -> CallCond (Condition.NoCarry, withUint16 ()) |> Control
     | 0xD5 -> Push DE |> Load
-    | 0xD6 -> failwith "0xD6 <sub d8> not implemented"
+    | 0xD6 -> Sub (withImmediate ()) |> Arithmetic
     | 0xD7 -> Rst 0x10uy |> Control
-    | 0xD8 -> RetCond Condition.Carry |> Control // "0xD8 <ret c> not implemented"
-    | 0xD9 -> Reti |> Control // "0xD9 <reti> not implemented"
-    | 0xDA -> JpCond (Condition.Carry, withUint16 ()) |> Control // "0xDA <jp c,a16> not implemented"
-    | 0xDC -> CallCond (Condition.Carry, withUint16 ()) |> Control // "0xDC <call c,a16> not implemented"
-    | 0xDE -> failwith "0xDE <sbc a,d8> not implemented"
+    | 0xD8 -> RetCond Condition.Carry |> Control
+    | 0xD9 -> Reti |> Control
+    | 0xDA -> JpCond (Condition.Carry, withUint16 ()) |> Control
+    | 0xDC -> CallCond (Condition.Carry, withUint16 ()) |> Control
+    | 0xDE -> Sbc (withImmediate ()) |> Arithmetic
     | 0xDF -> Rst 0x18uy |> Control
     | 0xE0 -> LdhAtByteFromA (withUint8 ()) |> Load
     | 0xE1 -> Pop HL |> Load
@@ -504,8 +504,8 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xE5 -> Push HL |> Load
     | 0xE6 -> failwith "0xE6 <and d8> not implemented"
     | 0xE7 -> Rst 0x20uy |> Control
-    | 0xE8 -> failwith "0xE8 <add sp,r8> not implemented"
-    | 0xE9 -> JpHL |> Control // "0xE9 <jp hl> not implemented"
+    | 0xE8 -> AddSPe (withInt8 ()) |> Arithmetic
+    | 0xE9 -> JpHL |> Control
     | 0xEA -> LdAtWordFromA (withUint16 ()) |> Load
     | 0xEE -> failwith "0xEE <xor d8> not implemented"
     | 0xEF -> Rst 0x28uy |> Control
@@ -520,7 +520,7 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xF9 -> LdSPFromHL |> Load
     | 0xFA -> LdAFromAtWord (withUint16 ()) |> Load
     | 0xFB -> failwith "0xFB <ei> not implemented"
-    | 0xFE -> failwith "0xFE <cp d8> not implemented"
+    | 0xFE -> Cp (withImmediate ()) |> Arithmetic
     | 0xFF -> Rst 0x38uy |> Control
     | _ -> Unknown
     |> withLengthAndCycles
