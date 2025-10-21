@@ -61,6 +61,7 @@ let instructionMappingCases =
        0x24, "inc h", IncReg8 H |> Arithmetic
        0x25, "dec h", DecReg8 H |> Arithmetic
        0x26, "ld h,d8", LdReg8 (H, Immediate 0x01uy) |> Load
+       0x27, "daa", Daa |> Logic
        0x28, "jr z,r8", JrCond (Condition.Zero, 0x01y) |> Control
        0x29, "add hl,hl", AddHL HL |> Arithmetic
        0x2A, "ld a,(hl+)", LdAFromAtHLInc |> Load
@@ -68,6 +69,7 @@ let instructionMappingCases =
        0x2C, "inc l", IncReg8 L |> Arithmetic
        0x2D, "dec l", DecReg8 L |> Arithmetic
        0x2E, "ld l,d8", LdReg8 (L, Immediate 0x01uy) |> Load
+       0x2F, "cpl", Cpl |> Logic
        0x30, "jr nc,r8", JrCond (Condition.NoCarry, 0x01y) |> Control
        0x31, "ld sp,d16", LdReg16FromWord (SP, 0x0101us) |> Load
        0x32, "ld (hl-),a", LdAtHLDecFromA |> Load
@@ -75,6 +77,7 @@ let instructionMappingCases =
        0x34, "inc (hl)", IncAtHL |> Arithmetic
        0x35, "dec (hl)", DecAtHL |> Arithmetic
        0x36, "ld (hl),d8", LdAtHLFromByte 0x01uy |> Load
+       0x37, "scf", Scf |> Logic
        0x38, "jr c,r8", JrCond (Condition.Carry, 0x01y) |> Control
        0x39, "add hl,sp", AddHL SP |> Arithmetic
        0x3A, "ld a,(hl-)", LdAFromAtHLDec |> Load
@@ -82,6 +85,7 @@ let instructionMappingCases =
        0x3C, "inc a", IncReg8 A |> Arithmetic
        0x3D, "dec a", DecReg8 A |> Arithmetic
        0x3E, "ld a,d8", LdReg8 (A, Immediate 0x01uy) |> Load
+       0x3F, "ccf", Ccf |> Logic
        0x40, "ld b,b", LdReg8 (B, RegDirect B) |> Load
        0x41, "ld b,c", LdReg8 (B, RegDirect C) |> Load
        0x42, "ld b,d", LdReg8 (B, RegDirect D) |> Load
@@ -177,6 +181,30 @@ let instructionMappingCases =
        0x9D, "sbc a,l", Sbc (RegDirect L) |> Arithmetic
        0x9E, "sbc a,(hl)", Sbc HLIndirect |> Arithmetic
        0x9F, "sbc a,a", Sbc (RegDirect A) |> Arithmetic
+       0xA0, "and b", And (RegDirect B) |> Logic
+       0xA1, "and c", And (RegDirect C) |> Logic
+       0xA2, "and d", And (RegDirect D) |> Logic
+       0xA3, "and e", And (RegDirect E) |> Logic
+       0xA4, "and h", And (RegDirect H) |> Logic
+       0xA5, "and l", And (RegDirect L) |> Logic
+       0xA6, "and (hl)", And HLIndirect |> Logic
+       0xA7, "and a", And (RegDirect A) |> Logic
+       0xA8, "xor b", Xor (RegDirect B) |> Logic
+       0xA9, "xor c", Xor (RegDirect C) |> Logic
+       0xAA, "xor d", Xor (RegDirect D) |> Logic
+       0xAB, "xor e", Xor (RegDirect E) |> Logic
+       0xAC, "xor h", Xor (RegDirect H) |> Logic
+       0xAD, "xor l", Xor (RegDirect L) |> Logic
+       0xAE, "xor (hl)", Xor HLIndirect |> Logic
+       0xAF, "xor a", Xor (RegDirect A) |> Logic
+       0xB0, "or b", Or (RegDirect B) |> Logic
+       0xB1, "or c", Or (RegDirect C) |> Logic
+       0xB2, "or d", Or (RegDirect D) |> Logic
+       0xB3, "or e", Or (RegDirect E) |> Logic
+       0xB4, "or h", Or (RegDirect H) |> Logic
+       0xB5, "or l", Or (RegDirect L) |> Logic
+       0xB6, "or (hl)", Or HLIndirect |> Logic
+       0xB7, "or a", Or (RegDirect A) |> Logic
        0xB8, "cp b", Cp (RegDirect B) |> Arithmetic
        0xB9, "cp c", Cp (RegDirect C) |> Arithmetic
        0xBA, "cp d", Cp (RegDirect D) |> Arithmetic
@@ -217,15 +245,18 @@ let instructionMappingCases =
        0xE1, "pop hl", Pop HL |> Load
        0xE2, "ld (c),a", LdhAtCFromA |> Load
        0xE5, "push hl", Push HL |> Load
+       0xE6, "and d8", And (Immediate 0x01uy) |> Logic
        0xE7, "rst 20h", Rst 0x20uy |> Control
        0xE8, "add sp,r8", AddSPe 0x01y |> Arithmetic
        0xE9, "jp hl", JpHL |> Control
        0xEA, "ld (a16),a", LdAtWordFromA 0x0101us |> Load
+       0xEE, "xor d8", Xor (Immediate 0x01uy) |> Logic
        0xEF, "rst 28h", Rst 0x28uy |> Control
        0xF0, "ldh a,(a8)", LdhAFromAByte 0x01uy |> Load
        0xF1, "pop af", Pop AF |> Load
        0xF2, "ld a,(c)", LdhAFromAtC |> Load
        0xF5, "push af", Push AF |> Load
+       0xF6, "or d8", Or (Immediate 0x01uy) |> Logic
        0xF7, "rst 30h", Rst 0x30uy |> Control
        0xF8, "ld hl,sp+r8", LdHLFromSPe 0x01y |> Load
        0xF9, "ld sp,hl", LdSPFromHL |> Load

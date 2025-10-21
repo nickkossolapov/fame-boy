@@ -137,7 +137,14 @@ type LoadInstr =
     | Pop of Reg16
     | LdHLFromSPe of int8
 
-type LogicInstr = Xor8 of Reg8
+type LogicInstr =
+    | And of ByteSource
+    | Or of ByteSource
+    | Xor of ByteSource
+    | Ccf // Complementing carry flag
+    | Scf // Set carry flag
+    | Daa // Decimal adjust accumulator
+    | Cpl // Complement accumulator
 
 type Instruction =
     | Nop
@@ -234,7 +241,13 @@ module private LengthsAndCycles =
 
     let forLogic =
         function
-        | Xor8 _ -> 1, Fixed 1
+        | And bs -> forByteSource bs
+        | Or bs -> forByteSource bs
+        | Xor bs -> forByteSource bs
+        | Ccf -> 1, Fixed 1
+        | Scf -> 1, Fixed 1
+        | Daa -> 1, Fixed 1
+        | Cpl -> 1, Fixed 1
 
 let withLengthAndCycles (instr: Instruction) =
     let length, cycles =

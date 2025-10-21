@@ -92,14 +92,6 @@ type Cpu =
         for flag, value in flags do
             this.setFlag flag value
 
-    /// <summary>
-    /// Sets the F register to the given 4-bit value (only last 4 bits of the input int are used).
-    /// Bits are in the order ZNHC (zero, negative, half-carry, carry).
-    /// </summary>
-    member this.setFlags(value: int) =
-        this.Registers.F <- (uint8 (value &&& 0b1111) <<< 4)
-
-
 let createCpu (bootRom: uint8 array) : Cpu =
     let memory = Array.zeroCreate (int memorySize)
     Array.blit bootRom 0 memory 0 bootRom.Length
