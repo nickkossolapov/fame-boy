@@ -66,7 +66,24 @@ module LoadTypes =
         | Carry
         | NoCarry
 
-    type ByteSource =
+    type LoadA =
+        | To
+        | From
+
+    type ASource =
+        | AtBC
+        | AtDE
+        | AtCHigh
+        | AtByteHigh of uint8
+        | AtWord of uint16
+        | AtHLInc
+        | AtHLDec
+
+open LoadTypes
+
+module ByteSource =
+    [<RequireQualifiedAccess>]
+    type Read =
         | Immediate of uint8
         | RegDirect of Reg8
         | HLIndirect
@@ -77,18 +94,31 @@ module LoadTypes =
             | RegDirect reg -> reg.GetFrom cpu
             | HLIndirect -> cpu.Memory[cpu.Registers.HL]
 
-open LoadTypes
+    [<RequireQualifiedAccess>]
+    type Write =
+        | RegDirect of Reg8
+        | HLIndirect
+
+        member this.SetTo (cpu: Cpu) (value: uint8) =
+            match this with
+            | RegDirect reg -> reg.SetTo cpu value
+            | HLIndirect -> cpu.Memory[cpu.Registers.HL] <- value
+
+        member this.GetFrom(cpu: Cpu) =
+            match this with
+            | RegDirect reg -> reg.GetFrom cpu
+            | HLIndirect -> cpu.Memory[cpu.Registers.HL]
+
+open ByteSource
 
 type ArithmeticInstr =
-    | Add of ByteSource
-    | Adc of ByteSource
-    | Sub of ByteSource
-    | Sbc of ByteSource
-    | Cp of ByteSource
-    | IncReg8 of Reg8
-    | IncAtHL
-    | DecReg8 of Reg8
-    | DecAtHL
+    | Add of Read
+    | Adc of Read
+    | Sub of Read
+    | Sbc of Read
+    | Cp of Read
+    | Inc of Write
+    | Dec of Write
     | IncReg16 of Reg16
     | DecReg16 of Reg16
     | AddHL of Reg16
@@ -113,23 +143,10 @@ type ControlInstr =
     | Rst of uint8
 
 type LoadInstr =
-    | LdReg8 of Reg8 * ByteSource
+    | LdReg8 of Reg8 * Read
     | LdAtHLFromReg8 of Reg8
     | LdAtHLFromByte of uint8
-    | LdAFromAtBC
-    | LdAFromAtDE
-    | LdAtBCFromA
-    | LdAtDEFromA
-    | LdAFromAtWord of uint16
-    | LdAtWordFromA of uint16
-    | LdhAFromAtC
-    | LdhAtCFromA
-    | LdhAFromAByte of uint8
-    | LdhAtByteFromA of uint8
-    | LdAFromAtHLDec
-    | LdAtHLDecFromA
-    | LdAFromAtHLInc
-    | LdAtHLIncFromA
+    | LdA of LoadA * ASource
     | LdReg16FromWord of Reg16 * uint16
     | LdAtWordFromSP of uint16
     | LdSPFromHL
@@ -138,9 +155,9 @@ type LoadInstr =
     | LdHLFromSPe of int8
 
 type LogicInstr =
-    | And of ByteSource
-    | Or of ByteSource
-    | Xor of ByteSource
+    | And of Read
+    | Or of Read
+    | Xor of Read
     | Ccf // Complementing carry flag
     | Scf // Set carry flag
     | Daa // Decimal adjust accumulator
@@ -167,23 +184,24 @@ type DecodedInstruction =
       MCycles: MCycles }
 
 module private LengthsAndCycles =
-    let forByteSource =
+    let forReadByte =
         function
-        | Immediate _ -> 2, Fixed 2
-        | HLIndirect -> 1, Fixed 2
-        | RegDirect _ -> 1, Fixed 1
+        | Read.Immediate _ -> 2, Fixed 2
+        | Read.HLIndirect -> 1, Fixed 2
+        | Read.RegDirect _ -> 1, Fixed 1
 
     let forArithmetic =
         function
-        | Add bs -> forByteSource bs
-        | Adc bs -> forByteSource bs
-        | Sub bs -> forByteSource bs
-        | Sbc bs -> forByteSource bs
-        | Cp bs -> forByteSource bs
-        | IncReg8 _ -> 1, Fixed 1
-        | IncAtHL -> 1, Fixed 3
-        | DecReg8 _ -> 1, Fixed 1
-        | DecAtHL -> 1, Fixed 3
+        | Add rb -> forReadByte rb
+        | Adc rb -> forReadByte rb
+        | Sub rb -> forReadByte rb
+        | Sbc rb -> forReadByte rb
+        | Cp rb -> forReadByte rb
+        | Inc wb
+        | Dec wb ->
+            match wb with
+            | Write.HLIndirect -> 1, Fixed 3
+            | Write.RegDirect _ -> 1, Fixed 1
         | IncReg16 _ -> 1, Fixed 2
         | DecReg16 _ -> 1, Fixed 2
         | AddHL _ -> 1, Fixed 2
@@ -211,27 +229,18 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
-        | LdReg8 (_, s) ->
-            match s with
-            | Immediate _ -> 2, Fixed 2
-            | RegDirect _ -> 1, Fixed 1
-            | HLIndirect -> 1, Fixed 2
+        | LdReg8 (_, s) -> forReadByte s
         | LdAtHLFromReg8 _ -> 1, Fixed 2
         | LdAtHLFromByte _ -> 2, Fixed 3
-        | LdAFromAtBC -> 1, Fixed 2
-        | LdAFromAtDE -> 1, Fixed 2
-        | LdAtBCFromA -> 1, Fixed 2
-        | LdAtDEFromA -> 1, Fixed 2
-        | LdAFromAtWord _ -> 3, Fixed 4
-        | LdAtWordFromA _ -> 3, Fixed 4
-        | LdhAFromAtC -> 1, Fixed 2
-        | LdhAtCFromA -> 1, Fixed 2
-        | LdhAtByteFromA _ -> 2, Fixed 3
-        | LdhAFromAByte _ -> 2, Fixed 3
-        | LdAFromAtHLDec -> 1, Fixed 2
-        | LdAtHLDecFromA -> 1, Fixed 2
-        | LdAFromAtHLInc -> 1, Fixed 2
-        | LdAtHLIncFromA -> 1, Fixed 2
+        | LdA (_, s) ->
+            match s with
+            | AtBC -> 1, Fixed 2
+            | AtDE -> 1, Fixed 2
+            | AtWord _ -> 3, Fixed 4
+            | AtCHigh -> 1, Fixed 2
+            | AtByteHigh _ -> 2, Fixed 3
+            | AtHLInc
+            | AtHLDec -> 1, Fixed 2
         | LdReg16FromWord _ -> 3, Fixed 3
         | LdAtWordFromSP _ -> 3, Fixed 5
         | LdSPFromHL -> 1, Fixed 2
@@ -241,9 +250,9 @@ module private LengthsAndCycles =
 
     let forLogic =
         function
-        | And bs -> forByteSource bs
-        | Or bs -> forByteSource bs
-        | Xor bs -> forByteSource bs
+        | And bs -> forReadByte bs
+        | Or bs -> forReadByte bs
+        | Xor bs -> forReadByte bs
         | Ccf -> 1, Fixed 1
         | Scf -> 1, Fixed 1
         | Daa -> 1, Fixed 1

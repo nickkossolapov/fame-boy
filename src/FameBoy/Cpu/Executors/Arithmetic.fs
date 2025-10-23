@@ -50,36 +50,20 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
         let carry = res < 0
 
         cpu.setFlags [ Zero, uint8 res = 0uy; Subtract, true; HalfCarry, halfCarry; Carry, carry ]
-    | IncReg8 reg ->
-        let value = reg.GetFrom cpu
+    | Inc ref ->
+        let value = ref.GetFrom cpu
         let res = value + 1uy
         let halfCarry = (value &&& 0xFuy) = 0xFuy
 
-        reg.SetTo cpu res
+        ref.SetTo cpu res
 
         cpu.setFlags [ Zero, res = 0uy; Subtract, false; HalfCarry, halfCarry ]
-    | IncAtHL ->
-        let value = cpu.Memory[cpu.Registers.HL]
-        let res = value + 1uy
-        let halfCarry = (value &&& 0xFuy) = 0xFuy
-
-        cpu.Memory[cpu.Registers.HL] <- res
-
-        cpu.setFlags [ Zero, res = 0uy; Subtract, false; HalfCarry, halfCarry ]
-    | DecReg8 reg ->
-        let value = reg.GetFrom cpu
+    | Dec ref ->
+        let value = ref.GetFrom cpu
         let res = value - 1uy
         let halfCarry = (value &&& 0xFuy) = 0x0uy
 
-        reg.SetTo cpu res
-
-        cpu.setFlags [ Zero, res = 0uy; Subtract, true; HalfCarry, halfCarry ]
-    | DecAtHL ->
-        let value = cpu.Memory[cpu.Registers.HL]
-        let res = value - 1uy
-        let halfCarry = (value &&& 0xFuy) = 0x0uy
-
-        cpu.Memory[cpu.Registers.HL] <- res
+        ref.SetTo cpu res
 
         cpu.setFlags [ Zero, res = 0uy; Subtract, true; HalfCarry, halfCarry ]
     | IncReg16 reg -> (reg.GetFrom cpu) + 1us |> reg.SetTo cpu

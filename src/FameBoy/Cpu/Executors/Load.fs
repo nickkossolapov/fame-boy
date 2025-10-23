@@ -1,44 +1,41 @@
 ﻿module FameBoy.Cpu.Executors.Load
 
 open FameBoy.Cpu.Instructions
+open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.State
 open FameBoy.Cpu.Utils
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
+    let getFullAddress (byte: uint8) = 0xFF00us + uint16 byte
+
     match instr with
     | LdReg8 (reg, source) -> source.GetFrom cpu |> reg.SetTo cpu
     | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFrom cpu
     | LdAtHLFromByte b -> cpu.Memory[cpu.Registers.HL] <- b
-    | LdAFromAtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]
-    | LdAFromAtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
-    | LdAtBCFromA -> cpu.Memory[cpu.Registers.BC] <- cpu.Registers.A
-    | LdAtDEFromA -> cpu.Memory[cpu.Registers.DE] <- cpu.Registers.A
-    | LdAFromAtWord w -> cpu.Registers.A <- cpu.Memory[w]
-    | LdAtWordFromA w -> cpu.Memory[w] <- cpu.Registers.A
-    | LdhAFromAtC ->
-        let address = 0xFF00us + uint16 cpu.Registers.C
-        cpu.Registers.A <- cpu.Memory[address]
-    | LdhAtCFromA ->
-        let address = 0xFF00us + uint16 cpu.Registers.C
-        cpu.Memory[address] <- cpu.Registers.A
-    | LdhAFromAByte b ->
-        let address = 0xFF00us + (uint16 b)
-        cpu.Registers.A <- cpu.Memory[address]
-    | LdhAtByteFromA b ->
-        let address = 0xFF00us + (uint16 b)
-        cpu.Memory[address] <- cpu.Registers.A
-    | LdAFromAtHLDec ->
-        cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
-        cpu.Registers.HL <- cpu.Registers.HL - 1us
-    | LdAtHLDecFromA ->
-        cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
-        cpu.Registers.HL <- cpu.Registers.HL - 1us
-    | LdAFromAtHLInc ->
-        cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
-        cpu.Registers.HL <- cpu.Registers.HL + 1us
-    | LdAtHLIncFromA ->
-        cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
-        cpu.Registers.HL <- cpu.Registers.HL + 1us
+    | LdA (d, s) ->
+        match d, s with
+        | From, AtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]
+        | From, AtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
+        | To, AtBC -> cpu.Memory[cpu.Registers.BC] <- cpu.Registers.A
+        | To, AtDE -> cpu.Memory[cpu.Registers.DE] <- cpu.Registers.A
+        | From, AtWord w -> cpu.Registers.A <- cpu.Memory[w]
+        | To, AtWord w -> cpu.Memory[w] <- cpu.Registers.A
+        | From, AtCHigh -> cpu.Registers.A <- cpu.Memory[getFullAddress cpu.Registers.C]
+        | To, AtCHigh -> cpu.Memory[getFullAddress cpu.Registers.C] <- cpu.Registers.A
+        | From, AtByteHigh b -> cpu.Registers.A <- cpu.Memory[getFullAddress b]
+        | To, AtByteHigh b -> cpu.Memory[getFullAddress b] <- cpu.Registers.A
+        | From, AtHLInc ->
+            cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
+            cpu.Registers.HL <- cpu.Registers.HL + 1us
+        | From, AtHLDec ->
+            cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
+            cpu.Registers.HL <- cpu.Registers.HL - 1us
+        | To, AtHLInc ->
+            cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
+            cpu.Registers.HL <- cpu.Registers.HL + 1us
+        | To, AtHLDec ->
+            cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
+            cpu.Registers.HL <- cpu.Registers.HL - 1us
     | LdReg16FromWord (reg, w) -> reg.SetTo cpu w
     | LdAtWordFromSP w ->
         let msb, lsb = uint8 (cpu.Sp >>> 8), uint8 cpu.Sp
