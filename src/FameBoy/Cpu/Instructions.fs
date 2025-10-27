@@ -125,9 +125,21 @@ type ArithmeticInstr =
     | AddSPe of int8
 
 type BitwiseInstr =
-    | Bit of uint3 * Reg8
-    | RlA
-    | RlReg8 of Reg8
+    | Rlca
+    | Rrca
+    | Rra
+    | Rla
+    | Rlc of Write
+    | Rrc of Write
+    | Rl of Write
+    | Rr of Write
+    | Sla of Write
+    | Sra of Write
+    | Srl of Write
+    | Swap of Write
+    | Bit of uint3 * Write
+    | Res of uint3 * Write
+    | Set of uint3 * Write
 
 type ControlInstr =
     | Jp of uint16
@@ -164,6 +176,10 @@ type LogicInstr =
     | Cpl // Complement accumulator
 
 type Instruction =
+    | Halt
+    | Stop
+    | Di
+    | Ei
     | Nop
     | Arithmetic of ArithmeticInstr
     | Bitwise of BitwiseInstr
@@ -208,10 +224,30 @@ module private LengthsAndCycles =
         | AddSPe _ -> 2, Fixed 4
 
     let forBitwise =
+        let forWriteByte =
+            function
+            | Write.RegDirect _ -> 2, Fixed 2
+            | Write.HLIndirect -> 2, Fixed 4
+
         function
-        | Bit _ -> 2, Fixed 2
-        | RlReg8 _ -> 2, Fixed 2
-        | RlA -> 1, Fixed 1
+        | Rlca
+        | Rrca -> 1, Fixed 1
+        | Rra
+        | Rla -> 1, Fixed 1
+        | Rlc w
+        | Rrc w -> forWriteByte w
+        | Rl w
+        | Rr w -> forWriteByte w
+        | Sla w
+        | Sra w -> forWriteByte w
+        | Srl w
+        | Swap w -> forWriteByte w
+        | Bit (_, w) ->
+            match w with
+            | Write.RegDirect _ -> 2, Fixed 2
+            | Write.HLIndirect -> 2, Fixed 3
+        | Res (_, w) -> forWriteByte w
+        | Set (_, w) -> forWriteByte w
 
     let forControl =
         function
@@ -261,6 +297,10 @@ module private LengthsAndCycles =
 let withLengthAndCycles (instr: Instruction) =
     let length, cycles =
         match instr with
+        | Halt -> 1, Fixed 1
+        | Stop -> 2, Fixed 2
+        | Di -> 1, Fixed 1
+        | Ei -> 1, Fixed 1
         | Nop -> 1, Fixed 1
         | Arithmetic arithmeticInstr -> LengthsAndCycles.forArithmetic arithmeticInstr
         | Bitwise bitwiseInstr -> LengthsAndCycles.forBitwise bitwiseInstr

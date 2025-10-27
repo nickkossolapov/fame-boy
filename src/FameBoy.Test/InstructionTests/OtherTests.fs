@@ -6,6 +6,59 @@ open FameBoy.Cpu.State
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.Execute
 
+[<Test>]
+let ``halt enables halt`` () =
+    // Setup
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0x76uy
+    cpu.Halted <- false
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+
+    Assert.That (cpu.Halted, Is.True)
+
+[<Test>]
+let ``di disables interrupts`` () =
+    // Setup
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xF3uy
+    cpu.Ime <- true
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+
+    Assert.That (cpu.Ime, Is.False)
+
+[<Test>]
+let ``ei enables interrupts`` () =
+    // Setup
+    let cpu = createCpu [||]
+    cpu.Pc <- 0x100us
+    cpu.Memory[0x100us] <- 0xFBuy
+    cpu.Ime <- false
+
+    // Execute
+    let instr = fetchAndDecode cpu.Memory cpu.Pc
+    execute cpu instr
+
+    // Evaluate
+    Assert.That (instr.Length, Is.EqualTo 1)
+    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+
+    Assert.That (cpu.Ime, Is.True)
 
 [<Test>]
 let ``NOP changes nothing`` () =

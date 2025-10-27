@@ -25,8 +25,6 @@ let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H 
     Assert.That (cpu.Registers.L, Is.EqualTo 0x34uy)
     Assert.That (cpu.Registers.HL, Is.EqualTo 0x1234us)
 
-
-
 let instructionMappingCases =
     [| 0x00, "nop", Nop
        0x01, "ld bc,d16", LdReg16FromWord (BC, 0x0101us) |> Load
@@ -35,6 +33,7 @@ let instructionMappingCases =
        0x04, "inc b", Inc (Write.RegDirect B) |> Arithmetic
        0x05, "dec b", Dec (Write.RegDirect B) |> Arithmetic
        0x06, "ld b,d8", LdReg8 (B, Read.Immediate 0x01uy) |> Load
+       0x07, "rlca", Rlca |> Bitwise
        0x08, "ld (a16),sp", LdAtWordFromSP 0x0101us |> Load
        0x09, "add hl,bc", AddHL BC |> Arithmetic
        0x0A, "ld a,(bc)", LdA (From, AtBC) |> Load
@@ -42,13 +41,15 @@ let instructionMappingCases =
        0x0C, "inc c", Inc (Write.RegDirect C) |> Arithmetic
        0x0D, "dec c", Dec (Write.RegDirect C) |> Arithmetic
        0x0E, "ld c,d8", LdReg8 (C, Read.Immediate 0x01uy) |> Load
+       0x0F, "rrca", Rrca |> Bitwise
+       0x10, "stop", Stop
        0x11, "ld de,d16", LdReg16FromWord (DE, 0x0101us) |> Load
        0x12, "ld (de),a", LdA (To, AtDE) |> Load
        0x13, "inc de", IncReg16 DE |> Arithmetic
        0x14, "inc d", Inc (Write.RegDirect D) |> Arithmetic
        0x15, "dec d", Dec (Write.RegDirect D) |> Arithmetic
        0x16, "ld d,d8", LdReg8 (D, Read.Immediate 0x01uy) |> Load
-       0x17, "rla", RlA |> Bitwise
+       0x17, "rla", Rla |> Bitwise
        0x18, "jr r8", Jr 0x01y |> Control
        0x19, "add hl,de", AddHL DE |> Arithmetic
        0x1A, "ld a,(de)", LdA (From, AtDE) |> Load
@@ -56,6 +57,7 @@ let instructionMappingCases =
        0x1C, "inc e", Inc (Write.RegDirect E) |> Arithmetic
        0x1D, "dec e", Dec (Write.RegDirect E) |> Arithmetic
        0x1E, "ld e,d8", LdReg8 (E, Read.Immediate 0x01uy) |> Load
+       0x1F, "rra", Rra |> Bitwise
        0x20, "jr nz,r8", JrCond (Condition.NotZero, 0x01y) |> Control
        0x21, "ld hl,d16", LdReg16FromWord (HL, 0x0101us) |> Load
        0x22, "ld (hl+),a", LdA (To, AtHLInc) |> Load
@@ -142,6 +144,7 @@ let instructionMappingCases =
        0x73, "ld (hl),e", LdAtHLFromReg8 E |> Load
        0x74, "ld (hl),h", LdAtHLFromReg8 H |> Load
        0x75, "ld (hl),l", LdAtHLFromReg8 L |> Load
+       0x76, "halt", Halt
        0x77, "ld (hl),a", LdAtHLFromReg8 A |> Load
        0x78, "ld a,b", LdReg8 (A, Read.RegDirect B) |> Load
        0x79, "ld a,c", LdReg8 (A, Read.RegDirect C) |> Load
@@ -257,12 +260,14 @@ let instructionMappingCases =
        0xF0, "ldh a,(a8)", LdA (From, AtByteHigh 0x01uy) |> Load
        0xF1, "pop af", Pop AF |> Load
        0xF2, "ld a,(c)", LdA (From, AtCHigh) |> Load
+       0xF3, "di", Di
        0xF5, "push af", Push AF |> Load
        0xF6, "or d8", Or (Read.Immediate 0x01uy) |> Logic
        0xF7, "rst 30h", Rst 0x30uy |> Control
        0xF8, "ld hl,sp+r8", LdHLFromSPe 0x01y |> Load
        0xF9, "ld sp,hl", LdSPFromHL |> Load
        0xFA, "ld a,(a16)", LdA (From, AtWord 0x0101us) |> Load
+       0xFB, "ei", Ei
        0xFE, "cp d8", Cp (Read.Immediate 0x01uy) |> Arithmetic
        0xFF, "rst 38h", Rst 0x38uy |> Control |]
     |> Array.map (fun (opcode, label, instr) -> TestCaseData(uint8 opcode, instr).SetName $"Check 0x{opcode:X2} to {label} mapping")
@@ -271,6 +276,55 @@ let instructionMappingCases =
 [<TestCaseSource(nameof instructionMappingCases)>]
 let ``Check opcode to instruction mapping`` (opcode: int, expectedInstr: Instruction) =
     let memory = Memory [| uint8 opcode; 0x01uy; 0x01uy |]
+
+    let instr = fetchAndDecode memory 0us
+
+    Assert.That (instr.Instruction, Is.EqualTo expectedInstr)
+
+let bitwiseOrder =
+    [| "b", Write.RegDirect B
+       "c", Write.RegDirect C
+       "d", Write.RegDirect D
+       "e", Write.RegDirect E
+       "h", Write.RegDirect H
+       "l", Write.RegDirect L
+       "[hl]", Write.HLIndirect
+       "a", Write.RegDirect A |]
+    |> Array.mapi (fun i (x, y) -> i, x, y)
+
+let twoByteRotateShiftInstructions =
+    [| "rlc", Rlc
+       "rrc", Rrc
+       "rl", Rl
+       "rr", Rr
+       "sla", Sla
+       "sra", Sra
+       "swap", Swap
+       "srl", Srl |]
+    |> Array.mapi (fun i (x, y) -> i * 8, x, y)
+
+// e.g. rlc b
+let rotateSwapCases =
+    Array.allPairs twoByteRotateShiftInstructions bitwiseOrder
+    |> Array.map (fun ((i1, desc, instr), (i2, reg, target)) -> i1 + i2, $"{desc} {reg}", Bitwise (instr target))
+
+// e.g. bit 0, b
+let indexedCases =
+    Array.allPairs [| "bit", Bit; "res", Res; "set", Set |] [| 0uy .. 7uy |]
+    |> Array.mapi (fun i ((desc, instr), x) -> 0x40 + (i * 8), $"{x} {desc}", x, instr)
+
+let remainingTwoByteTestCases =
+    Array.allPairs indexedCases bitwiseOrder
+    |> Array.map (fun ((i1, desc, bit, instr), (i2, reg, target)) -> i1 + i2, $"{desc},{reg}", Bitwise (instr (bit, target)))
+
+let twoByteTestCases =
+    Array.append rotateSwapCases remainingTwoByteTestCases
+    |> Array.map (fun (opcode, label, instr) -> TestCaseData(uint8 opcode, instr).SetName $"Check 0xCB{opcode:X2} to {label} mapping")
+
+[<Test>]
+[<TestCaseSource(nameof twoByteTestCases)>]
+let ``Check two-byte opcode to instruction mapping`` (opcode: int, expectedInstr: Instruction) =
+    let memory = Memory [| 0xCBuy; uint8 opcode |]
 
     let instr = fetchAndDecode memory 0us
 

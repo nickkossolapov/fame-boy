@@ -78,15 +78,13 @@ type Cpu =
       Registers: Registers
       mutable Pc: uint16
       mutable Sp: uint16
-      mutable Ime: bool }
+      mutable Ime: bool
+      mutable Halted: bool }
 
     member this.setFlag flag value =
         this.Registers.F <- Flags.applyFlag flag this.Registers.F value
 
     member this.getFlag flag = Flags.getFlag flag this.Registers.F
-
-    member this.getFlagBit flag =
-        if (Flags.getFlag flag this.Registers.F) then 1uy else 0uy
 
     member this.setFlags(flags: (Flag * bool) list) =
         for flag, value in flags do
@@ -106,8 +104,9 @@ let createCpu (bootRom: uint8 array) : Cpu =
           H = 0uy
           L = 0uy }
 
-    { Memory = Memory (memory)
+    { Memory = Memory memory
       Registers = registers
       Pc = 0us
       Sp = 0us
-      Ime = true }
+      Ime = true
+      Halted = false }
