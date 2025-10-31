@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>Library</OutputType>
         <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
 
@@ -16,7 +16,7 @@
         <Compile Include="Cpu\Executors\Logic.fs" />
         <Compile Include="Cpu\Execute.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
-        <Compile Include="Program.fs" />
+        <Compile Include="Constants.fs" />
     </ItemGroup>
 
     <PropertyGroup>

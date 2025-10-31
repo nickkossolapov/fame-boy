@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="RaylibBindings.fs" />
+        <Compile Include="CpuTest.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\src\FameBoy\FameBoy.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Raylib-cs" Version="7.0.2" />
+    </ItemGroup>
+
+</Project>
