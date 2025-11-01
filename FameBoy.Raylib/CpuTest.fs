@@ -4,6 +4,7 @@ open System.IO
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Memory
 
 let testCpu () =
     let readRom path = File.ReadAllBytes path
@@ -60,7 +61,8 @@ let testCpu () =
            0x3E |]
         |> Array.map uint8
 
-    let cpu = createCpu bytes
+    let memory = createMemory bytes
+    let cpu = createCpu memory
 
     Array.blit headerBitmapCheck 0 cpu.Memory.Array 0x104 headerBitmapCheck.Length
 

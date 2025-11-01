@@ -6,6 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Constants.fs" />
+        <Compile Include="Memory.fs" />
         <Compile Include="Cpu\State.fs" />
         <Compile Include="Cpu\Instructions.fs" />
         <Compile Include="Cpu\Executors\Utils.fs" />
@@ -16,7 +18,7 @@
         <Compile Include="Cpu\Executors\Logic.fs" />
         <Compile Include="Cpu\Execute.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
-        <Compile Include="Constants.fs" />
+        <Folder Include="Gpu\" />
     </ItemGroup>
 
     <PropertyGroup>

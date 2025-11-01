@@ -5,7 +5,7 @@
 let ``Load 16-bit register - ld sp,n16`` () = 
     // Setup
     let opcode = 0x31uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100
     cpu.Memory[0x100] <- opcode

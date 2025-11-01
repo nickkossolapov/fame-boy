@@ -2,6 +2,7 @@
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
+open FameBoy.Memory
 
 let getWordFromMemory (memory: Memory) (p: uint16) =
     let msb, lsb = memory[p + 1us], memory[p]

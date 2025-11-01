@@ -6,12 +6,13 @@ open FameBoy.Cpu.Instructions.ByteSource
 open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Memory
 open NUnit.Framework
 
 [<Test>]
 let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H = PC+2)`` () =
     let opcode = 0x21uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode

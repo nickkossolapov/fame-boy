@@ -4,13 +4,14 @@ open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Memory
 open NUnit.Framework
 
 [<Test>]
 let ``Add 8-bit register to A (no carry, no half-carry, no zero) - add b`` () =
     // Setup
     let opcode = 0x80uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0b00010010uy
@@ -39,7 +40,7 @@ let ``Add 8-bit register to A (no carry, no half-carry, no zero) - add b`` () =
 let ``Add 8-bit register to A (result zero) - add b`` () =
     // Setup
     let opcode = 0x80uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0b00000000uy
@@ -68,7 +69,7 @@ let ``Add 8-bit register to A (result zero) - add b`` () =
 let ``Add 8-bit register to A (half-carry, no carry) - add b`` () =
     // Setup
     let opcode = 0x80uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0b00001111uy
@@ -97,7 +98,7 @@ let ``Add 8-bit register to A (half-carry, no carry) - add b`` () =
 let ``Add 8-bit register to A (carry, no half-carry) - add b`` () =
     // Setup
     let opcode = 0x80uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0b11110000uy
@@ -126,7 +127,7 @@ let ``Add 8-bit register to A (carry, no half-carry) - add b`` () =
 let ``Add with carry from (HL) to A (no carry, no half-carry, no zero) - adc (hl)`` () =
     // Setup
     let opcode = 0x8Euy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -156,7 +157,7 @@ let ``Add with carry from (HL) to A (no carry, no half-carry, no zero) - adc (hl
 let ``Add with carry from (HL) to A (result zero) - adc (hl)`` () =
     // Setup
     let opcode = 0x8Euy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -186,7 +187,7 @@ let ``Add with carry from (HL) to A (result zero) - adc (hl)`` () =
 let ``Add with carry from (HL) to A (half-carry) - adc (hl)`` () =
     // Setup
     let opcode = 0x8Euy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -216,7 +217,7 @@ let ``Add with carry from (HL) to A (half-carry) - adc (hl)`` () =
 let ``Add with carry from (HL) to A (carry) - adc (hl)`` () =
     // Setup
     let opcode = 0x8Euy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -246,7 +247,7 @@ let ``Add with carry from (HL) to A (carry) - adc (hl)`` () =
 let ``Add with carry from (HL) to A (with initial carry) - adc (hl)`` () =
     // Setup
     let opcode = 0x8Euy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -276,7 +277,7 @@ let ``Add with carry from (HL) to A (with initial carry) - adc (hl)`` () =
 let ``Subtract immediate from A (no borrow, no half-borrow, no zero) - sub n`` () =
     // Setup
     let opcode = 0xD6uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -305,7 +306,7 @@ let ``Subtract immediate from A (no borrow, no half-borrow, no zero) - sub n`` (
 let ``Subtract immediate from A (result zero) - sub n`` () =
     // Setup
     let opcode = 0xD6uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -334,7 +335,7 @@ let ``Subtract immediate from A (result zero) - sub n`` () =
 let ``Subtract immediate from A (half-borrow) - sub n`` () =
     // Setup
     let opcode = 0xD6uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x30uy
@@ -363,7 +364,7 @@ let ``Subtract immediate from A (half-borrow) - sub n`` () =
 let ``Subtract immediate from A (borrow) - sub n`` () =
     // Setup
     let opcode = 0xD6uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -392,7 +393,7 @@ let ``Subtract immediate from A (borrow) - sub n`` () =
 let ``Subtract with carry from B to A (no borrow, no half-borrow, no zero) - sbc b`` () =
     // Setup
     let opcode = 0x98uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -421,7 +422,7 @@ let ``Subtract with carry from B to A (no borrow, no half-borrow, no zero) - sbc
 let ``Subtract with carry from B to A (result zero) - sbc b`` () =
     // Setup
     let opcode = 0x98uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -450,7 +451,7 @@ let ``Subtract with carry from B to A (result zero) - sbc b`` () =
 let ``Subtract with carry from B to A (half-borrow) - sbc b`` () =
     // Setup
     let opcode = 0x98uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x30uy
@@ -479,7 +480,7 @@ let ``Subtract with carry from B to A (half-borrow) - sbc b`` () =
 let ``Subtract with carry from B to A (borrow) - sbc b`` () =
     // Setup
     let opcode = 0x98uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -508,7 +509,7 @@ let ``Subtract with carry from B to A (borrow) - sbc b`` () =
 let ``Subtract with carry from B to A (with initial carry) - sbc b`` () =
     // Setup
     let opcode = 0x98uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
@@ -537,7 +538,7 @@ let ``Subtract with carry from B to A (with initial carry) - sbc b`` () =
 let ``Compare A with (HL) (A > (HL)) - cp (hl)`` () =
     // Setup
     let opcode = 0xBEuy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -567,7 +568,7 @@ let ``Compare A with (HL) (A > (HL)) - cp (hl)`` () =
 let ``Compare A with (HL) (A == (HL)) - cp (hl)`` () =
     // Setup
     let opcode = 0xBEuy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -597,7 +598,7 @@ let ``Compare A with (HL) (A == (HL)) - cp (hl)`` () =
 let ``Compare A with (HL) (half-borrow) - cp (hl)`` () =
     // Setup
     let opcode = 0xBEuy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -627,7 +628,7 @@ let ``Compare A with (HL) (half-borrow) - cp (hl)`` () =
 let ``Compare A with (HL) (borrow) - cp (hl)`` () =
     // Setup
     let opcode = 0xBEuy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -657,7 +658,7 @@ let ``Compare A with (HL) (borrow) - cp (hl)`` () =
 let ``Increment 8-bit register (no zero, no half-carry) - inc b`` () =
     // Setup
     let opcode = 0x04uy // INC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x12uy
@@ -685,7 +686,7 @@ let ``Increment 8-bit register (no zero, no half-carry) - inc b`` () =
 let ``Increment 8-bit register (result zero) - inc b`` () =
     // Setup
     let opcode = 0x04uy // INC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0xFFuy
@@ -713,7 +714,7 @@ let ``Increment 8-bit register (result zero) - inc b`` () =
 let ``Increment 8-bit register (half-carry) - inc b`` () =
     // Setup
     let opcode = 0x04uy // INC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x0Fuy
@@ -741,7 +742,7 @@ let ``Increment 8-bit register (half-carry) - inc b`` () =
 let ``Increment 8-bit register (all flags) - inc a`` () =
     // Setup
     let opcode = 0x3Cuy // INC A
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xFFuy
@@ -769,7 +770,7 @@ let ``Increment 8-bit register (all flags) - inc a`` () =
 let ``Increment (HL) (no zero, no half-carry) - inc (hl)`` () =
     // Setup
     let opcode = 0x34uy // INC (HL)
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -798,7 +799,7 @@ let ``Increment (HL) (no zero, no half-carry) - inc (hl)`` () =
 let ``Increment (HL) (result zero) - inc (hl)`` () =
     // Setup
     let opcode = 0x34uy // INC (HL)
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -827,7 +828,7 @@ let ``Increment (HL) (result zero) - inc (hl)`` () =
 let ``Increment (HL) (half-carry) - inc (hl)`` () =
     // Setup
     let opcode = 0x34uy // INC (HL)
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -856,7 +857,7 @@ let ``Increment (HL) (half-carry) - inc (hl)`` () =
 let ``Decrement 8-bit register (no zero, no half-carry) - dec b`` () =
     // Setup
     let opcode = 0x05uy // DEC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x13uy
@@ -884,7 +885,7 @@ let ``Decrement 8-bit register (no zero, no half-carry) - dec b`` () =
 let ``Decrement 8-bit register (result zero) - dec b`` () =
     // Setup
     let opcode = 0x05uy // DEC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x01uy
@@ -912,7 +913,7 @@ let ``Decrement 8-bit register (result zero) - dec b`` () =
 let ``Decrement 8-bit register (half-carry) - dec b`` () =
     // Setup
     let opcode = 0x05uy // DEC B
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x10uy
@@ -940,7 +941,7 @@ let ``Decrement 8-bit register (half-carry) - dec b`` () =
 let ``Decrement 8-bit register (from 0x00) - dec a`` () =
     // Setup
     let opcode = 0x3Duy // DEC A
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x00uy
@@ -968,7 +969,7 @@ let ``Decrement 8-bit register (from 0x00) - dec a`` () =
 let ``Decrement value at address HL (no zero, no half-carry) - dec (hl)`` () =
     // Setup
     let opcode = 0x35uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -997,7 +998,7 @@ let ``Decrement value at address HL (no zero, no half-carry) - dec (hl)`` () =
 let ``Decrement value at address HL (result zero) - dec (hl)`` () =
     // Setup
     let opcode = 0x35uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -1026,7 +1027,7 @@ let ``Decrement value at address HL (result zero) - dec (hl)`` () =
 let ``Decrement value at address HL (half-carry) - dec (hl)`` () =
     // Setup
     let opcode = 0x35uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -1055,7 +1056,7 @@ let ``Decrement value at address HL (half-carry) - dec (hl)`` () =
 let ``Decrement value at address HL (wrap around) - dec (hl)`` () =
     // Setup
     let opcode = 0x35uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -1084,7 +1085,7 @@ let ``Decrement value at address HL (wrap around) - dec (hl)`` () =
 let ``Increment 16-bit register BC - inc bc`` () =
     // Setup
     let opcode = 0x03uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x1234us
@@ -1103,7 +1104,7 @@ let ``Increment 16-bit register BC - inc bc`` () =
 let ``Increment 16-bit register BC (wrap around) - inc bc`` () =
     // Setup
     let opcode = 0x03uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0xFFFFus
@@ -1123,7 +1124,7 @@ let ``Increment 16-bit register BC (wrap around) - inc bc`` () =
 let ``Decrement 16-bit register BC - dec bc`` () =
     // Setup
     let opcode = 0x0Buy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x1234us
@@ -1142,7 +1143,7 @@ let ``Decrement 16-bit register BC - dec bc`` () =
 let ``Decrement 16-bit register BC (wrap around) - dec bc`` () =
     // Setup
     let opcode = 0x0Buy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x0000us
@@ -1161,7 +1162,7 @@ let ``Decrement 16-bit register BC (wrap around) - dec bc`` () =
 let ``Add 16-bit register BC to HL (no carry, no half-carry) - add hl,bc`` () =
     // Setup
     let opcode = 0x09uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x1234us
@@ -1187,7 +1188,7 @@ let ``Add 16-bit register BC to HL (no carry, no half-carry) - add hl,bc`` () =
 let ``Add 16-bit register BC to HL (half carry) - add hl,bc`` () =
     // Setup
     let opcode = 0x09uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x0FFFus
@@ -1213,7 +1214,7 @@ let ``Add 16-bit register BC to HL (half carry) - add hl,bc`` () =
 let ``Add 16-bit register BC to HL (carry) - add hl,bc`` () =
     // Setup
     let opcode = 0x09uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xFFFFus
@@ -1239,7 +1240,7 @@ let ``Add 16-bit register BC to HL (carry) - add hl,bc`` () =
 let ``Add 16-bit register BC to HL (half carry and carry) - add hl,bc`` () =
     // Setup
     let opcode = 0x09uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x0FFFus
@@ -1265,7 +1266,7 @@ let ``Add 16-bit register BC to HL (half carry and carry) - add hl,bc`` () =
 let ``Add signed immediate to SP (positive, no carry) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1234us
@@ -1293,7 +1294,7 @@ let ``Add signed immediate to SP (positive, no carry) - add sp, e`` () =
 let ``Add signed immediate to SP (positive, half carry) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x120Fus
@@ -1321,7 +1322,7 @@ let ``Add signed immediate to SP (positive, half carry) - add sp, e`` () =
 let ``Add signed immediate to SP (positive, carry) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x12FFus
@@ -1350,7 +1351,7 @@ let ``Add signed immediate to SP (positive, carry) - add sp, e`` () =
 let ``Add signed immediate to SP (negative, no borrow) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1200us
@@ -1378,7 +1379,7 @@ let ``Add signed immediate to SP (negative, no borrow) - add sp, e`` () =
 let ``Add signed immediate to SP (negative, half borrow) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1204us
@@ -1406,7 +1407,7 @@ let ``Add signed immediate to SP (negative, half borrow) - add sp, e`` () =
 let ``Add signed immediate to SP (negative, carry, no half borrow) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1210us
@@ -1434,7 +1435,7 @@ let ``Add signed immediate to SP (negative, carry, no half borrow) - add sp, e``
 let ``Add signed immediate to SP (negative, carry) - add sp, e`` () =
     // Setup
     let opcode = 0xE8uy
-    let cpu = createCpu [||]
+    let cpu = createCpu (createMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1201us
