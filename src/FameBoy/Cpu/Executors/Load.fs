@@ -9,9 +9,7 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     let getFullAddress (byte: uint8) = 0xFF00us + uint16 byte
 
     match instr with
-    | LdReg8 (reg, source) -> source.GetFrom cpu |> reg.SetTo cpu
-    | LdAtHLFromReg8 reg -> cpu.Memory[cpu.Registers.HL] <- reg.GetFrom cpu
-    | LdAtHLFromByte b -> cpu.Memory[cpu.Registers.HL] <- b
+    | Ld8 (w, r) -> r.GetFrom cpu |> w.SetTo cpu
     | LdA (d, s) ->
         match d, s with
         | From, AtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]
@@ -20,10 +18,6 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
         | To, AtDE -> cpu.Memory[cpu.Registers.DE] <- cpu.Registers.A
         | From, AtWord w -> cpu.Registers.A <- cpu.Memory[w]
         | To, AtWord w -> cpu.Memory[w] <- cpu.Registers.A
-        | From, AtCHigh -> cpu.Registers.A <- cpu.Memory[getFullAddress cpu.Registers.C]
-        | To, AtCHigh -> cpu.Memory[getFullAddress cpu.Registers.C] <- cpu.Registers.A
-        | From, AtByteHigh b -> cpu.Registers.A <- cpu.Memory[getFullAddress b]
-        | To, AtByteHigh b -> cpu.Memory[getFullAddress b] <- cpu.Registers.A
         | From, AtHLInc ->
             cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
             cpu.Registers.HL <- cpu.Registers.HL + 1us
@@ -36,7 +30,13 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
         | To, AtHLDec ->
             cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
             cpu.Registers.HL <- cpu.Registers.HL - 1us
-    | LdReg16FromWord (reg, w) -> reg.SetTo cpu w
+    | Ldh (d, s) ->
+        match d, s with
+        | From, AtCHigh -> cpu.Registers.A <- cpu.Memory[getFullAddress cpu.Registers.C]
+        | To, AtCHigh -> cpu.Memory[getFullAddress cpu.Registers.C] <- cpu.Registers.A
+        | From, AtByteHigh b -> cpu.Registers.A <- cpu.Memory[getFullAddress b]
+        | To, AtByteHigh b -> cpu.Memory[getFullAddress b] <- cpu.Registers.A
+    | Ld16FromWord (reg, w) -> reg.SetTo cpu w
     | LdAtWordFromSP w ->
         let msb, lsb = uint8 (cpu.Sp >>> 8), uint8 cpu.Sp
 

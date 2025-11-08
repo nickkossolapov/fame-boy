@@ -48,14 +48,15 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
 
     let withUint16 () = getWordFromMemory memory (pc + 1us)
 
+    // todo maybe convert to a map to avoid all the duplicates?
     match opcode with
     | 0x00 -> Nop
-    | 0x01 -> LdReg16FromWord (BC, withUint16 ()) |> Load
+    | 0x01 -> Ld16FromWord (BC, withUint16 ()) |> Load
     | 0x02 -> LdA (To, AtBC) |> Load
     | 0x03 -> IncReg16 BC |> Arithmetic
     | 0x04 -> Inc (Write.RegDirect B) |> Arithmetic
     | 0x05 -> Dec (Write.RegDirect B) |> Arithmetic
-    | 0x06 -> LdReg8 (B, withImmediate ()) |> Load
+    | 0x06 -> Ld8 (Write.RegDirect B, withImmediate ()) |> Load
     | 0x07 -> Rlca |> Bitwise
     | 0x08 -> LdAtWordFromSP (withUint16 ()) |> Load
     | 0x09 -> AddHL BC |> Arithmetic
@@ -63,15 +64,15 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x0B -> DecReg16 BC |> Arithmetic
     | 0x0C -> Inc (Write.RegDirect C) |> Arithmetic
     | 0x0D -> Dec (Write.RegDirect C) |> Arithmetic
-    | 0x0E -> LdReg8 (C, withImmediate ()) |> Load
+    | 0x0E -> Ld8 (Write.RegDirect C, withImmediate ()) |> Load
     | 0x0F -> Rrca |> Bitwise
     | 0x10 -> Stop
-    | 0x11 -> LdReg16FromWord (DE, withUint16 ()) |> Load
+    | 0x11 -> Ld16FromWord (DE, withUint16 ()) |> Load
     | 0x12 -> LdA (To, AtDE) |> Load
     | 0x13 -> IncReg16 DE |> Arithmetic
     | 0x14 -> Inc (Write.RegDirect D) |> Arithmetic
     | 0x15 -> Dec (Write.RegDirect D) |> Arithmetic
-    | 0x16 -> LdReg8 (D, withImmediate ()) |> Load
+    | 0x16 -> Ld8 (Write.RegDirect D, withImmediate ()) |> Load
     | 0x17 -> Rla |> Bitwise
     | 0x18 -> Jr (withInt8 ()) |> Control
     | 0x19 -> AddHL DE |> Arithmetic
@@ -79,15 +80,15 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x1B -> DecReg16 DE |> Arithmetic
     | 0x1C -> Inc (Write.RegDirect E) |> Arithmetic
     | 0x1D -> Dec (Write.RegDirect E) |> Arithmetic
-    | 0x1E -> LdReg8 (E, withImmediate ()) |> Load
+    | 0x1E -> Ld8 (Write.RegDirect E, withImmediate ()) |> Load
     | 0x1F -> Rra |> Bitwise
     | 0x20 -> JrCond (Condition.NotZero, withInt8 ()) |> Control
-    | 0x21 -> LdReg16FromWord (HL, withUint16 ()) |> Load
+    | 0x21 -> Ld16FromWord (HL, withUint16 ()) |> Load
     | 0x22 -> LdA (To, AtHLInc) |> Load
     | 0x23 -> IncReg16 HL |> Arithmetic
     | 0x24 -> Inc (Write.RegDirect H) |> Arithmetic
     | 0x25 -> Dec (Write.RegDirect H) |> Arithmetic
-    | 0x26 -> LdReg8 (H, withImmediate ()) |> Load
+    | 0x26 -> Ld8 (Write.RegDirect H, withImmediate ()) |> Load
     | 0x27 -> Daa |> Logic
     | 0x28 -> JrCond (Condition.Zero, withInt8 ()) |> Control
     | 0x29 -> AddHL HL |> Arithmetic
@@ -95,15 +96,15 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x2B -> DecReg16 HL |> Arithmetic
     | 0x2C -> Inc (Write.RegDirect L) |> Arithmetic
     | 0x2D -> Dec (Write.RegDirect L) |> Arithmetic
-    | 0x2E -> LdReg8 (L, withImmediate ()) |> Load
+    | 0x2E -> Ld8 (Write.RegDirect L, withImmediate ()) |> Load
     | 0x2F -> Cpl |> Logic
     | 0x30 -> JrCond (Condition.NoCarry, withInt8 ()) |> Control
-    | 0x31 -> LdReg16FromWord (SP, withUint16 ()) |> Load
+    | 0x31 -> Ld16FromWord (SP, withUint16 ()) |> Load
     | 0x32 -> LdA (To, AtHLDec) |> Load
     | 0x33 -> IncReg16 SP |> Arithmetic
     | 0x34 -> Inc Write.HLIndirect |> Arithmetic
     | 0x35 -> Dec Write.HLIndirect |> Arithmetic
-    | 0x36 -> LdAtHLFromByte (withUint8 ()) |> Load
+    | 0x36 -> Ld8 (Write.HLIndirect, withImmediate ()) |> Load
     | 0x37 -> Scf |> Logic
     | 0x38 -> JrCond (Condition.Carry, withInt8 ()) |> Control
     | 0x39 -> AddHL SP |> Arithmetic
@@ -111,72 +112,72 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0x3B -> DecReg16 SP |> Arithmetic
     | 0x3C -> Inc (Write.RegDirect A) |> Arithmetic
     | 0x3D -> Dec (Write.RegDirect A) |> Arithmetic
-    | 0x3E -> LdReg8 (A, withImmediate ()) |> Load
+    | 0x3E -> Ld8 (Write.RegDirect A, withImmediate ()) |> Load
     | 0x3F -> Ccf |> Logic
-    | 0x40 -> LdReg8 (B, Read.RegDirect B) |> Load
-    | 0x41 -> LdReg8 (B, Read.RegDirect C) |> Load
-    | 0x42 -> LdReg8 (B, Read.RegDirect D) |> Load
-    | 0x43 -> LdReg8 (B, Read.RegDirect E) |> Load
-    | 0x44 -> LdReg8 (B, Read.RegDirect H) |> Load
-    | 0x45 -> LdReg8 (B, Read.RegDirect L) |> Load
-    | 0x46 -> LdReg8 (B, Read.HLIndirect) |> Load
-    | 0x47 -> LdReg8 (B, Read.RegDirect A) |> Load
-    | 0x48 -> LdReg8 (C, Read.RegDirect B) |> Load
-    | 0x49 -> LdReg8 (C, Read.RegDirect C) |> Load
-    | 0x4A -> LdReg8 (C, Read.RegDirect D) |> Load
-    | 0x4B -> LdReg8 (C, Read.RegDirect E) |> Load
-    | 0x4C -> LdReg8 (C, Read.RegDirect H) |> Load
-    | 0x4D -> LdReg8 (C, Read.RegDirect L) |> Load
-    | 0x4E -> LdReg8 (C, Read.HLIndirect) |> Load
-    | 0x4F -> LdReg8 (C, Read.RegDirect A) |> Load
-    | 0x50 -> LdReg8 (D, Read.RegDirect B) |> Load
-    | 0x51 -> LdReg8 (D, Read.RegDirect C) |> Load
-    | 0x52 -> LdReg8 (D, Read.RegDirect D) |> Load
-    | 0x53 -> LdReg8 (D, Read.RegDirect E) |> Load
-    | 0x54 -> LdReg8 (D, Read.RegDirect H) |> Load
-    | 0x55 -> LdReg8 (D, Read.RegDirect L) |> Load
-    | 0x56 -> LdReg8 (D, Read.HLIndirect) |> Load
-    | 0x57 -> LdReg8 (D, Read.RegDirect A) |> Load
-    | 0x58 -> LdReg8 (E, Read.RegDirect B) |> Load
-    | 0x59 -> LdReg8 (E, Read.RegDirect C) |> Load
-    | 0x5A -> LdReg8 (E, Read.RegDirect D) |> Load
-    | 0x5B -> LdReg8 (E, Read.RegDirect E) |> Load
-    | 0x5C -> LdReg8 (E, Read.RegDirect H) |> Load
-    | 0x5D -> LdReg8 (E, Read.RegDirect L) |> Load
-    | 0x5E -> LdReg8 (E, Read.HLIndirect) |> Load
-    | 0x5F -> LdReg8 (E, Read.RegDirect A) |> Load
-    | 0x60 -> LdReg8 (H, Read.RegDirect B) |> Load
-    | 0x61 -> LdReg8 (H, Read.RegDirect C) |> Load
-    | 0x62 -> LdReg8 (H, Read.RegDirect D) |> Load
-    | 0x63 -> LdReg8 (H, Read.RegDirect E) |> Load
-    | 0x64 -> LdReg8 (H, Read.RegDirect H) |> Load
-    | 0x65 -> LdReg8 (H, Read.RegDirect L) |> Load
-    | 0x66 -> LdReg8 (H, Read.HLIndirect) |> Load
-    | 0x67 -> LdReg8 (H, Read.RegDirect A) |> Load
-    | 0x68 -> LdReg8 (L, Read.RegDirect B) |> Load
-    | 0x69 -> LdReg8 (L, Read.RegDirect C) |> Load
-    | 0x6A -> LdReg8 (L, Read.RegDirect D) |> Load
-    | 0x6B -> LdReg8 (L, Read.RegDirect E) |> Load
-    | 0x6C -> LdReg8 (L, Read.RegDirect H) |> Load
-    | 0x6D -> LdReg8 (L, Read.RegDirect L) |> Load
-    | 0x6E -> LdReg8 (L, Read.HLIndirect) |> Load
-    | 0x6F -> LdReg8 (L, Read.RegDirect A) |> Load
-    | 0x70 -> LdAtHLFromReg8 B |> Load
-    | 0x71 -> LdAtHLFromReg8 C |> Load
-    | 0x72 -> LdAtHLFromReg8 D |> Load
-    | 0x73 -> LdAtHLFromReg8 E |> Load
-    | 0x74 -> LdAtHLFromReg8 H |> Load
-    | 0x75 -> LdAtHLFromReg8 L |> Load
+    | 0x40 -> Ld8 (Write.RegDirect B, Read.RegDirect B) |> Load
+    | 0x41 -> Ld8 (Write.RegDirect B, Read.RegDirect C) |> Load
+    | 0x42 -> Ld8 (Write.RegDirect B, Read.RegDirect D) |> Load
+    | 0x43 -> Ld8 (Write.RegDirect B, Read.RegDirect E) |> Load
+    | 0x44 -> Ld8 (Write.RegDirect B, Read.RegDirect H) |> Load
+    | 0x45 -> Ld8 (Write.RegDirect B, Read.RegDirect L) |> Load
+    | 0x46 -> Ld8 (Write.RegDirect B, Read.HLIndirect) |> Load
+    | 0x47 -> Ld8 (Write.RegDirect B, Read.RegDirect A) |> Load
+    | 0x48 -> Ld8 (Write.RegDirect C, Read.RegDirect B) |> Load
+    | 0x49 -> Ld8 (Write.RegDirect C, Read.RegDirect C) |> Load
+    | 0x4A -> Ld8 (Write.RegDirect C, Read.RegDirect D) |> Load
+    | 0x4B -> Ld8 (Write.RegDirect C, Read.RegDirect E) |> Load
+    | 0x4C -> Ld8 (Write.RegDirect C, Read.RegDirect H) |> Load
+    | 0x4D -> Ld8 (Write.RegDirect C, Read.RegDirect L) |> Load
+    | 0x4E -> Ld8 (Write.RegDirect C, Read.HLIndirect) |> Load
+    | 0x4F -> Ld8 (Write.RegDirect C, Read.RegDirect A) |> Load
+    | 0x50 -> Ld8 (Write.RegDirect D, Read.RegDirect B) |> Load
+    | 0x51 -> Ld8 (Write.RegDirect D, Read.RegDirect C) |> Load
+    | 0x52 -> Ld8 (Write.RegDirect D, Read.RegDirect D) |> Load
+    | 0x53 -> Ld8 (Write.RegDirect D, Read.RegDirect E) |> Load
+    | 0x54 -> Ld8 (Write.RegDirect D, Read.RegDirect H) |> Load
+    | 0x55 -> Ld8 (Write.RegDirect D, Read.RegDirect L) |> Load
+    | 0x56 -> Ld8 (Write.RegDirect D, Read.HLIndirect) |> Load
+    | 0x57 -> Ld8 (Write.RegDirect D, Read.RegDirect A) |> Load
+    | 0x58 -> Ld8 (Write.RegDirect E, Read.RegDirect B) |> Load
+    | 0x59 -> Ld8 (Write.RegDirect E, Read.RegDirect C) |> Load
+    | 0x5A -> Ld8 (Write.RegDirect E, Read.RegDirect D) |> Load
+    | 0x5B -> Ld8 (Write.RegDirect E, Read.RegDirect E) |> Load
+    | 0x5C -> Ld8 (Write.RegDirect E, Read.RegDirect H) |> Load
+    | 0x5D -> Ld8 (Write.RegDirect E, Read.RegDirect L) |> Load
+    | 0x5E -> Ld8 (Write.RegDirect E, Read.HLIndirect) |> Load
+    | 0x5F -> Ld8 (Write.RegDirect E, Read.RegDirect A) |> Load
+    | 0x60 -> Ld8 (Write.RegDirect H, Read.RegDirect B) |> Load
+    | 0x61 -> Ld8 (Write.RegDirect H, Read.RegDirect C) |> Load
+    | 0x62 -> Ld8 (Write.RegDirect H, Read.RegDirect D) |> Load
+    | 0x63 -> Ld8 (Write.RegDirect H, Read.RegDirect E) |> Load
+    | 0x64 -> Ld8 (Write.RegDirect H, Read.RegDirect H) |> Load
+    | 0x65 -> Ld8 (Write.RegDirect H, Read.RegDirect L) |> Load
+    | 0x66 -> Ld8 (Write.RegDirect H, Read.HLIndirect) |> Load
+    | 0x67 -> Ld8 (Write.RegDirect H, Read.RegDirect A) |> Load
+    | 0x68 -> Ld8 (Write.RegDirect L, Read.RegDirect B) |> Load
+    | 0x69 -> Ld8 (Write.RegDirect L, Read.RegDirect C) |> Load
+    | 0x6A -> Ld8 (Write.RegDirect L, Read.RegDirect D) |> Load
+    | 0x6B -> Ld8 (Write.RegDirect L, Read.RegDirect E) |> Load
+    | 0x6C -> Ld8 (Write.RegDirect L, Read.RegDirect H) |> Load
+    | 0x6D -> Ld8 (Write.RegDirect L, Read.RegDirect L) |> Load
+    | 0x6E -> Ld8 (Write.RegDirect L, Read.HLIndirect) |> Load
+    | 0x6F -> Ld8 (Write.RegDirect L, Read.RegDirect A) |> Load
+    | 0x70 -> Ld8 (Write.HLIndirect, Read.RegDirect B) |> Load
+    | 0x71 -> Ld8 (Write.HLIndirect, Read.RegDirect C) |> Load
+    | 0x72 -> Ld8 (Write.HLIndirect, Read.RegDirect D) |> Load
+    | 0x73 -> Ld8 (Write.HLIndirect, Read.RegDirect E) |> Load
+    | 0x74 -> Ld8 (Write.HLIndirect, Read.RegDirect H) |> Load
+    | 0x75 -> Ld8 (Write.HLIndirect, Read.RegDirect L) |> Load
     | 0x76 -> Halt
-    | 0x77 -> LdAtHLFromReg8 A |> Load
-    | 0x78 -> LdReg8 (A, Read.RegDirect B) |> Load
-    | 0x79 -> LdReg8 (A, Read.RegDirect C) |> Load
-    | 0x7A -> LdReg8 (A, Read.RegDirect D) |> Load
-    | 0x7B -> LdReg8 (A, Read.RegDirect E) |> Load
-    | 0x7C -> LdReg8 (A, Read.RegDirect H) |> Load
-    | 0x7D -> LdReg8 (A, Read.RegDirect L) |> Load
-    | 0x7E -> LdReg8 (A, Read.HLIndirect) |> Load
-    | 0x7F -> LdReg8 (A, Read.RegDirect A) |> Load
+    | 0x77 -> Ld8 (Write.HLIndirect, Read.RegDirect A) |> Load
+    | 0x78 -> Ld8 (Write.RegDirect A, Read.RegDirect B) |> Load
+    | 0x79 -> Ld8 (Write.RegDirect A, Read.RegDirect C) |> Load
+    | 0x7A -> Ld8 (Write.RegDirect A, Read.RegDirect D) |> Load
+    | 0x7B -> Ld8 (Write.RegDirect A, Read.RegDirect E) |> Load
+    | 0x7C -> Ld8 (Write.RegDirect A, Read.RegDirect H) |> Load
+    | 0x7D -> Ld8 (Write.RegDirect A, Read.RegDirect L) |> Load
+    | 0x7E -> Ld8 (Write.RegDirect A, Read.HLIndirect) |> Load
+    | 0x7F -> Ld8 (Write.RegDirect A, Read.RegDirect A) |> Load
     | 0x80 -> Add (Read.RegDirect B) |> Arithmetic
     | 0x81 -> Add (Read.RegDirect C) |> Arithmetic
     | 0x82 -> Add (Read.RegDirect D) |> Arithmetic
@@ -270,9 +271,9 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xDC -> CallCond (Condition.Carry, withUint16 ()) |> Control
     | 0xDE -> Sbc (withImmediate ()) |> Arithmetic
     | 0xDF -> Rst 0x18uy |> Control
-    | 0xE0 -> LdA (To, AtByteHigh (withUint8 ())) |> Load
+    | 0xE0 -> Ldh (To, AtByteHigh (withUint8 ())) |> Load
     | 0xE1 -> Pop HL |> Load
-    | 0xE2 -> LdA (To, AtCHigh) |> Load
+    | 0xE2 -> Ldh (To, AtCHigh) |> Load
     | 0xE5 -> Push HL |> Load
     | 0xE6 -> And (withImmediate ()) |> Logic
     | 0xE7 -> Rst 0x20uy |> Control
@@ -281,9 +282,9 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     | 0xEA -> LdA (To, AtWord (withUint16 ())) |> Load
     | 0xEE -> Xor (withImmediate ()) |> Logic
     | 0xEF -> Rst 0x28uy |> Control
-    | 0xF0 -> LdA (From, AtByteHigh (withUint8 ())) |> Load
+    | 0xF0 -> Ldh (From, AtByteHigh (withUint8 ())) |> Load
     | 0xF1 -> Pop AF |> Load
-    | 0xF2 -> LdA (From, AtCHigh) |> Load
+    | 0xF2 -> Ldh (From, AtCHigh) |> Load
     | 0xF3 -> Di
     | 0xF5 -> Push AF |> Load
     | 0xF6 -> Or (withImmediate ()) |> Logic
