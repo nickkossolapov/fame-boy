@@ -21,7 +21,7 @@ let ``Jump to address - jp nn`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -41,7 +41,7 @@ let ``Jump to address in HL - jp hl`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -63,7 +63,7 @@ let ``Jump if carry, taken - jp c,a16`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -85,7 +85,7 @@ let ``Jump if carry, not taken - jp c,a16`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -105,7 +105,7 @@ let ``Jump relative, positive - jr s8`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -125,7 +125,7 @@ let ``Jump relative, negative - jr s8`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -146,7 +146,7 @@ let ``Jump relative if not zero, taken - jr nz,s8`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -167,7 +167,7 @@ let ``Jump relative if not zero, not taken - jr nz,s8`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -190,7 +190,7 @@ let ``Call function - call nn`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -216,7 +216,7 @@ let ``Call if no carry, taken - call nc,a16`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -242,7 +242,7 @@ let ``Call if no carry, not taken - call nc,a16`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -265,7 +265,7 @@ let ``Return from function - ret`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -289,7 +289,7 @@ let ``Return if zero, taken - ret z`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -313,7 +313,7 @@ let ``Return if zero, not taken - ret z`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -337,7 +337,7 @@ let ``Return from interrupt - reti`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -359,7 +359,7 @@ let ``Restart to 0x18 - rst 0x18`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)

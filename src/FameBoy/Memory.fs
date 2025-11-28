@@ -1,6 +1,6 @@
 ﻿module FameBoy.Memory
 
-let private memorySize = 65535us
+let private memorySize = 0x10000
 
 type Memory(arr: uint8 array) =
     member _.Item
@@ -9,9 +9,10 @@ type Memory(arr: uint8 array) =
 
     member _.Array = arr
 
-let createMemory (bootRom: uint8 array) =
-    let memory = Array.zeroCreate (int memorySize)
+let createMemory (rom: uint8 array) =
+    let memory = Array.zeroCreate memorySize
 
-    Array.blit bootRom 0 memory 0 bootRom.Length
+    Array.blit rom 0 memory 0 rom.Length
+    Array.fill memory 0x8000 0x2000 0uy
 
     Memory memory

@@ -17,7 +17,7 @@ let ``halt enables halt`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -35,7 +35,7 @@ let ``di disables interrupts`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -53,7 +53,7 @@ let ``ei enables interrupts`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -78,7 +78,7 @@ let ``NOP changes nothing`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -115,7 +115,7 @@ let ``Unknown opcode acts as NOP`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)

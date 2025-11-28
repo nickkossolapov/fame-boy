@@ -24,7 +24,7 @@ let ``Add 8-bit register to A (no carry, no half-carry, no zero) - add b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -53,7 +53,7 @@ let ``Add 8-bit register to A (result zero) - add b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -82,7 +82,7 @@ let ``Add 8-bit register to A (half-carry, no carry) - add b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -111,7 +111,7 @@ let ``Add 8-bit register to A (carry, no half-carry) - add b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -141,7 +141,7 @@ let ``Add with carry from (HL) to A (no carry, no half-carry, no zero) - adc (hl
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -171,7 +171,7 @@ let ``Add with carry from (HL) to A (result zero) - adc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -201,7 +201,7 @@ let ``Add with carry from (HL) to A (half-carry) - adc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -231,7 +231,7 @@ let ``Add with carry from (HL) to A (carry) - adc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -261,7 +261,7 @@ let ``Add with carry from (HL) to A (with initial carry) - adc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -290,7 +290,7 @@ let ``Subtract immediate from A (no borrow, no half-borrow, no zero) - sub n`` (
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -319,7 +319,7 @@ let ``Subtract immediate from A (result zero) - sub n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -348,7 +348,7 @@ let ``Subtract immediate from A (half-borrow) - sub n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -377,7 +377,7 @@ let ``Subtract immediate from A (borrow) - sub n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -406,7 +406,7 @@ let ``Subtract with carry from B to A (no borrow, no half-borrow, no zero) - sbc
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -435,7 +435,7 @@ let ``Subtract with carry from B to A (result zero) - sbc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -464,7 +464,7 @@ let ``Subtract with carry from B to A (half-borrow) - sbc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -493,7 +493,7 @@ let ``Subtract with carry from B to A (borrow) - sbc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -522,7 +522,7 @@ let ``Subtract with carry from B to A (with initial carry) - sbc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -552,7 +552,7 @@ let ``Compare A with (HL) (A > (HL)) - cp (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -582,7 +582,7 @@ let ``Compare A with (HL) (A == (HL)) - cp (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -612,7 +612,7 @@ let ``Compare A with (HL) (half-borrow) - cp (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -642,7 +642,7 @@ let ``Compare A with (HL) (borrow) - cp (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -670,7 +670,7 @@ let ``Increment 8-bit register (no zero, no half-carry) - inc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -698,7 +698,7 @@ let ``Increment 8-bit register (result zero) - inc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -726,7 +726,7 @@ let ``Increment 8-bit register (half-carry) - inc b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -754,7 +754,7 @@ let ``Increment 8-bit register (all flags) - inc a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -783,7 +783,7 @@ let ``Increment (HL) (no zero, no half-carry) - inc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -812,7 +812,7 @@ let ``Increment (HL) (result zero) - inc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -841,7 +841,7 @@ let ``Increment (HL) (half-carry) - inc (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -869,7 +869,7 @@ let ``Decrement 8-bit register (no zero, no half-carry) - dec b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -897,7 +897,7 @@ let ``Decrement 8-bit register (result zero) - dec b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -925,7 +925,7 @@ let ``Decrement 8-bit register (half-carry) - dec b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -953,7 +953,7 @@ let ``Decrement 8-bit register (from 0x00) - dec a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -982,7 +982,7 @@ let ``Decrement value at address HL (no zero, no half-carry) - dec (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1011,7 +1011,7 @@ let ``Decrement value at address HL (result zero) - dec (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1040,7 +1040,7 @@ let ``Decrement value at address HL (half-carry) - dec (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1069,7 +1069,7 @@ let ``Decrement value at address HL (wrap around) - dec (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1093,7 +1093,7 @@ let ``Increment 16-bit register BC - inc bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1112,7 +1112,7 @@ let ``Increment 16-bit register BC (wrap around) - inc bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1132,7 +1132,7 @@ let ``Decrement 16-bit register BC - dec bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1151,7 +1151,7 @@ let ``Decrement 16-bit register BC (wrap around) - dec bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1174,7 +1174,7 @@ let ``Add 16-bit register BC to HL (no carry, no half-carry) - add hl,bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1200,7 +1200,7 @@ let ``Add 16-bit register BC to HL (half carry) - add hl,bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1226,7 +1226,7 @@ let ``Add 16-bit register BC to HL (carry) - add hl,bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1252,7 +1252,7 @@ let ``Add 16-bit register BC to HL (half carry and carry) - add hl,bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -1279,7 +1279,7 @@ let ``Add signed immediate to SP (positive, no carry) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1307,7 +1307,7 @@ let ``Add signed immediate to SP (positive, half carry) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1335,7 +1335,7 @@ let ``Add signed immediate to SP (positive, carry) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1364,7 +1364,7 @@ let ``Add signed immediate to SP (negative, no borrow) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1392,7 +1392,7 @@ let ``Add signed immediate to SP (negative, half borrow) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1420,7 +1420,7 @@ let ``Add signed immediate to SP (negative, carry, no half borrow) - add sp, e``
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -1448,7 +1448,7 @@ let ``Add signed immediate to SP (negative, carry) - add sp, e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)

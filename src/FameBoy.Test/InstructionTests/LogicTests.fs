@@ -20,7 +20,7 @@ let ``Bitwise AND A with B - and b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -44,7 +44,7 @@ let ``Bitwise AND A with B (zero result) - and b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -69,7 +69,7 @@ let ``Bitwise OR A with (HL) - or (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -94,7 +94,7 @@ let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -118,7 +118,7 @@ let ``Bitwise XOR A with n - xor n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -142,7 +142,7 @@ let ``Bitwise XOR A with n (zero result) - xor n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -168,7 +168,7 @@ let ``Complement carry flag (carry initially true) - ccf`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -193,7 +193,7 @@ let ``Complement carry flag (carry initially false) - ccf`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -218,7 +218,7 @@ let ``Set carry flag - scf`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -243,7 +243,7 @@ let ``Decimal adjust accumulator - daa`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -267,7 +267,7 @@ let ``Complement accumulator - cpl`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)

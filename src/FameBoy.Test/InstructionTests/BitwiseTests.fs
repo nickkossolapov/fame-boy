@@ -79,7 +79,7 @@ let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
@@ -209,7 +209,7 @@ let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
@@ -308,7 +308,7 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
@@ -333,7 +333,7 @@ let ``Test bit 7 of H register - bit 7,h`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -359,7 +359,7 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)

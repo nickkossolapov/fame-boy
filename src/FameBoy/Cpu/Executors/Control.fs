@@ -12,6 +12,14 @@ let private evaluateCondition (cpu: Cpu) (condition: Condition) =
     | Condition.Carry -> cpu.getFlag Flag.Carry
     | Condition.NoCarry -> not (cpu.getFlag Flag.Carry)
 
+let isCondTaken (cpu: Cpu) =
+    function
+    | CallCond (c, _)
+    | JpCond (c, _)
+    | JrCond (c, _)
+    | RetCond c -> evaluateCondition cpu c
+    | _ -> false
+
 let executeControl (cpu: Cpu) (instr: ControlInstr) =
     let met c = evaluateCondition cpu c
 

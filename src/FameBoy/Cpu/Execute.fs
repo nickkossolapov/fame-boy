@@ -11,15 +11,37 @@ open FameBoy.Cpu.State
 let execute (cpu: Cpu) (instr: DecodedInstruction) =
     cpu.Pc <- cpu.Pc + uint16 instr.Length
 
-    match instr.Instruction with
-    | Halt -> cpu.Halted <- true
-    | Stop -> () // Not used in any games
-    | Di -> cpu.Ime <- false
-    | Ei -> cpu.Ime <- true
-    | Nop -> ()
-    | Arithmetic i -> executeArithmetic cpu i
-    | Bitwise i -> executeBitwise cpu i
-    | Control i -> executeControl cpu i
-    | Load i -> executeLoad cpu i
-    | Logic i -> executeLogic cpu i
-    | Unknown -> ()
+    let condTaken =
+        match instr.Instruction with
+        | Halt ->
+            cpu.Halted <- true
+            false
+        | Stop -> false // NOP - Not used in any games
+        | Di ->
+            cpu.Ime <- false
+            false
+        | Ei ->
+            cpu.Ime <- true
+            false
+        | Nop -> false
+        | Arithmetic i ->
+            executeArithmetic cpu i
+            false
+        | Bitwise i ->
+            executeBitwise cpu i
+            false
+        | Control i ->
+            let taken = isCondTaken cpu i
+            executeControl cpu i
+            taken
+        | Load i ->
+            executeLoad cpu i
+            false
+        | Logic i ->
+            executeLogic cpu i
+            false
+        | Unknown -> false
+
+    match instr.MCycles with
+    | Fixed c -> c
+    | Conditional cc -> if condTaken then cc.Met else cc.NotMet

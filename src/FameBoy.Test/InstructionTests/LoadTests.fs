@@ -20,7 +20,7 @@ let ``Load register (register) - ld b,c`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -41,7 +41,7 @@ let ``Load register (immediate) - ld b,n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -62,7 +62,7 @@ let ``Load register (indirect HL) - ld b,(hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -83,7 +83,7 @@ let ``Load from register (indirect HL) - ld (hl),b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -104,7 +104,7 @@ let ``Load from immediate (indirect HL) - ld (hl),n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -125,7 +125,7 @@ let ``Load accumulator (indirect BC) - ld a,(bc)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -146,7 +146,7 @@ let ``Load accumulator (indirect DE) - ld a,(de)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -167,7 +167,7 @@ let ``Load from accumulator (indirect BC) - ld (bc),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -188,7 +188,7 @@ let ``Load from accumulator (indirect DE) - ld (de),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -210,7 +210,7 @@ let ``Load accumulator (direct) - ld a,(nn)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -232,7 +232,7 @@ let ``Load from accumulator (direct) - ld (nn),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -253,7 +253,7 @@ let ``Load accumulator (indirect 0xFF00+C) - ldh a,(c)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -274,7 +274,7 @@ let ``Load from accumulator (indirect 0xFF00+C) - ldh (c),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -294,7 +294,7 @@ let ``Load accumulator (direct 0xFF00+n) - ldh a,(n)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -315,7 +315,7 @@ let ``Load from accumulator (direct 0xFF00+n) - ldh (n),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -337,7 +337,7 @@ let ``Load accumulator (indirect HL, decrement) - ld a,(hl-)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -359,7 +359,7 @@ let ``Load from accumulator (indirect HL, decrement) - ld (hl-),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -382,7 +382,7 @@ let ``Load accumulator (indirect HL, increment) - ld a,(hl+)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -404,7 +404,7 @@ let ``Load from accumulator (indirect HL, increment) - ld (hl+),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -426,7 +426,7 @@ let ``Load 16-bit register - ld bc,nn`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -448,7 +448,7 @@ let ``Load from stack pointer (direct) - ld (nn),sp`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 3)
@@ -470,7 +470,7 @@ let ``Load stack pointer from HL - ld sp,hl`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -491,7 +491,7 @@ let ``Push to stack - push bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -516,7 +516,7 @@ let ``Pop from stack - pop bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -540,7 +540,7 @@ let ``Pop from stack (flags) - pop af`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 1)
@@ -562,7 +562,7 @@ let ``Load HL from adjusted stack pointer - ld hl,sp+e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)
@@ -587,7 +587,7 @@ let ``Load HL from adjusted stack pointer (negative) - ld hl,sp+e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr
+    execute cpu instr |> ignore
 
     // Evaluate
     Assert.That (instr.Length, Is.EqualTo 2)

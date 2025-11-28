@@ -73,11 +73,13 @@ module LoadTypes =
     type ASource =
         | AtBC
         | AtDE
-        | AtCHigh
-        | AtByteHigh of uint8
         | AtWord of uint16
         | AtHLInc
         | AtHLDec
+
+    type AHighSource =
+        | AtCHigh
+        | AtByteHigh of uint8
 
 open LoadTypes
 
@@ -155,11 +157,10 @@ type ControlInstr =
     | Rst of uint8
 
 type LoadInstr =
-    | LdReg8 of Reg8 * Read
-    | LdAtHLFromReg8 of Reg8
-    | LdAtHLFromByte of uint8
+    | Ld8 of Write * Read
     | LdA of LoadA * ASource
-    | LdReg16FromWord of Reg16 * uint16
+    | Ldh of LoadA * AHighSource
+    | Ld16FromWord of Reg16 * uint16
     | LdAtWordFromSP of uint16
     | LdSPFromHL
     | Push of Reg16
@@ -265,19 +266,26 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
-        | LdReg8 (_, s) -> forReadByte s
-        | LdAtHLFromReg8 _ -> 1, Fixed 2
-        | LdAtHLFromByte _ -> 2, Fixed 3
+        | Ld8 (w, s) ->
+            match w with
+            | Write.RegDirect _ -> forReadByte s
+            | Write.HLIndirect ->
+                match s with
+                | Read.Immediate _ -> 2, Fixed 3
+                | Read.RegDirect _ -> 1, Fixed 2
+                | Read.HLIndirect -> 1, Fixed 1 // ld [hl],[hl] is actually decoded as HALT
         | LdA (_, s) ->
             match s with
             | AtBC -> 1, Fixed 2
             | AtDE -> 1, Fixed 2
             | AtWord _ -> 3, Fixed 4
-            | AtCHigh -> 1, Fixed 2
-            | AtByteHigh _ -> 2, Fixed 3
             | AtHLInc
             | AtHLDec -> 1, Fixed 2
-        | LdReg16FromWord _ -> 3, Fixed 3
+        | Ldh (_, s) ->
+            match s with
+            | AtCHigh -> 1, Fixed 2
+            | AtByteHigh _ -> 2, Fixed 3
+        | Ld16FromWord _ -> 3, Fixed 3
         | LdAtWordFromSP _ -> 3, Fixed 5
         | LdSPFromHL -> 1, Fixed 2
         | Push _ -> 1, Fixed 4
