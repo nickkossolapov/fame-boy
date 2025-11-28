@@ -7,7 +7,6 @@
 
     <ItemGroup>
         <Compile Include="RaylibBindings.fs" />
-        <Compile Include="CpuTest.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
