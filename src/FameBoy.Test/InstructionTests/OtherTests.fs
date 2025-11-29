@@ -134,3 +134,13 @@ let ``Unknown opcode acts as NOP`` () =
     Assert.That (cpu.getFlag Flag.Subtract, Is.False)
     Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)
     Assert.That (cpu.getFlag Flag.Carry, Is.False)
+
+[<Test>]
+let ``Loading value into F register zeroes lowest 4 bits`` () =
+    // Setup
+    let cpu = createCpu (createMemory [||])
+
+    cpu.Registers.F <- 0b10101111uy
+
+    // Evaluate
+    Assert.That (cpu.Registers.F, Is.EqualTo 0b10100000uy)

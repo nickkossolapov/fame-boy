@@ -31,15 +31,21 @@ module private Flags =
 
         if value then reg ||| mask else reg &&& ~~~mask
 
-type Registers =
-    { mutable A: uint8
-      mutable B: uint8
-      mutable C: uint8
-      mutable D: uint8
-      mutable E: uint8
-      mutable F: uint8
-      mutable H: uint8
-      mutable L: uint8 }
+type Registers() =
+    let mutable f = 0uy // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
+    
+    member val A = 0uy with get, set
+    member val B = 0uy with get, set
+    member val C = 0uy with get, set
+    member val D = 0uy with get, set
+    member val E = 0uy with get, set
+    member val H = 0uy with get, set
+    member val L = 0uy with get, set
+    
+    
+    member this.F
+        with get() = f
+        and set(value: uint8) = f <- uint8 (value &&& 0xF0uy) // lowest 4 bits are always ignored with F register
 
     member this.AF
         with get () = (uint16 this.A <<< 8) ||| uint16 this.F
@@ -84,15 +90,7 @@ type Cpu =
             this.setFlag flag value
 
 let createCpu (memory: Memory) : Cpu =
-    let registers =
-        { A = 0uy
-          F = 0uy
-          B = 0uy
-          C = 0uy
-          D = 0uy
-          E = 0uy
-          H = 0uy
-          L = 0uy }
+    let registers = Registers ()
 
     { Memory = memory
       Registers = registers

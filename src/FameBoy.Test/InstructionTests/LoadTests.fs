@@ -546,7 +546,7 @@ let ``Pop from stack (flags) - pop af`` () =
     Assert.That (instr.Length, Is.EqualTo 1)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 3))
 
-    Assert.That (cpu.Registers.AF, Is.EqualTo 0xABCDus)
+    Assert.That (cpu.Registers.AF, Is.EqualTo 0xABC0us)
     Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
 
 [<Test>]
