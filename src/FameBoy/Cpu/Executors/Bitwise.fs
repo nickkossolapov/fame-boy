@@ -46,9 +46,9 @@ let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     | Rr w -> shiftBytes w cpu (shiftRight (cpu.getFlag Carry))
     | Sla w -> shiftBytes w cpu (shiftLeft false)
     | Sra w ->
-        match w with
-        | Write.HLIndirect -> shiftBytes w cpu (shiftRight false)
-        | Write.RegDirect _ -> ((w.GetFrom cpu &&& 0x80uy) <> 0uy) |> shiftRight |> shiftBytes w cpu
+        let msb = ((w.GetFrom cpu &&& 0x80uy) <> 0uy)
+
+        shiftBytes w cpu (shiftRight msb)
     | Srl w -> shiftBytes w cpu (shiftRight false)
     | Bit (u3, w) ->
         let value = w.GetFrom cpu
