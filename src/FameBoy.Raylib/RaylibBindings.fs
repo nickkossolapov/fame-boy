@@ -11,7 +11,7 @@ let beginDrawing texture =
 let endDrawing = Raylib.EndDrawing
 
 let updateTexture texture (frameBuffer: Color array) =
-    Raylib.UpdateTexture (texture, frameicyBuffer)
+    Raylib.UpdateTexture (texture, frameBuffer)
 
     texture
 
