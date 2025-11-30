@@ -2,9 +2,8 @@
 
 [<RequireQualifiedAccess>]
 module Screen =
-    // let height, width = 160, 144 // tem disable while working on background
-
-    let height, width = 256, 256
+    // let height, width = 256, 256
+    let height, width = 160, 144
 
 [<RequireQualifiedAccess>]
 module Registers =

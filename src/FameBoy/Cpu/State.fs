@@ -32,8 +32,10 @@ module private Flags =
         if value then reg ||| mask else reg &&& ~~~mask
 
 type Registers() =
-    let mutable f = 0uy // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
-    
+    // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
+    // TODO maybe make underlying types Flags instead of uint8, and have F member expose it as a uint8 instead
+    let mutable f = 0uy
+
     member val A = 0uy with get, set
     member val B = 0uy with get, set
     member val C = 0uy with get, set
@@ -41,11 +43,11 @@ type Registers() =
     member val E = 0uy with get, set
     member val H = 0uy with get, set
     member val L = 0uy with get, set
-    
-    
+
+
     member this.F
-        with get() = f
-        and set(value: uint8) = f <- uint8 (value &&& 0xF0uy) // lowest 4 bits are always ignored with F register
+        with get () = f
+        and set (value: uint8) = f <- uint8 (value &&& 0xF0uy)
 
     member this.AF
         with get () = (uint16 this.A <<< 8) ||| uint16 this.F

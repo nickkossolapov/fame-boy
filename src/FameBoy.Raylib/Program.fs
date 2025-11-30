@@ -1,136 +1,139 @@
-﻿open System.Collections
-open System.Diagnostics
+﻿open System.Diagnostics
 open System.IO
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
-open FameBoy.Cpu.State
-open FameBoy.Ppu
+open FameBoy.Graphics.Ppu
 open FameBoy.Hardware
 open FameBoy.Memory
+open FameBoy.Ppu.Debug
 open FameBoy.Raylib.RaylibBindings
 open FameBoy.Startup
 open Raylib_cs
 
-let scale = 4
+let scale = 3
 
-Raylib.InitWindow (Screen.width * scale, Screen.height * scale, "Fame Boy")
+let enableDebugView = true
+
+let width =
+    if enableDebugView then
+        Screen.width + 256 + 1
+    else
+        Screen.width
+
+let height = if enableDebugView then 256 + 96 + 1 else Screen.height
+
+Raylib.InitWindow (width * scale, height * scale, "Fame Boy")
 Raylib.SetTargetFPS 60
 
-let mutable screenTexture =
-    Raylib.GenImageColor (Screen.width, Screen.height, Color.Black)
-    |> Raylib.LoadTextureFromImage
+module RateLimiting =
+    let rateLimitFunc (time: int) (func: 'a -> unit) =
+        let stopwatch = Stopwatch ()
+        let mutable lastPrint = 0L
 
-let mapToColors =
-    Array.map (fun b -> if b then Color (186, 218, 85) else Color (74, 87, 34))
+        fun p ->
+            if not stopwatch.IsRunning then
+                stopwatch.Start ()
 
-let drawTexture = drawScaledTexture (float32 scale)
+            let now = stopwatch.ElapsedMilliseconds
 
-let draw (framebuffer: bool array) =
-    framebuffer
-    |> mapToColors
-    |> beginDrawing
-    |> updateTexture screenTexture
-    |> drawTexture
-    |> endDrawing
+            if now - lastPrint >= time then
+                lastPrint <- now
+                func p
 
-let testFramebuffer = Array.zeroCreate<bool> (Screen.width * Screen.height)
+open RateLimiting
+
+
+module GraphicsPipeline =
+    let private mapSide = 256 // 32 tiles -> 32 * 8 pixels
+    let private tilesHeight = 96 // 384 tiles -> 12 lines at 32 tiles per line * 8 pixels
+
+    let mutable private screenTexture =
+        Raylib.GenImageColor (Screen.width, Screen.height, Color.Black) |> Raylib.LoadTextureFromImage
+
+    let mutable private mapTexture =
+        Raylib.GenImageColor (mapSide, mapSide, Color.Black) |> Raylib.LoadTextureFromImage
+
+    let mutable private tilesTexture =
+        Raylib.GenImageColor (mapSide, tilesHeight, Color.Black) |> Raylib.LoadTextureFromImage
+
+    let private mapToColors =
+        Array.map (function
+            | White -> Color (186, 218, 85)
+            | Light -> Color (130, 153, 59)
+            | Dark -> Color (74, 87, 34)
+            | Black -> Color (19, 22, 8))
+
+    let private backgroundFramebuffer = Array.create<Shade> (mapSide * mapSide) White
+    let private tilesFramebuffer = Array.create<Shade> (mapSide * tilesHeight) White
+
+    let private mapPos = (float32 ((Screen.width + 1) * scale), 0f)
+    let private tilePos = float32 ((Screen.width + 1) * scale), float32 ((mapSide + 1) * scale)
+
+    let private dumpVram =
+        rateLimitFunc 1000 (fun memory ->
+            dumpBackground backgroundFramebuffer memory
+            dumpTiles tilesFramebuffer memory)
+
+    let loadFramebuffer pos texture (framebuffer: Shade array) =
+        framebuffer |> mapToColors |> updateTexture texture |> drawScaledTexture pos (float32 scale)
+
+    let loadPpuFramebuffer = loadFramebuffer (0f, 0f) screenTexture
+    let loadTilesFramebuffer = loadFramebuffer (0f, 0f) tilesTexture
+
+    let loadDebugFramebuffers (memory: Memory) =
+        dumpVram memory
+
+        loadFramebuffer mapPos mapTexture backgroundFramebuffer
+        loadFramebuffer tilePos tilesTexture tilesFramebuffer
+
+    let close () =
+        Raylib.UnloadTexture screenTexture
+        Raylib.UnloadTexture mapTexture
+        Raylib.UnloadTexture tilesTexture
+
+        Raylib.CloseWindow ()
+
+open GraphicsPipeline
 
 let mcyclesPerSec = 1000 / 60
 
-let private stopwatch = Stopwatch ()
-let mutable private lastPrint = 0L
-
-let print (msg: string) =
-    if not stopwatch.IsRunning then
-        stopwatch.Start ()
-
-    let now = stopwatch.ElapsedMilliseconds
-
-    if now - lastPrint >= 1000L then
-        printfn $"{msg}"
-        lastPrint <- now
+let printLastFrameTime = rateLimitFunc 1000 (fun () -> printfn $"{1f / Raylib.GetFrameTime ()}")
 
 
-let renderTile x y loc (memory: Memory) =
-    for row in 0..7 do
-        let addr = loc + (row * 2)
-        let left = memory.Array[addr]
-        let right = memory.Array[(addr + 1)]
+// let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
+let bytes = File.ReadAllBytes "D:/gb/test-roms/cpu_instrs/individual/11-op a,(hl).gb"
 
-        for col in 0..7 do
-            let bit = 7 - col
-            let leftBit = left >>> bit &&& 1uy
-            let rightBit = (right >>> bit &&& 1uy) <<< 1
-            let net = leftBit ||| rightBit
-            
-            let bufferPos = ((y + row) * Screen.width) + (x + col)
-            
-            testFramebuffer[bufferPos] <- net > 0uy
+let memory = createMemory bytes
+// Array.blit headerBitmapCheck 0 memory.Array 0x104 headerBitmapCheck.Length
 
-let drawBackground (memory: Memory) =
-    let start = 
-        if memory[Registers.Lcdc] &&& 0b1000uy <> 0uy 
-        then 0x9C00 
-        else 0x9800
-    
-    let getLoc byte =
-        if memory[Registers.Lcdc] &&& 0b10000uy <> 0uy then
-            0x10us * (uint16 byte) + 0x8000us
-        else
-            0x10us * uint16 (int8 byte) + 0x9000us
+// let cpu = createCpu memory
+let cpu = createDmgCpu memory
+let ppu = createPpu memory
 
-    for row in 0..31 do
-        for col in 0..31 do
-            let mapIndex = start + (row * 32) + col
-            let tileIndex = getLoc memory.Array[mapIndex]
+while (not (windowShouldClose ())) do
+    let mutable counter = int ((Raylib.GetFrameTime ()) * 1000000f)
 
-            renderTile (col * 8) (row * 8) (int tileIndex) memory
+    printLastFrameTime ()
 
-let drawTiles (memory: Memory) =    
-    for row in 0..11 do // 384 total tiles -> 384/32 = 12 rows
-        for col in 0..31 do
-            let mapIndex = 0x8000 + ((row * 32) + col) * 16
-    
-            renderTile (col * 8) (row * 8) (int mapIndex) memory
+    while (counter > 0) do
+        let instr = fetchAndDecode cpu.Memory cpu.Pc
 
-let runGameBoy () =
-    // let bytes = File.ReadAllBytes "D:/gb/bootroms/dmg_boot.bin"
-    let bytes = File.ReadAllBytes "D:/gb/tests/cpu_instrs.gb"
+        // if cpu.Pc = 0x40us then if Debugger.IsAttached then Debugger.Break()
 
-    let memory = createMemory bytes
-    // Array.blit headerBitmapCheck 0 memory.Array 0x104 headerBitmapCheck.Length
+        let cpuCycles = execute cpu instr
+        counter <- counter - cpuCycles
 
-    // let cpu = createCpu memory
-    let cpu = createDmgCpu memory
-    let ppu = createPpu memory
+        let ppuSteps = cpuCycles * 4
 
-    while (not (windowShouldClose ())) do
-
-        let mutable counter = 16666 // int ((Raylib.GetFrameTime ()) * 1000000f)
-        
-        print $"{Raylib.GetFrameTime ()}"
-
-        while (counter > 0) do
-            let instr = fetchAndDecode cpu.Memory cpu.Pc
-
-            // if cpu.Pc = 0x40us then if Debugger.IsAttached then Debugger.Break()
-
-            // let vram = memory.Array[0x8800..0x97ff]
-            let tileMaps = memory.Array[0x9800..0x9bff]
-
-            let cpuCycles = execute cpu instr
-            counter <- counter - cpuCycles
-
-            let ppuSteps = cpuCycles * 4
-
-            // for _ in 0..ppuSteps do
+        for _ in 0..ppuSteps do
             stepPpu ppu
 
-        // drawTiles memory
-        drawBackground memory
-        draw testFramebuffer
+    beginDrawing ()
+    loadPpuFramebuffer ppu.Framebuffer
 
-runGameBoy ()
+    if enableDebugView then
+        loadDebugFramebuffers memory
 
-Raylib.UnloadTexture screenTexture
-Raylib.CloseWindow ()
+    endDrawing ()
+
+close ()

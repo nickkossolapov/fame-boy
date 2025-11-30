@@ -1,9 +1,9 @@
-﻿module FameBoy.Ppu
+﻿module FameBoy.Graphics.Ppu
 
 open FameBoy.Hardware
 open FameBoy.Memory
 
-type GpuMode =
+type PpuMode =
     | HBlank
     | VBlank
     | OamScan
@@ -18,14 +18,21 @@ module private ScanlineTimings =
 open ScanlineTimings
 
 type Shade =
-    | White = 0uy
-    | Light = 1uy
-    | Dark = 2uy
-    | Black = 3uy
+    | White
+    | Light
+    | Dark
+    | Black
+
+    static member ofByte =
+        function
+        | 0uy -> White
+        | 1uy -> Light
+        | 2uy -> Dark
+        | _ -> Black
 
 type Ppu =
     { Framebuffer: Shade array
-      mutable Mode: GpuMode
+      mutable Mode: PpuMode
       mutable Dot: int
       Memory: Memory
       mutable Disabled: bool }
@@ -35,7 +42,7 @@ type Ppu =
         and set v = this.Memory[Registers.Ly] <- v
 
 let createPpu (memory: Memory) =
-    { Framebuffer = Array.zeroCreate (Screen.width * Screen.height)
+    { Framebuffer = Array.create (Screen.width * Screen.height) White
       Mode = OamScan
       Dot = 0
       Memory = memory
@@ -63,32 +70,32 @@ module private statRegister =
 
 open statRegister
 
-let stepPpu (Ppu: Ppu) =
-    Ppu.Dot <- Ppu.Dot + 1
+let stepPpu (ppu: Ppu) =
+    ppu.Dot <- ppu.Dot + 1
 
-    let nextStat = getUpdatedStatRegister Ppu
+    let nextStat = getUpdatedStatRegister ppu
 
-    match Ppu.Mode with
+    match ppu.Mode with
     | HBlank ->
-        if Ppu.Dot > lineEnd then
-            Ppu.Ly <- Ppu.Ly + 1uy
-            Ppu.Dot <- 0
+        if ppu.Dot > lineEnd then
+            ppu.Ly <- ppu.Ly + 1uy
+            ppu.Dot <- 0
 
-        if Ppu.Ly >= vBlankStart then
-            Ppu.Mode <- VBlank
+        if ppu.Ly >= vBlankStart then
+            ppu.Mode <- VBlank
     | VBlank ->
-        if Ppu.Dot > lineEnd then
-            Ppu.Ly <- Ppu.Ly + 1uy
-            Ppu.Dot <- 0
+        if ppu.Dot > lineEnd then
+            ppu.Ly <- ppu.Ly + 1uy
+            ppu.Dot <- 0
 
-        if Ppu.Ly >= frameEnd then
-            Ppu.Ly <- 0uy
-            Ppu.Mode <- OamScan
+        if ppu.Ly >= frameEnd then
+            ppu.Ly <- 0uy
+            ppu.Mode <- OamScan
     | OamScan ->
-        if Ppu.Dot >= oamScanEnd then
-            Ppu.Mode <- Drawing
+        if ppu.Dot >= oamScanEnd then
+            ppu.Mode <- Drawing
     | Drawing ->
-        if Ppu.Dot >= 289 then
-            Ppu.Mode <- HBlank
+        if ppu.Dot >= 289 then
+            ppu.Mode <- HBlank
 
-    Ppu.Memory[Registers.Stat] <- nextStat
+    ppu.Memory[Registers.Stat] <- nextStat
