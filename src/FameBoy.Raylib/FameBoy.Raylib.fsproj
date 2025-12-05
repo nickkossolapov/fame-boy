@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <Compile Include="RaylibBindings.fs" />
+        <Compile Include="Joypad.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
