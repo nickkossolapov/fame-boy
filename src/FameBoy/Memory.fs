@@ -13,8 +13,8 @@ module private Helpers =
         | InterruptEnable
         | Unusable
 
-    let mapAddress (addr: uint16) : MemoryRegion =
-        match int addr with
+    let mapAddress (addr: int) : MemoryRegion =
+        match addr with
         | a when a < 0x4000 -> RomBase a
         | a when a < 0x8000 -> RomBank (a - 0x4000)
         | a when a < 0xA000 -> VideoRam (a - 0x8000)
@@ -42,19 +42,20 @@ module private Helpers =
         | [| bank |] -> bank, Array.zeroCreate memorySizes.romBank
         | banks -> banks[0], banks[1..]
 
-
 open Helpers
 
-module IoRegistersIndex =
+module IoRegistersOffsets =
     [<Literal>]
     let ioOffset = 0xFF00
 
     [<Literal>]
     let Joypad = 0xFF00 - ioOffset
- 
+
+    [<Literal>]
+    let Dma = 0xFF46 - ioOffset
+
 type Memory =
     abstract member writeIoDirect: uint16 -> uint8 -> unit
-
     abstract member Item: uint16 -> uint8 with get
     abstract member Item: uint16 -> uint8 with set
 
@@ -69,7 +70,29 @@ type DmgMemory(arr: uint8 array) =
     let highRam = Array.zeroCreate<uint8> memorySizes.hram
     let mutable interruptEnable = 0uy
 
-    let read (address: uint16) =
+    member private this.writeIoRegisters address (value: uint8) =
+        match address with
+        | IoRegistersOffsets.Joypad ->
+            // Lower nibble in Joypad register is read only
+            // ioRegisters[address] <- (value &&& 0b11110000uy) ||| (ioRegisters[address] &&& 0b00001111uy)
+            let s: string = $"{System.Convert.ToString(value, 2).PadLeft (8, '0')}"
+            ioRegisters[address] <- value
+        | IoRegistersOffsets.Dma ->
+            ioRegisters[address] <- value
+            this.doDmaTransfer value
+        | _ -> ioRegisters[int address] <- value
+
+    // TODO maybe move this out and do a m-cycle accurate transfer?
+    member private this.doDmaTransfer(startPrefix: uint8) =
+        let start = (int startPrefix) * 0x100
+
+        for i in 0..0xA0 do
+            let src = start + i
+            let dst = 0xFE00 + i
+
+            this.read src |> this.write dst
+
+    member private this.read(address: int) =
         match mapAddress address with
         | RomBase i -> romBase[i]
         | RomBank i -> romBanks[currentBank][i]
@@ -82,37 +105,28 @@ type DmgMemory(arr: uint8 array) =
         | InterruptEnable -> interruptEnable
         | Unusable -> 0xFFuy
 
-    let writeIoRegisters address value =
-        match address with
-        | IoRegistersIndex.Joypad ->
-            let j = IoRegistersIndex.Joypad
-
-            // Lower nibble in Joypad register is read only
-            ioRegisters[j] <- (value &&& 0b1111000uy) ||| (ioRegisters[j] ||| 0b1111uy)
-        | _ -> ioRegisters[int address] <- value
-
-    let write address value =
+    member private this.write address value =
         match mapAddress address with
-        | RomBase i -> ()
-        | RomBank i -> ()
+        | RomBase _ -> ()
+        | RomBank _ -> ()
         | VideoRam i -> videoRam[i] <- value
         | ExternalRam i -> externalRam[i] <- value
         | WorkRam i -> workRam[i] <- value
         | OamRam i -> oamRam[i] <- value
-        | IoRegisters i -> writeIoRegisters i value
+        | IoRegisters i -> this.writeIoRegisters i value
         | HighRam i -> highRam[i] <- value
         | InterruptEnable -> interruptEnable <- value
         | Unusable -> ()
-    
+
     interface Memory with
         member this.writeIoDirect (address: uint16) value =
-            let offset = int address - IoRegistersIndex.ioOffset
+            let offset = int address - IoRegistersOffsets.ioOffset
 
             ioRegisters[offset] <- value
 
         member this.Item
-            with get (i: uint16) = read i
-            and set (i: uint16) (v: uint8) = write i v
+            with get (i: uint16) = this.read (int i)
+            and set (i: uint16) (v: uint8) = this.write (int i) v
 
 type TestMemory(arr: uint8 array) =
     interface Memory with
@@ -122,8 +136,9 @@ type TestMemory(arr: uint8 array) =
 
         member _.writeIoDirect i value = arr[int i] <- value
 
-let createMemory rom = DmgMemory rom
-let createTestMemory arr=
+let createMemory rom : Memory = DmgMemory rom
+
+let createTestMemory arr : Memory =
     let memory = Array.zeroCreate 0x10000
 
     Array.blit arr 0 memory 0 arr.Length

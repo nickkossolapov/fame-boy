@@ -1,4 +1,4 @@
-module FameBoy.Test.Joypad
+module FameBoy.Test.JoypadTests
 
 open NUnit.Framework
 open FameBoy.Joypad
