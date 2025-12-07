@@ -12,7 +12,7 @@ open NUnit.Framework
 let ``Jump to address - jp nn`` () =
     // Setup
     let opcode = 0xC3uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -33,7 +33,7 @@ let ``Jump to address - jp nn`` () =
 let ``Jump to address in HL - jp hl`` () =
     // Setup
     let opcode = 0xE9uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x1234us
@@ -53,7 +53,7 @@ let ``Jump to address in HL - jp hl`` () =
 let ``Jump if carry, taken - jp c,a16`` () =
     // Setup
     let opcode = 0xDAuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -75,7 +75,7 @@ let ``Jump if carry, taken - jp c,a16`` () =
 let ``Jump if carry, not taken - jp c,a16`` () =
     // Setup
     let opcode = 0xDAuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -97,7 +97,7 @@ let ``Jump if carry, not taken - jp c,a16`` () =
 let ``Jump relative, positive - jr s8`` () =
     // Setup
     let opcode = 0x18uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -117,7 +117,7 @@ let ``Jump relative, positive - jr s8`` () =
 let ``Jump relative, negative - jr s8`` () =
     // Setup
     let opcode = 0x18uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -137,7 +137,7 @@ let ``Jump relative, negative - jr s8`` () =
 let ``Jump relative if not zero, taken - jr nz,s8`` () =
     // Setup
     let opcode = 0x20uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -158,7 +158,7 @@ let ``Jump relative if not zero, taken - jr nz,s8`` () =
 let ``Jump relative if not zero, not taken - jr nz,s8`` () =
     // Setup
     let opcode = 0x20uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
     
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -180,7 +180,7 @@ let ``Jump relative if not zero, not taken - jr nz,s8`` () =
 let ``Call function - call nn`` () =
     // Setup
     let opcode = 0xCDuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
     
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
@@ -205,7 +205,7 @@ let ``Call function - call nn`` () =
 let ``Call if no carry, taken - call nc,a16`` () =
     // Setup
     let opcode = 0xD4uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
@@ -231,7 +231,7 @@ let ``Call if no carry, taken - call nc,a16`` () =
 let ``Call if no carry, not taken - call nc,a16`` () =
     // Setup
     let opcode = 0xD4uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
@@ -255,7 +255,7 @@ let ``Call if no carry, not taken - call nc,a16`` () =
 let ``Return from function - ret`` () =
     // Setup
     let opcode = 0xC9uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -278,7 +278,7 @@ let ``Return from function - ret`` () =
 let ``Return if zero, taken - ret z`` () =
     // Setup
     let opcode = 0xC8uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -302,7 +302,7 @@ let ``Return if zero, taken - ret z`` () =
 let ``Return if zero, not taken - ret z`` () =
     // Setup
     let opcode = 0xC8uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -326,7 +326,7 @@ let ``Return if zero, not taken - ret z`` () =
 let ``Return from interrupt - reti`` () =
     // Setup
     let opcode = 0xD9uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -351,7 +351,7 @@ let ``Return from interrupt - reti`` () =
 let ``Restart to 0x18 - rst 0x18`` () =
     // Setup
     let opcode = 0xDFuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus

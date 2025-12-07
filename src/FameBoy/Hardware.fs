@@ -7,6 +7,7 @@ module Screen =
 
 [<RequireQualifiedAccess>]
 module Registers =
+    // Joypad
     [<Literal>]
     let P1 = 0xFF00us
 

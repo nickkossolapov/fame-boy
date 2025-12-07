@@ -70,7 +70,7 @@ let accumulatorTestData =
 [<TestCaseSource(nameof accumulatorTestData)>]
 let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- data.Opcode
@@ -199,7 +199,7 @@ let registerDirectTestData =
 [<TestCaseSource(nameof registerDirectTestData)>]
 let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- twoBitPrefix
@@ -297,7 +297,7 @@ let hlIndirectTestData =
 [<TestCaseSource(nameof hlIndirectTestData)>]
 let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- twoBitPrefix
@@ -321,7 +321,7 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
 let ``Test bit 7 of H register - bit 7,h`` () =
     // Setup
     let opcode = 0x7Cuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- twoBitPrefix
@@ -347,7 +347,7 @@ let ``Test bit 7 of H register - bit 7,h`` () =
 let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     // Setup
     let opcode = 0x7Cuy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- twoBitPrefix

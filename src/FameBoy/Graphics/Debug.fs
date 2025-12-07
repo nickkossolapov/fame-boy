@@ -6,9 +6,9 @@ open FameBoy.Graphics.Ppu
 
 let renderTile x y loc (memory: Memory) (buffer: Shade array) =
     for row in 0..7 do
-        let addr = loc + (row * 2)
-        let left = memory.Array[addr]
-        let right = memory.Array[(addr + 1)]
+        let addr = uint16 (loc + (row * 2))
+        let left = memory[addr]
+        let right = memory[(addr + 1us)]
 
         for col in 0..7 do
             let bit = 7 - col
@@ -35,8 +35,8 @@ let dumpBackground (buffer: Shade array) (memory: Memory) =
 
     for row in 0..31 do
         for col in 0..31 do
-            let mapIndex = start + (row * 32) + col
-            let tileIndex = getLoc memory.Array[mapIndex]
+            let mapIndex = uint16 (start + (row * 32) + col)
+            let tileIndex = getLoc memory[mapIndex]
 
             renderTile (col * 8) (row * 8) (int tileIndex) memory buffer
 

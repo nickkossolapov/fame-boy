@@ -7,7 +7,6 @@ open FameBoy.Hardware
 open FameBoy.Joypad
 open FameBoy.Memory
 open FameBoy.Ppu.Debug
-open FameBoy.Raylib
 open FameBoy.Raylib.Joypad
 open FameBoy.Raylib.RaylibBindings
 open FameBoy.Startup
@@ -101,7 +100,9 @@ open GraphicsPipeline
 let mcyclesPerSec = 1000 / 60
 
 let printLastFrameTime = rateLimitFunc 1000 (fun () -> printfn $"{1f / Raylib.GetFrameTime ()}")
-let printBits = rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft(8, '0')}")
+
+let printBits =
+    rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft (8, '0')}")
 
 // let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
@@ -113,9 +114,14 @@ let memory = createMemory bytes
 let cpu = createDmgCpu memory
 let ppu = createPpu memory
 
+
 while (not (windowShouldClose ())) do
     // TODO: have a better frame time counter
     let mutable counter = int ((Raylib.GetFrameTime ()) * 1000000f)
+    
+    // It's faster to do this inside the nester loop below
+    // TODO investigate why
+    // applyJoypadState (getJoypadState ()) memory
 
     printLastFrameTime ()
 
@@ -124,17 +130,14 @@ while (not (windowShouldClose ())) do
 
         let cpuCycles = execute cpu instr
         counter <- counter - cpuCycles
-        
-        // TODO: apply joypad state when instruction actually reads p1?
-        // Alternatively, maybe ensure lower 4 are read only? Probably being overwritten by select bits in rom
+
         applyJoypadState (getJoypadState ()) memory
-        printBits memory[Registers.P1]
 
         let ppuSteps = cpuCycles * 4
 
         for _ in 0..ppuSteps do
             stepPpu ppu
-    
+
     beginDrawing ()
     loadPpuFramebuffer ppu.Framebuffer
 

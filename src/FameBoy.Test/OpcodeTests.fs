@@ -12,7 +12,7 @@ open NUnit.Framework
 [<Test>]
 let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H = PC+2)`` () =
     let opcode = 0x21uy
-    let cpu = createCpu (createMemory [||])
+    let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
     cpu.Memory[0x100us] <- opcode
@@ -276,7 +276,7 @@ let instructionMappingCases =
 [<Test>]
 [<TestCaseSource(nameof instructionMappingCases)>]
 let ``Check opcode to instruction mapping`` (opcode: int, expectedInstr: Instruction) =
-    let memory = Memory [| uint8 opcode; 0x01uy; 0x01uy |]
+    let memory = createTestMemory [| uint8 opcode; 0x01uy; 0x01uy |]
 
     let instr = fetchAndDecode memory 0us
 
@@ -325,7 +325,7 @@ let twoByteTestCases =
 [<Test>]
 [<TestCaseSource(nameof twoByteTestCases)>]
 let ``Check two-byte opcode to instruction mapping`` (opcode: int, expectedInstr: Instruction) =
-    let memory = Memory [| 0xCBuy; uint8 opcode |]
+    let memory = createTestMemory [| 0xCBuy; uint8 opcode |]
 
     let instr = fetchAndDecode memory 0us
 
