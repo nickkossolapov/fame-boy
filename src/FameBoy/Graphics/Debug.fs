@@ -22,13 +22,13 @@ let renderTile x y loc (memory: Memory) (buffer: Shade array) =
 
 let dumpBackground (buffer: Shade array) (memory: Memory) =
     let start =
-        if memory[Registers.Lcdc] &&& 0b1000uy <> 0uy then
+        if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
             0x9C00
         else
             0x9800
 
     let getLoc byte =
-        if memory[Registers.Lcdc] &&& 0b10000uy <> 0uy then
+        if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
             0x10us * (uint16 byte) + 0x8000us
         else
             0x10us * uint16 (int8 byte) + 0x9000us

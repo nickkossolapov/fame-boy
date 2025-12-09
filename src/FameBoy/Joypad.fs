@@ -36,10 +36,17 @@ let toJoypadRegisterValue (state: JoypadState) (current: uint8) =
 
     (current &&& 0b11110000uy) ||| joypadFlags
 
+let private interruptTriggered (prevReg: uint8) (nextReg: uint8) =
+    let mask = 0b1111uy
+    let highToLow = (prevReg &&& mask) &&& ~~~(nextReg &&& mask)
+
+    highToLow <> 0uy
+
 let applyJoypadState (state: JoypadState) (memory: Memory) =
-    let prevReg = memory[Registers.P1]
-    let newReg = toJoypadRegisterValue state prevReg
+    let prevReg = memory[IoRegisters.P1]
+    let nextReg = toJoypadRegisterValue state prevReg
 
-    // TODO: handle interrupts
+    if interruptTriggered prevReg nextReg then
+        memory[IoRegisters.If] <- memory[IoRegisters.If] ||| 0b00010000uy
 
-    memory.writeIoDirect Registers.P1 newReg
+    memory.writeIoDirect IoRegisters.P1 nextReg

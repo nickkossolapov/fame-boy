@@ -80,7 +80,8 @@ type Cpu =
       mutable Pc: uint16
       mutable Sp: uint16
       mutable Ime: bool
-      mutable Halted: bool }
+      mutable Halted: bool
+      mutable EnableImeNextCycle: bool }
 
     member this.setFlag flag value =
         this.Registers.F <- Flags.applyFlag flag this.Registers.F value
@@ -99,4 +100,5 @@ let createCpu (memory: Memory) : Cpu =
       Pc = 0us
       Sp = 0us
       Ime = true
-      Halted = false }
+      Halted = false
+      EnableImeNextCycle = false }

@@ -74,9 +74,7 @@ type DmgMemory(arr: uint8 array) =
         match address with
         | IoRegistersOffsets.Joypad ->
             // Lower nibble in Joypad register is read only
-            // ioRegisters[address] <- (value &&& 0b11110000uy) ||| (ioRegisters[address] &&& 0b00001111uy)
-            let s: string = $"{System.Convert.ToString(value, 2).PadLeft (8, '0')}"
-            ioRegisters[address] <- value
+            ioRegisters[address] <- (value &&& 0b11110000uy) ||| (ioRegisters[address] &&& 0b00001111uy)
         | IoRegistersOffsets.Dma ->
             ioRegisters[address] <- value
             this.doDmaTransfer value

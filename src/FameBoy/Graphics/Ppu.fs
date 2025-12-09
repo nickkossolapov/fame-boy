@@ -38,8 +38,8 @@ type Ppu =
       mutable Disabled: bool }
 
     member this.Ly
-        with get () = this.Memory[Registers.Ly]
-        and set v = this.Memory[Registers.Ly] <- v
+        with get () = this.Memory[IoRegisters.Ly]
+        and set v = this.Memory[IoRegisters.Ly] <- v
 
 let createPpu (memory: Memory) =
     { Framebuffer = Array.create (Screen.width * Screen.height) White
@@ -61,12 +61,12 @@ module private statRegister =
         let modeMask = getModeMask gpu.Mode
 
         let lycMask =
-            if gpu.Ly = gpu.Memory[Registers.Lyc] then
+            if gpu.Ly = gpu.Memory[IoRegisters.Lyc] then
                 0b0100uy
             else
                 0b0uy
 
-        (gpu.Memory[Registers.Stat] &&& 0b11111000uy) + modeMask + lycMask
+        (gpu.Memory[IoRegisters.Stat] &&& 0b11111000uy) + modeMask + lycMask
 
 open statRegister
 
@@ -98,4 +98,4 @@ let stepPpu (ppu: Ppu) =
         if ppu.Dot >= 289 then
             ppu.Mode <- HBlank
 
-    ppu.Memory[Registers.Stat] <- nextStat
+    ppu.Memory[IoRegisters.Stat] <- nextStat

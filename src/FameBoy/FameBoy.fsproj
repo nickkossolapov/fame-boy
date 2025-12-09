@@ -16,8 +16,9 @@
         <Compile Include="Cpu\Executors\Control.fs" />
         <Compile Include="Cpu\Executors\Load.fs" />
         <Compile Include="Cpu\Executors\Logic.fs" />
-        <Compile Include="Cpu\Execute.fs" />
+        <Compile Include="Cpu\Interrupts.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
+        <Compile Include="Cpu\Execute.fs" />
         <Compile Include="Graphics\Ppu.fs" />
         <Compile Include="Graphics\Debug.fs" />
         <Compile Include="Startup.fs" />

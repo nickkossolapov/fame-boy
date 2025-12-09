@@ -2,11 +2,10 @@
 
 [<RequireQualifiedAccess>]
 module Screen =
-    // let height, width = 256, 256
     let height, width = 160, 144
 
 [<RequireQualifiedAccess>]
-module Registers =
+module IoRegisters =
     // Joypad
     [<Literal>]
     let P1 = 0xFF00us
