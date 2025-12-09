@@ -1,5 +1,7 @@
 module FameBoy.Joypad
 
+open FameBoy.Cpu
+open FameBoy.Cpu.Interrupts
 open FameBoy.Hardware
 open FameBoy.Memory
 
@@ -47,6 +49,6 @@ let applyJoypadState (state: JoypadState) (memory: Memory) =
     let nextReg = toJoypadRegisterValue state prevReg
 
     if interruptTriggered prevReg nextReg then
-        memory[IoRegisters.If] <- memory[IoRegisters.If] ||| 0b00010000uy
+        triggerInterrupt memory InterruptType.Joypad
 
     memory.writeIoDirect IoRegisters.P1 nextReg

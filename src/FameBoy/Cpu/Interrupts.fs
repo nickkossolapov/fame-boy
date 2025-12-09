@@ -50,6 +50,11 @@ module private Helpers =
 
 open Helpers
 
+let triggerInterrupt (memory: Memory) (t: InterruptType)=
+    let mask = getBitMask t
+    
+    memory[IoRegisters.If] <- memory[IoRegisters.If] ||| mask
+
 let checkForInterrupt (cpu: Cpu) : InterruptType option =
     if cpu.Ime then
         let enable = cpu.Memory[IoRegisters.Ie]

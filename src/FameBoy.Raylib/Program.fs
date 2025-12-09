@@ -105,13 +105,10 @@ let printBits =
     rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft (8, '0')}")
 
 // let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
-// let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
-let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/dr mario.gb"
+let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
+// let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/dr mario.gb"
 
 let memory = createMemory bytes
-// Array.blit headerBitmapCheck 0 memory.Array 0x104 headerBitmapCheck.Length
-
-// let cpu = createCpu memory
 let cpu = createDmgCpu memory
 let ppu = createPpu memory
 

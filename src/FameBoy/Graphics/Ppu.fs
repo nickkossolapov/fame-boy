@@ -1,5 +1,6 @@
 ﻿module FameBoy.Graphics.Ppu
 
+open FameBoy.Cpu.Interrupts
 open FameBoy.Hardware
 open FameBoy.Memory
 
@@ -83,6 +84,7 @@ let stepPpu (ppu: Ppu) =
 
         if ppu.Ly >= vBlankStart then
             ppu.Mode <- VBlank
+            triggerInterrupt ppu.Memory InterruptType.VBlank 
     | VBlank ->
         if ppu.Dot > lineEnd then
             ppu.Ly <- ppu.Ly + 1uy
