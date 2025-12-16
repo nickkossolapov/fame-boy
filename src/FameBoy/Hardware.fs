@@ -2,7 +2,14 @@
 
 [<RequireQualifiedAccess>]
 module Screen =
-    let height, width = 160, 144
+    [<Literal>]
+    let height = 160
+    
+    [<Literal>]
+    let width = 144
+
+[<Literal>]
+let cpuFrequency = 1048576 // M-Cycles
 
 [<RequireQualifiedAccess>]
 module IoRegisters =

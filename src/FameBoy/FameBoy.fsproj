@@ -23,6 +23,7 @@
         <Compile Include="Graphics\Debug.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Joypad.fs" />
+        <Compile Include="Timer.fs" />
     </ItemGroup>
 
     <PropertyGroup>

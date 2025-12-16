@@ -11,48 +11,58 @@ open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open FameBoy.Hardware
 
-
 let execute (cpu: Cpu) (instr: DecodedInstruction) =
     cpu.Pc <- cpu.Pc + uint16 instr.Length
 
-    match checkForInterrupt cpu with
-    | Some i -> serviceInterrupt cpu i
-    | None ->
-        let condTaken =
-            match instr.Instruction with
-            | Halt ->
-                cpu.Halted <- true
-                false
-            | Stop -> false // NOP - Not used in any games
-            | Di ->
-                cpu.Ime <- false
-                cpu.EnableImeNextCycle <- false
-                false
-            | Ei ->
-                cpu.EnableImeNextCycle <- true
-                false
-            | Nop -> false
-            | Arithmetic i ->
-                executeArithmetic cpu i
-                false
-            | Bitwise i ->
-                executeBitwise cpu i
-                false
-            | Control i ->
-                let taken = isCondTaken cpu i
-                executeControl cpu i
-                taken
-            | Load i ->
-                executeLoad cpu i
-                false
-            | Logic i ->
-                executeLogic cpu i
-                false
-            | Unknown -> false
+    if cpu.EnableImeNextInstr then
+        cpu.Ime <- true
+        cpu.EnableImeNextInstr <- false
 
-        match instr.MCycles with
-        | Fixed c -> c
-        | Conditional cc -> if condTaken then cc.Met else cc.NotMet
+    let condTaken =
+        match instr.Instruction with
+        | Halt ->
+            cpu.Halted <- true
+            false
+        | Stop -> false // NOP - Not used in any games
+        | Di ->
+            cpu.Ime <- false
+            cpu.EnableImeNextInstr <- false
+            false
+        | Ei ->
+            cpu.EnableImeNextInstr <- true
+            false
+        | Nop -> false
+        | Arithmetic i ->
+            executeArithmetic cpu i
+            false
+        | Bitwise i ->
+            executeBitwise cpu i
+            false
+        | Control i ->
+            let taken = isCondTaken cpu i
+            executeControl cpu i
+            taken
+        | Load i ->
+            executeLoad cpu i
+            false
+        | Logic i ->
+            executeLogic cpu i
+            false
+        | Unknown -> false
+
+    let cycles =
+        match checkForInterrupt cpu with
+        | Some i -> serviceInterrupt cpu i
+        | None ->   
+            match instr.MCycles with
+            | Fixed c -> c
+            | Conditional cc -> if condTaken then cc.Met else cc.NotMet
+
+    if cpu.EnableImeNextInstr then
+        cpu.Ime <- true
+        cpu.EnableImeNextInstr <- false
+
+    cycles
 
 let stepCpu (cpu: Cpu) =
     let isHalted = cpu.Halted && (cpu.Memory[IoRegisters.Ie] &&& cpu.Memory[IoRegisters.If]) = 0uy
