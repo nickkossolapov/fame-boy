@@ -53,7 +53,7 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
     let cycles =
         match checkForInterrupt cpu with
         | Some i -> serviceInterrupt cpu i
-        | None ->   
+        | None ->
             match instr.MCycles with
             | Fixed c -> c
             | Conditional cc -> if condTaken then cc.Met else cc.NotMet

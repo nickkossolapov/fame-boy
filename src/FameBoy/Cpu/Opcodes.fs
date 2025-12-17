@@ -30,8 +30,7 @@ module private twoByteInstructions =
         |> Array.allPairs regOrder
         |> Array.map (fun ((i2, target), (i1, bit, instr)) -> i1 + i2, Bitwise (instr (bit, target)))
 
-    let twoByteInstructionMap =
-        Array.append rotateSwapInstructions indexedInstructions |> Map.ofArray
+    let twoByteInstructionMap = Array.append rotateSwapInstructions indexedInstructions |> Map.ofArray
 
     let fetchAndDecode2Byte (opcode: uint8) =
         twoByteInstructionMap |> Map.find opcode

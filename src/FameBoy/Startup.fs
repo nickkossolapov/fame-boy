@@ -9,8 +9,8 @@ let createDmgCpu (memory: Memory) =
     let cpu = createCpu memory
 
     cpu.Registers.A <- 0x01uy
-    cpu.setFlag Zero true
-    cpu.Registers.B <- 0x11uy
+    cpu.setFlags [ Carry, true; HalfCarry, true; Zero, true ]
+    cpu.Registers.B <- 0x00uy
     cpu.Registers.C <- 0x13uy
     cpu.Registers.D <- 0x00uy
     cpu.Registers.E <- 0xD8uy
