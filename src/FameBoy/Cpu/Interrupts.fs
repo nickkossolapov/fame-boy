@@ -46,13 +46,13 @@ module private Helpers =
         | InterruptType.Joypad -> JoypadVector
 
     let clearInterruptFlag (memory: Memory) (flag: InterruptType) =
-        memory[IoRegisters.Ie] <- memory[IoRegisters.Ie] &&& ~~~(getBitMask flag)
+        memory[IoRegisters.If] <- memory[IoRegisters.If] &&& ~~~(getBitMask flag)
 
 open Helpers
 
-let triggerInterrupt (memory: Memory) (t: InterruptType)=
+let triggerInterrupt (memory: Memory) (t: InterruptType) =
     let mask = getBitMask t
-    
+
     memory[IoRegisters.If] <- memory[IoRegisters.If] ||| mask
 
 let checkForInterrupt (cpu: Cpu) : InterruptType option =
