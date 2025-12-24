@@ -9,13 +9,13 @@ let private dividerFrequency = cpuFrequency / 16384
 
 let private getTimerFrequency =
     function
-    | 0b00uy -> 1024
-    | 0b01uy -> 16
-    | 0b10uy -> 64
-    | _ -> 256
+    | 0b00uy -> 256
+    | 0b01uy -> 4
+    | 0b10uy -> 16
+    | _ -> 64
 
 type TimerState =
-    { mutable HasOverflowed: bool // Interrupt triggered one M-cycle after overflowing
+    { mutable HasTimerOverflowed: bool // Interrupt triggered one M-cycle after overflowing
       mutable DividerCount: int
       mutable TimerCount: int }
 
@@ -30,26 +30,27 @@ let private stepTimer (state: TimerState) (memory: Memory) =
         if state.TimerCount >= frequency then
             state.TimerCount <- 0
 
-            if memory[IoRegisters.Tima] = 0xFFuy then
-                state.HasOverflowed <- true
+            let newTima = memory[IoRegisters.Tima] + 1uy
+            memory[IoRegisters.Tima] <- newTima
 
-            memory[IoRegisters.Tima] <- memory[IoRegisters.Tima] + 1uy
+            if newTima = 0uy then
+                state.HasTimerOverflowed <- true
+                triggerInterrupt memory InterruptType.Timer
 
 let stepTimers (state: TimerState) (memory: Memory) =
+    state.DividerCount <- state.DividerCount + 1
+
     if state.DividerCount = dividerFrequency then
         state.DividerCount <- 0
         memory.writeIoDirect IoRegisters.Div (memory[IoRegisters.Div] + 1uy)
-    else
-        state.DividerCount <- state.DividerCount + 1
 
-    if state.HasOverflowed then
-        state.HasOverflowed <- false
-        triggerInterrupt memory InterruptType.Timer
+    if state.HasTimerOverflowed then
+        state.HasTimerOverflowed <- false
         memory[IoRegisters.Tima] <- memory[IoRegisters.Tma]
     else
         stepTimer state memory
 
 let createTimer () : TimerState =
-    { HasOverflowed = false
+    { HasTimerOverflowed = false
       DividerCount = 0
       TimerCount = 0 }
