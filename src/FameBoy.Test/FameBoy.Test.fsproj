@@ -18,6 +18,7 @@
         <Compile Include="InstructionTests\LogicTests.fs" />
         <Compile Include="InstructionTests\OtherTests.fs" />
         <Compile Include="JoypadTests.fs" />
+        <Compile Include="TimerTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Debug.fs" />
         <Compile Include="Hardware.fs" />
         <Compile Include="Memory.fs" />
         <Compile Include="Cpu\State.fs" />

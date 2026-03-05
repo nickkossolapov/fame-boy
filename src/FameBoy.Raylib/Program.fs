@@ -1,6 +1,5 @@
 ﻿open System.IO
 open FameBoy.Cpu.Execute
-open FameBoy.Cpu.State
 open FameBoy.Graphics.Ppu
 open FameBoy.Joypad
 open FameBoy.Memory
@@ -21,7 +20,6 @@ let mcyclesPerSec = 1000 / 60
 
 let printLastFrameTime = rateLimitFunc 1000 (fun () -> printfn $"{1f / Raylib.GetFrameTime ()}")
 
-let printCpuState = rateLimitFunc 1000 (fun (cpu: Cpu) -> printfn $"{cpu.getState ()}")
 
 let printBits =
     rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft (8, '0')}")
@@ -37,15 +35,11 @@ let memory = createMemory bytes
 let cpu = createDmgCpu memory
 let ppu = createPpu memory
 
-
-
 while (not (windowShouldClose ())) do
     // TODO: have a better frame time counter
     let mutable counter = 16666
 
-    // It's faster to do this inside the nester loop below
-    // TODO investigate why
-    // applyJoypadState (getJoypadState ()) memory
+    applyJoypadState (getJoypadState ()) memory
 
     printLastFrameTime ()
 
@@ -53,8 +47,8 @@ while (not (windowShouldClose ())) do
         let cpuCycles = stepCpu cpu
         counter <- counter - cpuCycles
 
-        applyJoypadState (getJoypadState ()) memory
-        stepTimers timer memory
+        for _ in 1..cpuCycles do
+            stepTimers timer memory
 
         let ppuSteps = cpuCycles * 4
 
