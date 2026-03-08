@@ -92,12 +92,15 @@ module private scanline =
 
         getLoc memory[mapIndex]
 
-    let getBgPixel x y (memory: Memory) =
-        let tileX = x / 8
-        let tileY = y / 8
+    let fetchBgPixel screenX screenY (memory: Memory) =
+        let bgX = screenX + int memory[IoRegisters.Scx]
+        let bgY = screenY + int memory[IoRegisters.Scy]
 
-        let bitY = y % 8
-        let bitX = 7 - x % 8
+        let tileX = bgX / 8
+        let tileY = bgY / 8
+
+        let bitY = bgY % 8
+        let bitX = 7 - bgX % 8
 
         let tileLoc = getBgTileMemLoc tileX tileY memory
         let pixelLoc = tileLoc + uint16 (bitY * 2)
@@ -110,15 +113,43 @@ module private scanline =
 
         leftBit ||| rightBit |> Shade.ofByte
 
+    let oamMap = [ 0xFE00us .. 4us .. 0xFE9Fus ]
+
+    // TODO 8x16 tiles
+    let fetchObjectPixel x y filteredOam (memory: Memory) =
+        let mutable found = false // mutable makes me sad, but this is a hot path
+        let mutable i = 0
+        let len = List.length filteredOam
+
+        while i < len && not found do
+            let objX = int memory[filteredOam[i] + 1us]
+
+            if x >= objX - 8 && x < objX then
+                found <- true
+            else
+                i <- i + 1
+
+        if found then Shade.Black else Shade.White
+
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
         let screenY = int ppu.Ly
 
+        let objectsInLine =
+            oamMap |> List.where (fun loc -> ppu.Ly >= ppu.Memory[loc] - 16uy && ppu.Ly < ppu.Memory[loc] - 8uy)
+        // TODO List.take 10? Do I want to be hardware accurate?
+
         for screenX in 0 .. Screen.width - 1 do
             let bufferLoc = screenY * Screen.width + screenX
-            let bgX = screenX + int ppu.Memory[IoRegisters.Scx]
-            let bgY = screenY + int ppu.Memory[IoRegisters.Scy]
 
-            buffer[bufferLoc] <- getBgPixel screenX screenY ppu.Memory
+            let objPixel = fetchObjectPixel screenX screenY objectsInLine ppu.Memory
+
+            let pixel =
+                if objPixel = Shade.White then
+                    fetchBgPixel screenX screenY ppu.Memory
+                else
+                    objPixel
+
+            buffer[bufferLoc] <- pixel
 
 open scanline
 
