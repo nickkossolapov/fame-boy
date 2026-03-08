@@ -15,11 +15,9 @@ open Raylib_cs
 Raylib.InitWindow (Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
 Raylib.SetTargetFPS 60
 
-
 let mcyclesPerSec = 1000 / 60
 
 let printLastFrameTime = rateLimitFunc 1000 (fun () -> printfn $"{1f / Raylib.GetFrameTime ()}")
-
 
 let printBits =
     rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft (8, '0')}")
@@ -27,8 +25,8 @@ let printBits =
 // let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/dr mario.gb"
-// let bytes = File.ReadAllBytes "D:/gb/test-roms/cpu_instrs/individual/08-misc instrs.gb"
-let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
+let bytes = File.ReadAllBytes "D:/gb/test-roms/cpu_instrs/cpu_instrs.gb"
+// let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 
 let timer = createTimer ()
 let memory = createMemory bytes

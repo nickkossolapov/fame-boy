@@ -75,28 +75,31 @@ open statRegister
 
 
 module private scanline =
-    // let getBgTileMemLoc tileX tileY (memory: Memory) =
-    //     let start =
-    //         if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
-    //             0x9C00
-    //         else
-    //             0x9800
-    //
-    //     let getLoc byte =
-    //         if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
-    //             0x10us * (uint16 byte) + 0x8000us
-    //         else
-    //             0x10us * uint16 (int8 byte) + 0x9000us
-    //
-    //     let mapIndex = uint16 (start + (tileX * 32) + tileY)
-    //
-    //     getLoc memory[mapIndex]
+    let getBgTileMemLoc tileX tileY (memory: Memory) =
+        let start =
+            if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
+                0x9C00
+            else
+                0x9800
+
+        let getLoc byte =
+            if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
+                0x10us * (uint16 byte) + 0x8000us
+            else
+                0x10us * uint16 (int8 byte) + 0x9000us
+
+        let mapIndex = uint16 (start + (tileY * 32) + tileX)
+
+        getLoc memory[mapIndex]
 
     let getBgPixel x y (memory: Memory) =
-        let bitY = y % 8
-        let bitX = 8 - x % 8
+        let tileX = x / 8
+        let tileY = y / 8
 
-        let tileLoc = 0x8270us
+        let bitY = y % 8
+        let bitX = 7 - x % 8
+
+        let tileLoc = getBgTileMemLoc tileX tileY memory
         let pixelLoc = tileLoc + uint16 (bitY * 2)
 
         let left = memory[pixelLoc]
@@ -107,13 +110,15 @@ module private scanline =
 
         leftBit ||| rightBit |> Shade.ofByte
 
-    let renderScanline (buffer: Shade array) ly (memory: Memory) =
-        let line = int ly
-        let y = int line
+    let renderScanline (buffer: Shade array) (ppu: Ppu) =
+        let screenY = int ppu.Ly
 
-        for x in 0 .. Screen.width - 1 do
-            let bufferLoc = line * Screen.width + x
-            buffer[bufferLoc] <- getBgPixel x y memory
+        for screenX in 0 .. Screen.width - 1 do
+            let bufferLoc = screenY * Screen.width + screenX
+            let bgX = screenX + int ppu.Memory[IoRegisters.Scx]
+            let bgY = screenY + int ppu.Memory[IoRegisters.Scy]
+
+            buffer[bufferLoc] <- getBgPixel screenX screenY ppu.Memory
 
 open scanline
 
@@ -143,7 +148,7 @@ let stepPpu (ppu: Ppu) =
             ppu.Mode <- Drawing
     | Drawing ->
         if ppu.Dot = oamScanEnd + 1 then
-            renderScanline ppu.Framebuffer ppu.Ly ppu.Memory
+            renderScanline ppu.Framebuffer ppu
 
         if ppu.Dot >= 289 then
             ppu.Mode <- HBlank

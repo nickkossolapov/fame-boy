@@ -4,7 +4,7 @@ module FameBoy.Raylib.Config
 open FameBoy.Hardware
 
 [<Literal>]
-let scale = 4
+let scale = 2
 
 [<Literal>]
 let enableDebugView = true
