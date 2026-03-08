@@ -75,54 +75,44 @@ open statRegister
 
 
 module private scanline =
-    let mapWidth = 32 * 8
-    let mapHeight = 32 * 8
-
-    let getBgTileMemLoc tileX tileY (memory: Memory) = 0x84e0us
-    // let start =
-    //     if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
-    //         0x9C00
-    //     else
-    //         0x9800
+    // let getBgTileMemLoc tileX tileY (memory: Memory) =
+    //     let start =
+    //         if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
+    //             0x9C00
+    //         else
+    //             0x9800
     //
-    // let getLoc byte =
-    //     if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
-    //         0x10us * (uint16 byte) + 0x8000us
-    //     else
-    //         0x10us * uint16 (int8 byte) + 0x9000us
+    //     let getLoc byte =
+    //         if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
+    //             0x10us * (uint16 byte) + 0x8000us
+    //         else
+    //             0x10us * uint16 (int8 byte) + 0x9000us
     //
-    // let mapIndex = uint16 (start + (tileX * 32) + tileY)
+    //     let mapIndex = uint16 (start + (tileX * 32) + tileY)
     //
-    // getLoc memory[mapIndex]
+    //     getLoc memory[mapIndex]
 
     let getBgPixel x y (memory: Memory) =
-        // let tileX = mapWidth / (x + 1) - 1 // ???
-        // let bitX = mapWidth % (x + 1) - 1 // ???
-        //
-        // let tileY = mapHeight / (y + 1) // ???
-        // let bitY = mapHeight % (y + 1) - 1 // ???
-        //
-        // let tileLoc = getBgTileMemLoc tileX tileY memory
-        // let pixelLoc = tileLoc + uint16 (bitY * 2) // 1 line is 2 bytes
-        //
-        // let left = memory[pixelLoc]
-        // let right = memory[(pixelLoc + 1us)]
-        //
-        // let leftBit = left >>> bitX &&& 1uy
-        // let rightBit = (right >>> bitX &&& 1uy) <<< 1
-        //
-        // leftBit ||| rightBit
-        // |> Shade.ofByte
+        let bitY = y % 8
+        let bitX = 8 - x % 8
 
-        (x + y) % 4 |> uint8 |> Shade.ofByte
+        let tileLoc = 0x8270us
+        let pixelLoc = tileLoc + uint16 (bitY * 2)
+
+        let left = memory[pixelLoc]
+        let right = memory[(pixelLoc + 1us)]
+
+        let leftBit = left >>> bitX &&& 1uy
+        let rightBit = (right >>> bitX &&& 1uy) <<< 1
+
+        leftBit ||| rightBit |> Shade.ofByte
 
     let renderScanline (buffer: Shade array) ly (memory: Memory) =
         let line = int ly
         let y = int line
-        let xStart = int memory[IoRegisters.Scx]
 
-        for x in xStart .. xStart + Screen.width - 1 do
-            let bufferLoc = y * Screen.width + x
+        for x in 0 .. Screen.width - 1 do
+            let bufferLoc = line * Screen.width + x
             buffer[bufferLoc] <- getBgPixel x y memory
 
 open scanline
