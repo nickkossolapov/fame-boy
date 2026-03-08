@@ -27,8 +27,8 @@ let printBits =
 // let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/dr mario.gb"
-let bytes =
-    File.ReadAllBytes "/Users/nickkossolapov/dev/gb/blargg/cpu_instrs/individual/02-interrupts.gb"
+// let bytes = File.ReadAllBytes "D:/gb/test-roms/cpu_instrs/individual/08-misc instrs.gb"
+let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 
 let timer = createTimer ()
 let memory = createMemory bytes

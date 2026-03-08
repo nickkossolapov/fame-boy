@@ -3,10 +3,10 @@
 [<RequireQualifiedAccess>]
 module Screen =
     [<Literal>]
-    let height = 160
-    
+    let height = 144
+
     [<Literal>]
-    let width = 144
+    let width = 160
 
 [<Literal>]
 let cpuFrequency = 1048576 // M-Cycles
