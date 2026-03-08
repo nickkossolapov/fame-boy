@@ -1,32 +1,6 @@
 ﻿module FameBoy.Memory
 
 module private Helpers =
-    type MemoryRegion =
-        | RomBase of offset: int
-        | RomBank of offset: int
-        | VideoRam of offset: int
-        | ExternalRam of offset: int
-        | WorkRam of offset: int
-        | OamRam of offset: int
-        | IoRegisters of offset: int
-        | HighRam of offset: int
-        | InterruptEnable
-        | Unusable
-
-    let mapAddress (addr: int) : MemoryRegion =
-        match addr with
-        | a when a < 0x4000 -> RomBase a
-        | a when a < 0x8000 -> RomBank (a - 0x4000)
-        | a when a < 0xA000 -> VideoRam (a - 0x8000)
-        | a when a < 0xC000 -> ExternalRam (a - 0xA000)
-        | a when a < 0xE000 -> WorkRam (a - 0xC000)
-        | a when a < 0xFE00 -> WorkRam (a - 0xE000) // Echo RAM
-        | a when a < 0xFEA0 -> OamRam (a - 0xFE00)
-        | a when a < 0xFF00 -> Unusable
-        | a when a < 0xFF80 -> IoRegisters (a - 0xFF00)
-        | a when a < 0xFFFF -> HighRam (a - 0xFF80)
-        | _ -> InterruptEnable
-
     let memorySizes =
         {| romBank = 0x4000
            vram = 0x2000
@@ -91,30 +65,30 @@ type DmgMemory(arr: uint8 array) =
             this.read src |> this.write dst
 
     member private this.read(address: int) =
-        match mapAddress address with
-        | RomBase i -> romBase[i]
-        | RomBank i -> romBanks[currentBank][i]
-        | VideoRam i -> videoRam[i]
-        | ExternalRam i -> externalRam[i]
-        | WorkRam i -> workRam[i]
-        | OamRam i -> oamRam[i]
-        | IoRegisters i -> ioRegisters[i]
-        | HighRam i -> highRam[i]
-        | InterruptEnable -> interruptEnable
-        | Unusable -> 0xFFuy
+        if address < 0x4000 then romBase[address]
+        elif address < 0x8000 then romBanks[currentBank][address - 0x4000]
+        elif address < 0xA000 then videoRam[address - 0x8000]
+        elif address < 0xC000 then externalRam[address - 0xA000]
+        elif address < 0xE000 then workRam[address - 0xC000]
+        elif address < 0xFE00 then workRam[address - 0xE000]
+        elif address < 0xFEA0 then oamRam[address - 0xFE00]
+        elif address < 0xFF00 then 0xFFuy
+        elif address < 0xFF80 then ioRegisters[address - 0xFF00]
+        elif address < 0xFFFF then highRam[address - 0xFF80]
+        else interruptEnable
 
     member private this.write address value =
-        match mapAddress address with
-        | RomBase _ -> ()
-        | RomBank _ -> ()
-        | VideoRam i -> videoRam[i] <- value
-        | ExternalRam i -> externalRam[i] <- value
-        | WorkRam i -> workRam[i] <- value
-        | OamRam i -> oamRam[i] <- value
-        | IoRegisters i -> this.writeIoRegisters i value
-        | HighRam i -> highRam[i] <- value
-        | InterruptEnable -> interruptEnable <- value
-        | Unusable -> ()
+        if address < 0x4000 then ()
+        elif address < 0x8000 then ()
+        elif address < 0xA000 then videoRam[address - 0x8000] <- value
+        elif address < 0xC000 then externalRam[address - 0xA000] <- value
+        elif address < 0xE000 then workRam[address - 0xC000] <- value
+        elif address < 0xFE00 then workRam[address - 0xE000] <- value
+        elif address < 0xFEA0 then oamRam[address - 0xFE00] <- value
+        elif address < 0xFF00 then ()
+        elif address < 0xFF80 then this.writeIoRegisters (address - 0xFF00) value
+        elif address < 0xFFFF then highRam[address - 0xFF80] <- value
+        else interruptEnable <- value
 
     interface Memory with
         member this.writeIoDirect (address: uint16) value =
