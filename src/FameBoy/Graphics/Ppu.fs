@@ -189,6 +189,7 @@ module private scanline =
         let objectsInLine =
             oamMap
             |> List.where (fun loc -> ppu.Ly >= ppu.Memory[loc] - 16uy && ppu.Ly < ppu.Memory[loc] - 8uy)
+            |> List.sortBy (fun loc -> ppu.Memory[loc + 1us]) // DMG prioritises by X coordinate. TODO GCB prioritise by OAM only
         // TODO List.take 10? Do I want to be hardware accurate?
 
         for screenX in 0 .. Screen.width - 1 do
