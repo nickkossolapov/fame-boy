@@ -19,7 +19,7 @@ let createDmgCpu (memory: Memory) =
     cpu.Pc <- 0x0100us
     cpu.Sp <- 0xFFFEus
 
-    cpu.Memory[IoRegisters.P1] <- 0xCFuy
+    cpu.Memory[IoRegisters.Joyp] <- 0xCFuy
     cpu.Memory[IoRegisters.Sb] <- 0x00uy
     cpu.Memory[IoRegisters.Sc] <- 0x7Euy
     cpu.Memory[IoRegisters.Div] <- 0x18uy

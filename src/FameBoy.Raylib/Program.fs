@@ -19,7 +19,7 @@ let mcyclesPerSec = 1000 / 60
 
 let printLastFrameTime =
     rateLimitFunc 1000 (fun () -> printfn $"{1f / Raylib.GetFrameTime()}")
-    
+
 let printBits =
     rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft(8, '0')}")
 
@@ -27,9 +27,9 @@ let printBits =
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/tetris.gb"
 // let bytes = File.ReadAllBytes "/Users/nickkossolapov/dev/gb/dr mario.gb"
 // let bytes = File.ReadAllBytes "D:/gb/test-roms/cpu_instrs/cpu_instrs.gb"
-let bytes = File.ReadAllBytes "D:/personal/gb/tetris.gb"
+let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 
-let frameTimesDuration = 120 // frame
+let frameTimesDuration = 600 // frame
 let frameTimes = Array.create frameTimesDuration 60f
 let mutable frameIndex = 0
 
@@ -37,7 +37,7 @@ let printTotalFrameTime =
     rateLimitFunc 1000 (fun () ->
         let avg = Array.average frameTimes
         printfn $"avg: %.4f{1f / avg} | last frame: %.4f{1f / Raylib.GetFrameTime()}")
-    
+
 let timer = createTimer ()
 let memory = createMemory bytes
 let cpu = createDmgCpu memory
@@ -49,19 +49,21 @@ while (not (windowShouldClose ())) do
     frameTimes[frameIndex] <- Raylib.GetFrameTime()
     frameIndex <- (frameIndex + 1) % frameTimesDuration
 
-    applyJoypadState (getJoypadState ()) memory
-    
+    let joypadState = getJoypadState ()
+
     printTotalFrameTime ()
 
     while (counter > 0) do
+        // TODO don't apply on every instruction. Modify memory to resolve joypad state on read, and handle interrupts
+        applyJoypadState joypadState memory
         let cpuCycles = stepCpu cpu
         counter <- counter - cpuCycles
 
         for _ in 1..cpuCycles do
             stepTimers timer memory
-        
+
         let ppuSteps = cpuCycles * 4
-        
+
         for _ in 0..ppuSteps do
             stepPpu ppu
 

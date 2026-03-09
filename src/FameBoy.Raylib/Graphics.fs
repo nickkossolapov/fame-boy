@@ -14,20 +14,28 @@ module GraphicsPipeline =
     let private tilesHeight = 96 // 384 tiles -> 12 lines at 32 tiles per line * 8 pixels
 
     let mutable private screenTexture =
-        Raylib.GenImageColor (Screen.width, Screen.height, Color.Black) |> Raylib.LoadTextureFromImage
+        Raylib.GenImageColor(Screen.width, Screen.height, Color.Black)
+        |> Raylib.LoadTextureFromImage
 
     let mutable private mapTexture =
-        Raylib.GenImageColor (mapSide, mapSide, Color.Black) |> Raylib.LoadTextureFromImage
+        Raylib.GenImageColor(mapSide, mapSide, Color.Black)
+        |> Raylib.LoadTextureFromImage
 
     let mutable private tilesTexture =
-        Raylib.GenImageColor (mapSide, tilesHeight, Color.Black) |> Raylib.LoadTextureFromImage
+        Raylib.GenImageColor(mapSide, tilesHeight, Color.Black)
+        |> Raylib.LoadTextureFromImage
+
+    let private white = Color(186, 218, 85)
+    let private light = Color(130, 153, 59)
+    let private dark = Color(74, 87, 34)
+    let private black = Color(19, 22, 8)
 
     let private mapToColors =
         Array.map (function
-            | White -> Color (186, 218, 85)
-            | Light -> Color (130, 153, 59)
-            | Dark -> Color (74, 87, 34)
-            | Black -> Color (19, 22, 8))
+            | White -> white
+            | Light -> light
+            | Dark -> dark
+            | Black -> black)
 
     let private backgroundFramebuffer = Array.create<Shade> (mapSide * mapSide) White
     let private tilesFramebuffer = Array.create<Shade> (mapSide * tilesHeight) White
@@ -43,7 +51,10 @@ module GraphicsPipeline =
             dumpTiles tilesFramebuffer memory)
 
     let loadFramebuffer pos texture (framebuffer: Shade array) =
-        framebuffer |> mapToColors |> updateTexture texture |> drawScaledTexture pos (float32 Config.scale)
+        framebuffer
+        |> mapToColors
+        |> updateTexture texture
+        |> drawScaledTexture pos (float32 Config.scale)
 
     let loadPpuFramebuffer = loadFramebuffer (0f, 0f) screenTexture
     let loadTilesFramebuffer = loadFramebuffer (0f, 0f) tilesTexture
@@ -59,4 +70,4 @@ module GraphicsPipeline =
         Raylib.UnloadTexture mapTexture
         Raylib.UnloadTexture tilesTexture
 
-        Raylib.CloseWindow ()
+        Raylib.CloseWindow()

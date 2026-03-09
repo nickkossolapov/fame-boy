@@ -1,6 +1,5 @@
 module FameBoy.Joypad
 
-open FameBoy.Cpu
 open FameBoy.Cpu.Interrupts
 open FameBoy.Hardware
 open FameBoy.Memory
@@ -19,8 +18,8 @@ let inline private toBitFlag isPressed bit = if isPressed then 0uy else bit
 
 let toJoypadRegisterValue (state: JoypadState) (current: uint8) =
     // Game Boy is active low for joypad inputs
-    let selectButtons = current &&& 0b10000uy = 0uy
-    let selectDPad = current &&& 0b100000uy = 0uy
+    let selectButtons = (current &&& 0b100000uy) = 0uy
+    let selectDPad = (current &&& 0b10000uy) = 0uy
 
     let joypadFlags =
         match selectButtons, selectDPad with
@@ -45,10 +44,11 @@ let private interruptTriggered (prevReg: uint8) (nextReg: uint8) =
     highToLow <> 0uy
 
 let applyJoypadState (state: JoypadState) (memory: Memory) =
-    let prevReg = memory[IoRegisters.P1]
+    let prevReg = memory[IoRegisters.Joyp]
     let nextReg = toJoypadRegisterValue state prevReg
 
-    if interruptTriggered prevReg nextReg then
-        triggerInterrupt memory InterruptType.Joypad
+    if not (prevReg = nextReg) then
+        if interruptTriggered prevReg nextReg then
+            triggerInterrupt memory InterruptType.Joypad
 
-    memory.writeIoDirect IoRegisters.P1 nextReg
+        memory.writeIoDirect IoRegisters.Joyp nextReg

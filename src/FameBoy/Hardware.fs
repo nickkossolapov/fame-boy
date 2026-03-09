@@ -15,7 +15,7 @@ let cpuFrequency = 1048576 // M-Cycles
 module IoRegisters =
     // Joypad
     [<Literal>]
-    let P1 = 0xFF00us
+    let Joyp = 0xFF00us
 
     [<Literal>]
     let Sb = 0xFF01us

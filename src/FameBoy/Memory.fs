@@ -18,7 +18,7 @@ module private Helpers =
 
 open Helpers
 
-module IoRegistersOffsets =
+module private IoRegistersOffsets =
     [<Literal>]
     let ioOffset = 0xFF00
 
@@ -62,8 +62,8 @@ type DmgMemory(arr: uint8 array) =
             let src = start + i
             let dst = 0xFE00 + i
 
-            this.read src |> this.write dst        
-    
+            this.read src |> this.write dst
+
     // TODO consider flattening memory. This is the biggest hot-path in the emulator
     member private this.read(address: int) =
         if address < 0x4000 then romBase[address]
