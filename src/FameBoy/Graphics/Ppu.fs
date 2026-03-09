@@ -4,6 +4,7 @@ open FameBoy.Cpu.Interrupts
 open FameBoy.Hardware
 open FameBoy.Memory
 
+[<Struct>]
 type PpuMode =
     | HBlank
     | VBlank
@@ -18,6 +19,7 @@ module private ScanlineTimings =
 
 open ScanlineTimings
 
+[<Struct>]
 type Shade =
     | White
     | Light
@@ -42,7 +44,31 @@ type Ppu =
         with get () = this.Memory[IoRegisters.Ly]
         and set v = this.Memory[IoRegisters.Ly] <- v
 
-module private statRegister =
+module private Oam =
+    // 0uy = OBP0, 1uy = OBP1
+    type DmgPalette = byte
+
+    [<Literal>]
+    let OBP0: DmgPalette = 0b00000uy
+
+    [<Literal>]
+    let OBP1: DmgPalette = 0b10000uy
+
+    type OamAttributes =
+        { Priority: bool
+          XFlip: bool
+          YFlip: bool
+          DmgPalette: DmgPalette }
+
+        static member ofByte b =
+            { Priority = b &&& 0b10000000uy <> 0uy
+              YFlip = b &&& 0b01000000uy <> 0uy
+              XFlip = b &&& 0b00100000uy <> 0uy
+              DmgPalette = b &&& OBP1 }
+
+open Oam
+
+module private StatRegister =
     let getModeMask =
         function
         | HBlank -> 0uy
@@ -71,9 +97,10 @@ let createPpu (memory: Memory) =
       Memory = memory
       Disabled = false }
 
-open statRegister
+open StatRegister
 
 
+// TODO palettes
 module private scanline =
     let getBgTileMemLoc tileX tileY (memory: Memory) =
         let start =
@@ -99,8 +126,8 @@ module private scanline =
         let tileX = bgX / 8
         let tileY = bgY / 8
 
-        let bitY = bgY % 8
         let bitX = 7 - bgX % 8
+        let bitY = bgY % 8
 
         let tileLoc = getBgTileMemLoc tileX tileY memory
         let pixelLoc = tileLoc + uint16 (bitY * 2)
@@ -114,6 +141,28 @@ module private scanline =
         leftBit ||| rightBit |> Shade.ofByte
 
     let oamMap = [ 0xFE00us .. 4us .. 0xFE9Fus ]
+
+    let fetchTransformedObjectPixel screenX screenY oamLoc (memory: Memory) =
+        let objX = int memory[oamLoc + 1us]
+        let objY = int memory[oamLoc]
+        let objLoc = 0x8000us + 0x10us * (uint16 memory[oamLoc + 2us])
+        let attributes = OamAttributes.ofByte memory[oamLoc + 3us]
+
+        let localX = screenX - (objX - 8)
+        let localY = screenY - (objY - 16)
+
+        let bitX = if attributes.XFlip then localX else 7 - localX
+        let bitY = if attributes.YFlip then 7 - localY else localY
+
+        let pixelLoc = objLoc + uint16 (bitY * 2)
+
+        let left = memory[pixelLoc]
+        let right = memory[(pixelLoc + 1us)]
+
+        let leftBit = left >>> bitX &&& 1uy
+        let rightBit = (right >>> bitX &&& 1uy) <<< 1
+
+        leftBit ||| rightBit |> Shade.ofByte
 
     // TODO 8x16 tiles
     let fetchObjectPixel x y filteredOam (memory: Memory) =
@@ -129,13 +178,17 @@ module private scanline =
             else
                 i <- i + 1
 
-        if found then Shade.Black else Shade.White
+        if found then
+            fetchTransformedObjectPixel x y filteredOam[i] memory
+        else
+            Shade.White
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
         let screenY = int ppu.Ly
 
         let objectsInLine =
-            oamMap |> List.where (fun loc -> ppu.Ly >= ppu.Memory[loc] - 16uy && ppu.Ly < ppu.Memory[loc] - 8uy)
+            oamMap
+            |> List.where (fun loc -> ppu.Ly >= ppu.Memory[loc] - 16uy && ppu.Ly < ppu.Memory[loc] - 8uy)
         // TODO List.take 10? Do I want to be hardware accurate?
 
         for screenX in 0 .. Screen.width - 1 do
