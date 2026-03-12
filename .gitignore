@@ -10,3 +10,11 @@ obj/
 .vs/
 .idea/
 *.swp
+
+# Node / Fable
+node_modules/
+fable_modules/
+*.fs.js
+*.fs.js.map
+dist/
+/src/FameBoy.Web/FameBoy.Web.fable-temp.csproj

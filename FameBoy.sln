@@ -6,6 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{6B2313EE-9
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 		.gitignore = .gitignore
+		dotnet-tools.json = dotnet-tools.json
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Test", "src\FameBoy.Test\FameBoy.Test.fsproj", "{BBB139AD-12DF-4FE1-86DA-5271403F0A48}"
