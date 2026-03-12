@@ -25,7 +25,7 @@
         <Compile Include="Joypad.fs" />
         <Compile Include="Timer.fs" />
         <Compile Include="Emulator.fs" />
-        <Compile Include="Test.fs" />
+
     </ItemGroup>
 
     <PropertyGroup>

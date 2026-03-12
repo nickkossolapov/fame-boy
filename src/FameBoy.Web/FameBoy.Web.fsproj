@@ -6,7 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="index.html" />
+        <Content Include="index.html" />
+        <Content Include="styles.css" />
         <None Include="vite.config.ts" />
         <None Include="package.json" />
     </ItemGroup>
@@ -22,6 +23,10 @@
 
     <ItemGroup>
         <TypeScriptCompile Include="vite.config.ts" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\FameBoy\FameBoy.fsproj" />
     </ItemGroup>
 
 </Project>
