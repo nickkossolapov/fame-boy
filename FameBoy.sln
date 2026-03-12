@@ -12,6 +12,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Test", "src\FameBoy
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Raylib", "src\FameBoy.Raylib\FameBoy.Raylib.fsproj", "{20640AF0-4FE8-4914-89BF-00C01D89DC40}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Web", "src\FameBoy.Web\FameBoy.Web.fsproj", "{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{20640AF0-4FE8-4914-89BF-00C01D89DC40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20640AF0-4FE8-4914-89BF-00C01D89DC40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20640AF0-4FE8-4914-89BF-00C01D89DC40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
