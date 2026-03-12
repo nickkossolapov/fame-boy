@@ -20,14 +20,12 @@ module private Helpers =
     let SerialVector = 0x0058us
     let JoypadVector = 0x0060us
 
-    // Maps trailing zero count (0-4) to the corresponding interrupt type
-    // The lowest set bit = highest priority interrupt per GB spec
-    let interruptByBitIndex =
-        [ InterruptType.VBlank // bit 0
-          InterruptType.LcdStat // bit 1
-          InterruptType.Timer // bit 2
-          InterruptType.Serial // bit 3
-          InterruptType.Joypad ] // bit 4
+    let getInterruptForPending pending =
+        if pending &&& 0x01uy <> 0uy then InterruptType.VBlank
+        elif pending &&& 0x02uy <> 0uy then InterruptType.LcdStat
+        elif pending &&& 0x04uy <> 0uy then InterruptType.Timer
+        elif pending &&& 0x08uy <> 0uy then InterruptType.Serial
+        else InterruptType.Joypad
 
     let getBitMask =
         function
@@ -62,10 +60,7 @@ let checkForInterrupt (cpu: Cpu) =
         let pending = enable &&& flag &&& 0x1Fuy
 
         if pending <> 0uy then
-            // Lowest set bit = highest priority interrupt.
-            let bitIndex = System.Numerics.BitOperations.TrailingZeroCount(uint32 pending)
-
-            ValueSome interruptByBitIndex[bitIndex]
+            getInterruptForPending pending |> ValueSome
         else
             ValueNone
     else
