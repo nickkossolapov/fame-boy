@@ -2,7 +2,6 @@
 open Browser.Types
 open Fable.Core
 open FameBoy.Emulator
-open FameBoy.Graphics.Ppu
 open FameBoy.Hardware
 open FameBoy.Joypad
 
@@ -14,23 +13,18 @@ screenCanvas.height <- Screen.height
 
 let ctx = screenCanvas.getContext "2d" :?> CanvasRenderingContext2D
 let imageData = ctx.createImageData (Screen.width, Screen.height)
-let white = (186uy, 218uy, 85uy)
-let light = (130uy, 153uy, 59uy)
-let dark = (74uy, 87uy, 34uy)
-let black = (19uy, 22uy, 8uy)
 
-let private mapToColors =
-    function
-    | White -> white
-    | Light -> light
-    | Dark -> dark
-    | Black -> black
+let shades =
+    [ (186uy, 218uy, 85uy)
+      (130uy, 153uy, 59uy)
+      (74uy, 87uy, 34uy)
+      (19uy, 22uy, 8uy) ]
 
-let loadImageData (emulatorFramebuffer) =
+let loadImageData emulatorFramebuffer =
     let len = Array.length emulatorFramebuffer - 1
 
     for i in 0..len do
-        let r, g, b = mapToColors (emulatorFramebuffer[i])
+        let r, g, b = shades[int (emulatorFramebuffer[i])]
         let j = i * 4
 
         imageData.data[j] <- r

@@ -25,18 +25,13 @@ module GraphicsPipeline =
         Raylib.GenImageColor(mapSide, tilesHeight, Color.Black)
         |> Raylib.LoadTextureFromImage
 
-    let private white = Color(186, 218, 85)
-    let private light = Color(130, 153, 59)
-    let private dark = Color(74, 87, 34)
-    let private black = Color(19, 22, 8)
-
     let shades =
         [ Color(186, 218, 85)
           Color(130, 153, 59)
           Color(74, 87, 34)
           Color(19, 22, 8) ]
 
-    let private mapToColors = Array.map (fun (s: Shade) -> shades[int(s)])
+    let private mapToColors = Array.map (fun (s: Shade) -> shades[int (s)])
 
     let private backgroundFramebuffer =
         Array.create<Shade> (mapSide * mapSide) Shade.White
