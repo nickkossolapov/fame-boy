@@ -13,6 +13,7 @@ body {
 
 button {
     all: unset;
+    cursor: pointer;
 }
 
 .shell {
@@ -20,7 +21,7 @@ button {
     width: calc(360px * var(--s));
     background: #c8c4bf;
     border-radius: calc(15px * var(--s)) calc(15px * var(--s)) calc(60px * var(--s)) calc(15px * var(--s));
-    box-shadow: calc(3px * var(--s)) calc(6px * var(--s)) calc(16px * var(--s)) rgba(0, 0, 0, 0.5);
+    box-shadow: 3px 6px 16px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -94,7 +95,6 @@ button {
     top: 0;
     left: var(--d-pad-button-size);
     border-radius: calc(5px * var(--s)) calc(5px * var(--s)) 0 0;
-    cursor: pointer;
 }
 
 #down-button {
@@ -103,7 +103,6 @@ button {
     bottom: 0;
     left: var(--d-pad-button-size);
     border-radius: 0 0 calc(5px * var(--s)) calc(5px * var(--s));
-    cursor: pointer;
 }
 
 #left-button {
@@ -112,7 +111,6 @@ button {
     top: var(--d-pad-button-size);
     left: 0;
     border-radius: calc(5px * var(--s)) 0 0 calc(5px * var(--s));
-    cursor: pointer;
 }
 
 #right-button {
@@ -121,7 +119,6 @@ button {
     top: var(--d-pad-button-size);
     right: 0;
     border-radius: 0 calc(5px * var(--s)) calc(5px * var(--s)) 0;
-    cursor: pointer;
 }
 
 .a-b-buttons {
@@ -139,7 +136,6 @@ button {
     height: calc(50px * var(--s));
     background: #8b2252;
     border-radius: 50%;
-    cursor: pointer;
 }
 
 .a-b-button:active {
@@ -161,7 +157,6 @@ button {
     background: #555;
     border-radius: calc(10px * var(--s));
     rotate: -25deg;
-    cursor: pointer;
 }
 
 .start-select-button:active {
