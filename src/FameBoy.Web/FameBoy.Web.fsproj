@@ -10,6 +10,7 @@
         <Content Include="styles.css" />
         <None Include="vite.config.ts" />
         <None Include="package.json" />
+        <Compile Include="Joypad.fs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -4,7 +4,9 @@ open Browser.Types
 open Fable.Core
 open FameBoy.Emulator
 open FameBoy.Hardware
-open FameBoy.Joypad
+open FameBoy.Web.Joypad
+
+initOnScreenButtons ()
 
 let fileUploadButton = document.getElementById "rom-file"
 let screenCanvas = document.getElementById "screen" :?> HTMLCanvasElement
@@ -25,7 +27,7 @@ let loadImageData emulatorFramebuffer =
     let len = Array.length emulatorFramebuffer - 1
 
     for i in 0..len do
-        let r, g, b = shades[int (emulatorFramebuffer[i])]
+        let r, g, b = shades[int emulatorFramebuffer[i]]
         let j = i * 4
 
         imageData.data[j] <- r
@@ -33,26 +35,13 @@ let loadImageData emulatorFramebuffer =
         imageData.data[j + 2] <- b
         imageData.data[j + 3] <- 255uy
 
-let mutable joypadState: JoypadState =
-    { Up = false
-      Down = false
-      Left = false
-      Right = false
-      A = false
-      B = false
-      Start = false
-      Select = false }
-
 let mutable logNow = 0
 let targetMCyclesPerMs = 1048.576
 let maxMCyclesPerFrame = targetMCyclesPerMs * 16.6667 // So if emulator can't reach 60 FPS it won't down itself in instructions
-
 let mutable accumulator = 0.0
 
-
 let startEmulator bytes =
-    let struct (frameBuffer, _, stepEmulator) =
-        createEmulator bytes (fun () -> joypadState)
+    let struct (frameBuffer, _, stepEmulator) = createEmulator bytes getJoypadState
 
     let draw () =
         loadImageData frameBuffer
