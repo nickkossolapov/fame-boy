@@ -1,0 +1,170 @@
+﻿:root {
+    --s: 1;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: sans-serif;
+    margin: 0;
+}
+
+button {
+    all: unset;
+    cursor: pointer;
+}
+
+.shell {
+    height: calc(600px * var(--s));
+    width: calc(360px * var(--s));
+    background: #c8c4bf;
+    border-radius: calc(15px * var(--s)) calc(15px * var(--s)) calc(60px * var(--s)) calc(15px * var(--s));
+    box-shadow: 3px 6px 16px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.screen-border {
+    background: #4e4a57;
+    border-radius: calc(15px * var(--s)) calc(15px * var(--s)) calc(60px * var(--s)) calc(15px * var(--s));
+    padding: calc(25px * var(--s)) calc(55px * var(--s));
+    margin-top: calc(30px * var(--s));
+}
+
+#screen {
+    image-rendering: pixelated;
+    height: calc(180px * var(--s));
+    aspect-ratio: 10/9;
+    border: calc(5px * var(--s)) solid #2a2a2a;
+    border-radius: calc(5px * var(--s));
+}
+
+.buttons {
+    position: relative;
+    width: calc(300px * var(--s));
+    height: calc(150px * var(--s));
+    perspective: calc(150px * var(--s));
+    margin-bottom: calc(100px * var(--s));
+}
+
+.d-pad {
+    --d-pad-button-size: calc(35px * var(--s));
+    position: relative;
+    width: calc(105px * var(--s));
+    height: calc(105px * var(--s));
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease;
+}
+
+.d-pad > * {
+    position: absolute;
+    background: #2a2a2a;
+}
+
+.d-pad:has(#up-button:active) {
+    transform: rotateX(2deg);
+}
+
+.d-pad:has(#down-button:active) {
+    transform: rotateX(-2deg);
+}
+
+.d-pad:has(#left-button:active) {
+    transform: rotateY(-2deg);
+}
+
+.d-pad:has(#right-button:active) {
+    transform: rotateY(2deg);
+}
+
+.d-pad .center {
+    width: var(--d-pad-button-size);
+    height: var(--d-pad-button-size);
+    top: var(--d-pad-button-size);
+    left: var(--d-pad-button-size);
+}
+
+#up-button {
+    width: var(--d-pad-button-size);
+    height: calc(var(--d-pad-button-size) + 2px * var(--s));
+    top: 0;
+    left: var(--d-pad-button-size);
+    border-radius: calc(5px * var(--s)) calc(5px * var(--s)) 0 0;
+}
+
+#down-button {
+    width: var(--d-pad-button-size);
+    height: calc(var(--d-pad-button-size) + 2px * var(--s));
+    bottom: 0;
+    left: var(--d-pad-button-size);
+    border-radius: 0 0 calc(5px * var(--s)) calc(5px * var(--s));
+}
+
+#left-button {
+    width: calc(var(--d-pad-button-size) + 2px * var(--s));
+    height: var(--d-pad-button-size);
+    top: var(--d-pad-button-size);
+    left: 0;
+    border-radius: calc(5px * var(--s)) 0 0 calc(5px * var(--s));
+}
+
+#right-button {
+    width: calc(var(--d-pad-button-size) + 2px * var(--s));
+    height: var(--d-pad-button-size);
+    top: var(--d-pad-button-size);
+    right: 0;
+    border-radius: 0 calc(5px * var(--s)) calc(5px * var(--s)) 0;
+}
+
+.a-b-buttons {
+    right: 0;
+    top: calc(25px * var(--s));
+    position: absolute;
+    width: calc(110px * var(--s));
+    display: flex;
+    justify-content: space-between;
+    rotate: -25deg;
+}
+
+.a-b-button {
+    width: calc(50px * var(--s));
+    height: calc(50px * var(--s));
+    background: #8b2252;
+    border-radius: 50%;
+}
+
+.a-b-button:active {
+    transform: scale(0.95);
+}
+
+.start-select-buttons {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    gap: calc(15px * var(--s));
+    justify-content: center;
+}
+
+.start-select-button {
+    width: calc(45px * var(--s));
+    height: calc(15px * var(--s));
+    background: #555;
+    border-radius: calc(10px * var(--s));
+    rotate: -25deg;
+}
+
+.start-select-button:active {
+    transform: scale(0.95);
+}
+
+
+button:focus-visible {
+    outline: 3px solid #0e8ff8;
+    z-index: 2;
+}

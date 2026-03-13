@@ -4,23 +4,39 @@
 <html>
 
 <head>
-  <title>FameBoy.Wasm</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preload" id="webassembly" />
-  <script type="importmap"></script>
-  <script type='module' src="main#[.{fingerprint}].js"></script>
+    <title>FameBoy.Wasm</title>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link id="webassembly" rel="preload"/>
+    <script type="importmap"></script>
+    <script src="main#[.{fingerprint}].js" type='module'></script>
+    <link href="/styles.css" rel="stylesheet"/>
 </head>
 
-<body>
-  <h1>Stopwatch</h1>
-  <p>
-    Time elapsed in .NET is <span id="time"><i>loading...</i></span>
-  </p>
-  <p>
-    <button id="pause">Pause</button>
-    <button id="reset">Reset</button>
-  </p>
+<body id="root">
+<div class="shell">
+    <div class="screen-border">
+        <canvas aria-label="Game screen" id="screen" role="img"></canvas>
+    </div>
+    <div class="buttons">
+        <div class="d-pad" role="group">
+            <div class="center"></div>
+            <button aria-label="D-pad up" id="up-button"></button>
+            <button aria-label="D-pad left" id="left-button"></button>
+            <button aria-label="D-pad right" id="right-button"></button>
+            <button aria-label="D-pad down" id="down-button"></button>
+        </div>
+        <div class="a-b-buttons" role="group">
+            <button aria-label="A button" class="a-b-button" id="a-button"></button>
+            <button aria-label="B button" class="a-b-button" id="b-button"></button>
+        </div>
+        <div class="start-select-buttons" role="group">
+            <button aria-label="Select" class="start-select-button" id="select-button"></button>
+            <button aria-label="Start" class="start-select-button" id="start-button"></button>
+        </div>
+    </div>
+</div>
+<input accept=".gb" id="rom-file" type="file">
 </body>
 
 </html>
