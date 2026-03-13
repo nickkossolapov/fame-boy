@@ -52,7 +52,7 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
         cpu.setFlags [ Zero, uint8 res = 0uy; Subtract, true; HalfCarry, halfCarry; Carry, carry ]
     | Inc ref ->
         let value = ref.GetFrom cpu
-        let res = value + 1uy
+        let res = (value + 1uy) &&& 0xFFuy
         let halfCarry = (value &&& 0xFuy) = 0xFuy
 
         ref.SetTo cpu res
@@ -60,14 +60,14 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
         cpu.setFlags [ Zero, res = 0uy; Subtract, false; HalfCarry, halfCarry ]
     | Dec ref ->
         let value = ref.GetFrom cpu
-        let res = value - 1uy
+        let res = (value - 1uy) &&& 0xFFuy
         let halfCarry = (value &&& 0xFuy) = 0x0uy
 
         ref.SetTo cpu res
 
         cpu.setFlags [ Zero, res = 0uy; Subtract, true; HalfCarry, halfCarry ]
-    | IncReg16 reg -> (reg.GetFrom cpu) + 1us |> reg.SetTo cpu
-    | DecReg16 reg -> (reg.GetFrom cpu) - 1us |> reg.SetTo cpu
+    | IncReg16 reg -> ((reg.GetFrom cpu) + 1us) &&& 0xFFFFus |> reg.SetTo cpu
+    | DecReg16 reg -> ((reg.GetFrom cpu) - 1us) &&& 0xFFFFus |> reg.SetTo cpu
     | AddHL reg ->
         let x, y = int cpu.Registers.HL, int (reg.GetFrom cpu)
         let res = x + y
@@ -79,11 +79,11 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
         cpu.setFlags [ Subtract, false; HalfCarry, halfCarry; Carry, carry ]
     | AddSPe s ->
         let sp, e = cpu.Sp, uint16 s
-        let res = sp + e
+        let res = (sp + e) &&& 0xFFFFus
 
         let halfCarry = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us
         let carry = ((sp &&& 0xFFus) + (e &&& 0xFFus)) &&& 0x100us <> 0us
 
-        cpu.Sp <- uint16 res
+        cpu.Sp <- res
 
         cpu.setFlags [ Zero, false; Subtract, false; HalfCarry, halfCarry; Carry, carry ]

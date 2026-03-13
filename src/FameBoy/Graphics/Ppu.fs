@@ -27,7 +27,7 @@ type Shade =
     | Black = 3
 
 module Shade =
-    let ofByte (i: uint8) = LanguagePrimitives.EnumOfValue (int i)
+    let ofByte (i: uint8) = LanguagePrimitives.EnumOfValue(int i)
 
 type Ppu =
     { Framebuffer: Shade array
@@ -209,7 +209,7 @@ let stepPpu (ppu: Ppu) =
     match ppu.Mode with
     | HBlank ->
         if ppu.Dot > lineEnd then
-            ppu.Ly <- ppu.Ly + 1uy
+            ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
             ppu.Dot <- 0
             ppu.Mode <- OamScan
 
@@ -218,7 +218,7 @@ let stepPpu (ppu: Ppu) =
             triggerInterrupt ppu.Memory InterruptType.VBlank
     | VBlank ->
         if ppu.Dot > lineEnd then
-            ppu.Ly <- ppu.Ly + 1uy
+            ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
             ppu.Dot <- 0
 
         if ppu.Ly >= frameEnd then

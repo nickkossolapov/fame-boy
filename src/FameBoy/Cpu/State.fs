@@ -35,43 +35,74 @@ type Registers() =
     // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
     // TODO maybe make underlying types Flags instead of uint8, and have F member expose it as a uint8 instead
     let mutable f = 0uy
+    let mutable a = 0uy
+    let mutable b = 0uy
+    let mutable c = 0uy
+    let mutable d = 0uy
+    let mutable e = 0uy
+    let mutable h = 0uy
+    let mutable l = 0uy
 
-    member val A = 0uy with get, set
-    member val B = 0uy with get, set
-    member val C = 0uy with get, set
-    member val D = 0uy with get, set
-    member val E = 0uy with get, set
-    member val H = 0uy with get, set
-    member val L = 0uy with get, set
+    // Explicit masking needed for Fable (JS numbers don't auto-truncate like .NET uint8)
+    member _.A
+        with get () = a
+        and set v = a <- v &&& 0xFFuy
 
+    member _.B
+        with get () = b
+        and set v = b <- v &&& 0xFFuy
 
-    member this.F
+    member _.C
+        with get () = c
+        and set v = c <- v &&& 0xFFuy
+
+    member _.D
+        with get () = d
+        and set v = d <- v &&& 0xFFuy
+
+    member _.E
+        with get () = e
+        and set v = e <- v &&& 0xFFuy
+
+    member _.H
+        with get () = h
+        and set v = h <- v &&& 0xFFuy
+
+    member _.L
+        with get () = l
+        and set v = l <- v &&& 0xFFuy
+
+    member _.F
         with get () = f
-        and set (value: uint8) = f <- uint8 (value &&& 0xF0uy)
+        and set (value: uint8) = f <- value &&& 0xF0uy
 
     member this.AF
         with get () = (uint16 this.A <<< 8) ||| uint16 this.F
         and set (value: uint16) =
-            this.A <- uint8 (value >>> 8)
-            this.F <- uint8 (value &&& 0xFFus)
+            let v = value &&& 0xFFFFus
+            this.A <- uint8 (v >>> 8)
+            this.F <- uint8 (v &&& 0xFFus)
 
     member this.BC
         with get () = (uint16 this.B <<< 8) ||| uint16 this.C
         and set (value: uint16) =
-            this.B <- uint8 (value >>> 8)
-            this.C <- uint8 (value &&& 0xFFus)
+            let v = value &&& 0xFFFFus
+            this.B <- uint8 (v >>> 8)
+            this.C <- uint8 (v &&& 0xFFus)
 
     member this.DE
         with get () = (uint16 this.D <<< 8) ||| uint16 this.E
         and set (value: uint16) =
-            this.D <- uint8 (value >>> 8)
-            this.E <- uint8 (value &&& 0xFFus)
+            let v = value &&& 0xFFFFus
+            this.D <- uint8 (v >>> 8)
+            this.E <- uint8 (v &&& 0xFFus)
 
     member this.HL
         with get () = (uint16 this.H <<< 8) ||| uint16 this.L
         and set (value: uint16) =
-            this.H <- uint8 (value >>> 8)
-            this.L <- uint8 (value &&& 0xFFus)
+            let v = value &&& 0xFFFFus
+            this.H <- uint8 (v >>> 8)
+            this.L <- uint8 (v &&& 0xFFus)
 
 
 type Cpu =

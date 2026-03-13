@@ -1,4 +1,5 @@
-﻿open Browser
+﻿open System
+open Browser
 open Browser.Types
 open Fable.Core
 open FameBoy.Emulator
@@ -44,6 +45,8 @@ let mutable joypadState: JoypadState =
 
 let mutable logNow = 0
 let targetMCyclesPerMs = 1048.576
+let maxMCyclesPerFrame = targetMCyclesPerMs * 16.6667 // So if emulator can't reach 60 FPS it won't down itself in instructions
+
 let mutable accumulator = 0.0
 
 
@@ -57,8 +60,9 @@ let startEmulator bytes =
 
     let rec runEmulator (last: float) (timestamp: float) =
         logNow <- logNow + 1
+
         let dt = timestamp - last
-        let cycles = targetMCyclesPerMs * dt
+        let cycles = Math.Min(targetMCyclesPerMs * dt, maxMCyclesPerFrame)
         accumulator <- accumulator + cycles
 
         if logNow = 60 then

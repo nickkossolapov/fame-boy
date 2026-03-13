@@ -15,7 +15,7 @@ let turnAToBcd (cpu: Cpu) =
         if carry then
             correction <- correction ||| 0x60uy
 
-        cpu.Registers.A <- a - correction
+        cpu.Registers.A <- (a - correction) &&& 0xFFuy
     else
         if a > 0x99uy || carry then
             correction <- correction ||| 0x60uy
@@ -24,7 +24,7 @@ let turnAToBcd (cpu: Cpu) =
         if (a &&& 0x0Fuy) > 0x09uy || cpu.getFlag HalfCarry then
             correction <- correction ||| 0x06uy
 
-        cpu.Registers.A <- a + correction
+        cpu.Registers.A <- (a + correction) &&& 0xFFuy
 
     cpu.setFlags [ Zero, cpu.Registers.A = 0uy; HalfCarry, false; Carry, carry ]
 
@@ -52,5 +52,5 @@ let executeLogic (cpu: Cpu) (instr: LogicInstr) =
     | Scf -> cpu.setFlags [ Subtract, false; HalfCarry, false; Carry, true ]
     | Daa -> turnAToBcd cpu
     | Cpl ->
-        cpu.Registers.A <- ~~~cpu.Registers.A
+        cpu.Registers.A <- ~~~cpu.Registers.A &&& 0xFFuy
         cpu.setFlags [ Subtract, true; HalfCarry, true ]

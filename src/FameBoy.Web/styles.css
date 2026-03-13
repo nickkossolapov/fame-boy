@@ -1,5 +1,5 @@
 ﻿:root {
-    --s: 1;
+    --s: 1.2;
 }
 
 body {
@@ -48,7 +48,7 @@ button {
     position: relative;
     width: calc(300px * var(--s));
     height: calc(150px * var(--s));
-    perspective: calc(150px * var(--s));
+    perspective: 150px;
     margin-bottom: calc(100px * var(--s));
 }
 

@@ -8,7 +8,7 @@ let private shiftLeft (edge: bool) (value: uint8) =
     let e = if edge then 1uy else 0uy
     let c = (value &&& 0x80uy) <> 0uy
 
-    uint8 (value <<< 1) + e, c
+    ((value <<< 1) + e) &&& 0xFFuy, c
 
 let private rotateLeftCircular (value: uint8) =
     shiftLeft ((value &&& 0x80uy) <> 0uy) value
@@ -17,7 +17,7 @@ let private shiftRight (edge: bool) (value: uint8) =
     let e = if edge then 0x80uy else 0uy
     let c = (value &&& 0x1uy) <> 0uy
 
-    uint8 (value >>> 1) + e, c
+    ((value >>> 1) + e) &&& 0xFFuy, c
 
 let private rotateRightCircular (value: uint8) =
     shiftRight ((value &&& 0x1uy) <> 0uy) value
@@ -57,17 +57,17 @@ let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
         cpu.setFlags [ Zero, bitIsZero; Subtract, false; HalfCarry, true ]
     | Swap w ->
         let value = w.GetFrom cpu
-        let swapped = (uint8 (value <<< 4)) + (value >>> 4)
+        let swapped = (((value <<< 4) &&& 0xF0uy) + (value >>> 4)) &&& 0xFFuy
 
         w.SetTo cpu swapped
         cpu.setFlags [ Zero, swapped = 0uy; Subtract, false; HalfCarry, false; Carry, false ]
     | Res (u3, w) ->
-        let mask = ~~~(1uy <<< (int u3))
+        let mask = ~~~(1uy <<< (int u3)) &&& 0xFFuy
         let res = (w.GetFrom cpu) &&& mask
 
         w.SetTo cpu res
     | Set (u3, w) ->
-        let mask = 1uy <<< (int u3)
+        let mask = (1uy <<< (int u3)) &&& 0xFFuy
         let res = (w.GetFrom cpu) ||| mask
 
         w.SetTo cpu res

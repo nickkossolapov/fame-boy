@@ -5,7 +5,7 @@ open FameBoy.Cpu.State
 open FameBoy.Memory
 
 let getWordFromMemory (memory: Memory) (p: uint16) =
-    let msb, lsb = memory[p + 1us], memory[p]
+    let msb, lsb = memory[(p + 1us) &&& 0xFFFFus], memory[p]
 
     (uint16 msb <<< 8) + uint16 lsb
 
@@ -13,12 +13,12 @@ let popFromStack (cpu: Cpu) (reg: Reg16) =
     let value = getWordFromMemory cpu.Memory cpu.Sp
 
     reg.SetTo cpu value
-    cpu.Sp <- cpu.Sp + 2us
+    cpu.Sp <- (cpu.Sp + 2us) &&& 0xFFFFus
 
 let pushToStack (cpu: Cpu) (value: uint16) =
     let lsb = uint8 value
     let msb = uint8 (value >>> 8)
 
-    cpu.Memory[cpu.Sp - 1us] <- msb
-    cpu.Memory[cpu.Sp - 2us] <- lsb
-    cpu.Sp <- cpu.Sp - 2us
+    cpu.Memory[(cpu.Sp - 1us) &&& 0xFFFFus] <- msb
+    cpu.Memory[(cpu.Sp - 2us) &&& 0xFFFFus] <- lsb
+    cpu.Sp <- (cpu.Sp - 2us) &&& 0xFFFFus

@@ -12,7 +12,7 @@ open FameBoy.Cpu.State
 open FameBoy.Hardware
 
 let execute (cpu: Cpu) (instr: DecodedInstruction) =
-    cpu.Pc <- cpu.Pc + uint16 instr.Length
+    cpu.Pc <- (cpu.Pc + uint16 instr.Length) &&& 0xFFFFus
 
     if cpu.EnableImeNextInstr then
         cpu.Ime <- true

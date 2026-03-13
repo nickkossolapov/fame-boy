@@ -20,16 +20,16 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
         | To, AtWord w -> cpu.Memory[w] <- cpu.Registers.A
         | From, AtHLInc ->
             cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
-            cpu.Registers.HL <- cpu.Registers.HL + 1us
+            cpu.Registers.HL <- (cpu.Registers.HL + 1us) &&& 0xFFFFus
         | From, AtHLDec ->
             cpu.Registers.A <- cpu.Memory[cpu.Registers.HL]
-            cpu.Registers.HL <- cpu.Registers.HL - 1us
+            cpu.Registers.HL <- (cpu.Registers.HL - 1us) &&& 0xFFFFus
         | To, AtHLInc ->
             cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
-            cpu.Registers.HL <- cpu.Registers.HL + 1us
+            cpu.Registers.HL <- (cpu.Registers.HL + 1us) &&& 0xFFFFus
         | To, AtHLDec ->
             cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
-            cpu.Registers.HL <- cpu.Registers.HL - 1us
+            cpu.Registers.HL <- (cpu.Registers.HL - 1us) &&& 0xFFFFus
     | Ldh (d, s) ->
         match d, s with
         | From, AtCHigh -> cpu.Registers.A <- cpu.Memory[getFullAddress cpu.Registers.C]
@@ -47,7 +47,7 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     | Pop reg -> popFromStack cpu reg
     | LdHLFromSPe b ->
         let sp, e = cpu.Sp, uint16 b
-        let res = sp + e
+        let res = (sp + e) &&& 0xFFFFus
 
         let halfCarry = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us
         let carry = ((sp &&& 0xFFus) + (e &&& 0xFFus)) &&& 0x100us <> 0us

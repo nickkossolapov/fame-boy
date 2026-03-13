@@ -25,7 +25,7 @@ let executeControl (cpu: Cpu) (instr: ControlInstr) =
 
     let ret () =
         cpu.Pc <- getWordFromMemory cpu.Memory cpu.Sp
-        cpu.Sp <- cpu.Sp + 2us
+        cpu.Sp <- (cpu.Sp + 2us) &&& 0xFFFFus
 
     match instr with
     | Jp w -> cpu.Pc <- w
