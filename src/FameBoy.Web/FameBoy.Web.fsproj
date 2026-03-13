@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="assets\site.webmanifest" />
         <Content Include="index.html" />
         <Content Include="styles.css" />
         <None Include="vite.config.ts" />
@@ -29,5 +30,6 @@
     <ItemGroup>
         <ProjectReference Include="..\FameBoy\FameBoy.fsproj" />
     </ItemGroup>
+
 
 </Project>
