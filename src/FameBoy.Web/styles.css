@@ -37,9 +37,9 @@ button {
 }
 
 #screen {
+    image-rendering: pixelated;
     height: calc(180px * var(--s));
     aspect-ratio: 10/9;
-    background: #7b8c3b;
     border: calc(5px * var(--s)) solid #2a2a2a;
     border-radius: calc(5px * var(--s));
 }

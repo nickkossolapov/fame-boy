@@ -1,12 +1,84 @@
 ﻿open Browser
 open Browser.Types
 open Fable.Core
+open FameBoy.Emulator
+open FameBoy.Graphics.Ppu
+open FameBoy.Hardware
+open FameBoy.Joypad
 
 let fileUploadButton = document.getElementById "rom-file"
+let screenCanvas = document.getElementById "screen" :?> HTMLCanvasElement
 
-fileUploadButton.addEventListener ("change", fun (a) -> printfn $"{a}")
+screenCanvas.width <- Screen.width
+screenCanvas.height <- Screen.height
+
+let ctx = screenCanvas.getContext "2d" :?> CanvasRenderingContext2D
+let imageData = ctx.createImageData (Screen.width, Screen.height)
+let white = (186uy, 218uy, 85uy)
+let light = (130uy, 153uy, 59uy)
+let dark = (74uy, 87uy, 34uy)
+let black = (19uy, 22uy, 8uy)
+
+let private mapToColors =
+    function
+    | White -> white
+    | Light -> light
+    | Dark -> dark
+    | Black -> black
+
+let loadImageData (emulatorFramebuffer) =
+    let len = Array.length emulatorFramebuffer - 1
+
+    for i in 0..len do
+        let r, g, b = mapToColors (emulatorFramebuffer[i])
+        let j = i * 4
+
+        imageData.data[j] <- r
+        imageData.data[j + 1] <- g
+        imageData.data[j + 2] <- b
+        imageData.data[j + 3] <- 255uy
+
+let mutable joypadState: JoypadState =
+    { Up = false
+      Down = false
+      Left = false
+      Right = false
+      A = false
+      B = false
+      Start = false
+      Select = false }
+
+let mutable logNow = 0
+let targetMCyclesPerMs = 1048.576
+let mutable accumulator = 0.0
 
 
+let startEmulator bytes =
+    let struct (frameBuffer, _, stepEmulator) =
+        createEmulator bytes (fun () -> joypadState)
+
+    let draw () =
+        loadImageData frameBuffer
+        ctx.putImageData (imageData, 0, 0)
+
+    let rec runEmulator (last: float) (timestamp: float) =
+        logNow <- logNow + 1
+        let dt = timestamp - last
+        let cycles = targetMCyclesPerMs * dt
+        accumulator <- accumulator + cycles
+
+        if logNow = 60 then
+            console.log (1000.0 / dt)
+            logNow <- 0
+
+        while accumulator > 0 do
+            let mCycles = float (stepEmulator ())
+            accumulator <- accumulator - mCycles
+
+        draw ()
+        window.requestAnimationFrame (runEmulator timestamp) |> ignore
+
+    runEmulator 0 0
 
 let onFileLoaded (ev: Event) =
     let input = ev.target :?> HTMLInputElement
@@ -19,23 +91,11 @@ let onFileLoaded (ev: Event) =
         reader.onload <-
             fun _ ->
                 let arrayBuffer = reader.result :?> JS.ArrayBuffer
-                let bytes = JS.Constructors.Uint8Array.Create(arrayBuffer)
-                printfn $"Loaded {bytes.length} bytes"
+                let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
+                let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
+
+                startEmulator bytes
 
         reader.readAsArrayBuffer file
 
 fileUploadButton.addEventListener ("change", onFileLoaded)
-
-// let bytes =
-
-// let mutable joypadState: JoypadState =
-//     { Up = false
-//       Down = false
-//       Left = false
-//       Right = false
-//       A = false
-//       B = false
-//       Start = false
-//       Select = false }
-//
-// let struct (frameBuffer, memory, stepEmulator) = createEmulator bytes (fun () -> joypadState)
