@@ -30,15 +30,19 @@ module GraphicsPipeline =
     let private dark = Color(74, 87, 34)
     let private black = Color(19, 22, 8)
 
-    let private mapToColors =
-        Array.map (function
-            | White -> white
-            | Light -> light
-            | Dark -> dark
-            | Black -> black)
+    let shades =
+        [ Color(186, 218, 85)
+          Color(130, 153, 59)
+          Color(74, 87, 34)
+          Color(19, 22, 8) ]
 
-    let private backgroundFramebuffer = Array.create<Shade> (mapSide * mapSide) White
-    let private tilesFramebuffer = Array.create<Shade> (mapSide * tilesHeight) White
+    let private mapToColors = Array.map (fun (s: Shade) -> shades[int(s)])
+
+    let private backgroundFramebuffer =
+        Array.create<Shade> (mapSide * mapSide) Shade.White
+
+    let private tilesFramebuffer =
+        Array.create<Shade> (mapSide * tilesHeight) Shade.White
 
     let private mapPos = (float32 ((Screen.width + 1) * Config.scale), 0f)
 

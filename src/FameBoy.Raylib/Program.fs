@@ -9,7 +9,7 @@ open FameBoy.Raylib.Utils.RateLimiting
 open Raylib_cs
 
 Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
-Raylib.SetTargetFPS 60
+Raylib.SetTargetFPS 120
 
 let mcyclesPerSec = 1000 / 60
 
@@ -25,7 +25,7 @@ let printTotalFrameTime =
         let avg = Array.average frameTimes
         printfn $"avg: %.4f{1f / avg} | last frame: %.4f{1f / Raylib.GetFrameTime()}")
 
-let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
+let bytes = File.ReadAllBytes "D:/personal/gb/tetris.gb"
 
 let mutable joypadState: JoypadState =
     { Up = false
@@ -37,7 +37,8 @@ let mutable joypadState: JoypadState =
       Start = false
       Select = false }
 
-let struct (frameBuffer, memory, stepEmulator) = createEmulator bytes (fun () -> joypadState)
+let struct (frameBuffer, memory, stepEmulator) =
+    createEmulator bytes (fun () -> joypadState)
 
 while (not (windowShouldClose ())) do
     // TODO: have a better frame time counter

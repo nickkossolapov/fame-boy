@@ -19,19 +19,15 @@ module private ScanlineTimings =
 
 open ScanlineTimings
 
-[<Struct>]
-type Shade =
-    | White
-    | Light
-    | Dark
-    | Black
 
-    static member ofByte =
-        function
-        | 0uy -> White
-        | 1uy -> Light
-        | 2uy -> Dark
-        | _ -> Black
+type Shade =
+    | White = 0
+    | Light = 1
+    | Dark = 2
+    | Black = 3
+
+module Shade =
+    let ofByte (i: uint8) = LanguagePrimitives.EnumOfValue (int i)
 
 type Ppu =
     { Framebuffer: Shade array
@@ -91,7 +87,7 @@ module private StatRegister =
 let createPpu (memory: Memory) =
     let mode = if memory[IoRegisters.Ly] >= 144uy then VBlank else OamScan
 
-    { Framebuffer = Array.create (Screen.width * Screen.height) White
+    { Framebuffer = Array.create (Screen.width * Screen.height) Shade.White
       Mode = mode
       Dot = 0
       Memory = memory
