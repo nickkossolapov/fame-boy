@@ -6,10 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="assets\site.webmanifest" />
         <Content Include="index.html" />
         <Content Include="styles.css" />
-        <None Include="vite.config.ts" />
+        <TypeScriptCompile Include="vite.config.ts" />
         <None Include="package.json" />
         <Compile Include="Joypad.fs" />
     </ItemGroup>
@@ -21,10 +20,6 @@
     <ItemGroup>
         <PackageReference Include="Fable.Browser.Dom" Version="2.20.0" />
         <PackageReference Include="Fable.Core" Version="5.0.0-rc.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <TypeScriptCompile Include="vite.config.ts" />
     </ItemGroup>
 
     <ItemGroup>

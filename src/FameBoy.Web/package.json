@@ -2,14 +2,14 @@
   "name": "fameboy.web",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "dotnet fable watch --run npx vite",
+    "build": "dotnet fable && npx vite build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "vite": "^8.0.0"
   }

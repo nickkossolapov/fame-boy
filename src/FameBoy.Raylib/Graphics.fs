@@ -26,10 +26,10 @@ module GraphicsPipeline =
         |> Raylib.LoadTextureFromImage
 
     let shades =
-        [ Color(186, 218, 85)
-          Color(130, 153, 59)
-          Color(74, 87, 34)
-          Color(19, 22, 8) ]
+        [| Color(186, 218, 85)
+           Color(130, 153, 59)
+           Color(74, 87, 34)
+           Color(19, 22, 8) |]
 
     let private mapToColors = Array.map (fun (s: Shade) -> shades[int (s)])
 

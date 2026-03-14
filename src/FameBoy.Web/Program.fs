@@ -18,10 +18,10 @@ let ctx = screenCanvas.getContext "2d" :?> CanvasRenderingContext2D
 let imageData = ctx.createImageData (Screen.width, Screen.height)
 
 let shades =
-    [ (186uy, 218uy, 85uy)
-      (130uy, 153uy, 59uy)
-      (74uy, 87uy, 34uy)
-      (19uy, 22uy, 8uy) ]
+    [| (186uy, 218uy, 85uy)
+       (130uy, 153uy, 59uy)
+       (74uy, 87uy, 34uy)
+       (19uy, 22uy, 8uy) |]
 
 let loadImageData emulatorFramebuffer =
     let len = Array.length emulatorFramebuffer - 1
@@ -35,37 +35,34 @@ let loadImageData emulatorFramebuffer =
         imageData.data[j + 2] <- b
         imageData.data[j + 3] <- 255uy
 
-let mutable logNow = 0
-let targetMCyclesPerMs = 1048.576
-let maxMCyclesPerFrame = targetMCyclesPerMs * 16.6667 // So if emulator can't reach 60 FPS it won't down itself in instructions
-let mutable accumulator = 0.0
+let targetCyclesPerMs = float cpuFrequency / 1000.0
+let maxCyclesPerFrame = float cpuFrequency / 60.0 // So if the emulator can't reach 60 FPS it won't drown itself in instructions
+let mutable currentAnimationFrame = None
+
 
 let startEmulator bytes =
+    currentAnimationFrame |> Option.iter window.cancelAnimationFrame
+
     let struct (frameBuffer, _, stepEmulator) = createEmulator bytes getJoypadState
+    let mutable accumulator = 0.0
 
     let draw () =
         loadImageData frameBuffer
         ctx.putImageData (imageData, 0, 0)
 
     let rec runEmulator (last: float) (timestamp: float) =
-        logNow <- logNow + 1
-
         let dt = timestamp - last
-        let cycles = Math.Min(targetMCyclesPerMs * dt, maxMCyclesPerFrame)
+        let cycles = Math.Min(targetCyclesPerMs * dt, maxCyclesPerFrame)
         accumulator <- accumulator + cycles
-
-        if logNow = 60 then
-            console.log (1000.0 / dt)
-            logNow <- 0
 
         while accumulator > 0 do
             let mCycles = float (stepEmulator ())
             accumulator <- accumulator - mCycles
 
         draw ()
-        window.requestAnimationFrame (runEmulator timestamp) |> ignore
+        currentAnimationFrame <- window.requestAnimationFrame (runEmulator timestamp) |> Some
 
-    runEmulator 0 0
+    currentAnimationFrame <- window.requestAnimationFrame (runEmulator 0) |> Some
 
 let onFileLoaded (ev: Event) =
     let input = ev.target :?> HTMLInputElement

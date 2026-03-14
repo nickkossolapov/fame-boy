@@ -106,9 +106,11 @@ body {
     border: 0;
 }
 
-button {
-    all: unset;
-    cursor: pointer;
+@layer base {
+    .shell button {
+        all: unset;
+        cursor: pointer;
+    }
 }
 
 .shell {
