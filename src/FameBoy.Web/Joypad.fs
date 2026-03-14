@@ -71,7 +71,12 @@ let initOnScreenButtons () =
     |> Map.iter (fun id button ->
         let el = document.getElementById id
 
-        el.addEventListener ("pointerdown", fun _ -> pressed <- pressed.Add button))
+        el.addEventListener (
+            "pointerdown",
+            fun e ->
+                e.preventDefault ()
+                pressed <- pressed.Add button
+        ))
 
 
 let getJoypadState () : JoypadState =

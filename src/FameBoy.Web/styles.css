@@ -53,24 +53,27 @@ body {
 }
 
 .controls {
-    width: 130px;
+    width: 180px;
     position: absolute;
     right: 30px;
     bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .controls table {
-    width: 100%;
+    width: 120px;
     border-collapse: collapse;
 }
 
-.controls caption {
-    caption-side: top;
+.controls summary {
     text-align: center;
     font-weight: 600;
     padding-bottom: 8px;
-    font-size: 0.8rem;
+    font-size: 1rem;
     color: #6b7280;
+    cursor: pointer;
 }
 
 .controls th,
@@ -85,13 +88,13 @@ body {
 }
 
 .controls tbody th {
-    text-align: left;
+    text-align: center;
     font-weight: 500;
 }
 
 .controls td {
+    text-align: center;
     font-weight: 600;
-    text-align: right;
 }
 
 .sr-only {
@@ -124,6 +127,8 @@ body {
     align-items: center;
     justify-content: space-between;
     user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
 }
 
 .screen-border {
@@ -139,6 +144,7 @@ body {
     aspect-ratio: 10/9;
     border: calc(5px * var(--s)) solid #2a2a2a;
     border-radius: calc(5px * var(--s));
+    background: #2a2a2a;
 }
 
 .buttons {

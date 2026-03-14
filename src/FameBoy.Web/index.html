@@ -38,9 +38,9 @@
         Load ROM
         <input accept=".gb" id="rom-file" type="file">
     </label>
-    <div class="controls">
+    <details class="controls">
+        <summary>Keyboard Controls</summary>
         <table aria-label="Keyboard controls">
-            <caption>Keyboard Controls</caption>
             <thead class="sr-only">
             <tr>
                 <th scope="col">Input</th>
@@ -57,20 +57,8 @@
                 <td>J</td>
             </tr>
             <tr>
-                <th scope="row">Up</th>
-                <td>W</td>
-            </tr>
-            <tr>
-                <th scope="row">Down</th>
-                <td>S</td>
-            </tr>
-            <tr>
-                <th scope="row">Left</th>
-                <td>A</td>
-            </tr>
-            <tr>
-                <th scope="row">Right</th>
-                <td>D</td>
+                <th scope="row">↑ ← ↓ →</th>
+                <td>WASD</td>
             </tr>
             <tr>
                 <th scope="row">Start</th>
@@ -82,7 +70,7 @@
             </tr>
             </tbody>
         </table>
-    </div>
+    </details>
 </div>
 <script src="/Program.fs.js" type="module"></script>
 </body>
