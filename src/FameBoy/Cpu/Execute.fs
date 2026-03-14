@@ -58,16 +58,17 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
             | Fixed c -> c
             | Conditional cc -> if condTaken then cc.Met else cc.NotMet
 
-    if cpu.EnableImeNextInstr then
-        cpu.Ime <- true
-        cpu.EnableImeNextInstr <- false
-
     cycles
 
 let stepCpu (cpu: Cpu) =
-    let isHalted = cpu.Halted && (cpu.Memory[IoRegisters.Ie] &&& cpu.Memory[IoRegisters.If]) = 0uy
+    if cpu.Halted then
+        if ((cpu.Memory[IoRegisters.Ie] &&& cpu.Memory[IoRegisters.If]) &&& 0x1Fuy) <> 0uy then
+            cpu.Halted <- false
 
-    if isHalted then
-        1
+            match checkForInterrupt cpu with
+            | ValueSome i -> serviceInterrupt cpu i
+            | ValueNone -> fetchAndDecode cpu.Memory cpu.Pc |> execute cpu
+        else
+            1
     else
         fetchAndDecode cpu.Memory cpu.Pc |> execute cpu

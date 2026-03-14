@@ -59,7 +59,7 @@ let ``ei enables interrupts`` () =
     Assert.That (instr.Length, Is.EqualTo 1)
     Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
 
-    Assert.That (cpu.Ime, Is.True)
+    Assert.That (cpu.EnableImeNextInstr, Is.True)
 
 [<Test>]
 let ``NOP changes nothing`` () =

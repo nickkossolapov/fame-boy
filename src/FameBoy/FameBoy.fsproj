@@ -22,6 +22,7 @@
         <Compile Include="Graphics\Ppu.fs" />
         <Compile Include="Graphics\Debug.fs" />
         <Compile Include="Startup.fs" />
+        <Compile Include="Serial.fs" />
         <Compile Include="Joypad.fs" />
         <Compile Include="Timer.fs" />
         <Compile Include="Emulator.fs" />
