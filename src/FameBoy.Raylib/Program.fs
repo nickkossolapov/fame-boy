@@ -1,31 +1,19 @@
-﻿open System.IO
+﻿open System
+open System.IO
 open FameBoy.Emulator
+open FameBoy.Hardware
 open FameBoy.Joypad
 open FameBoy.Raylib
 open FameBoy.Raylib.Graphics.GraphicsPipeline
 open FameBoy.Raylib.Joypad
 open FameBoy.Raylib.RaylibBindings
-open FameBoy.Raylib.Utils.RateLimiting
 open Raylib_cs
 
 Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
 Raylib.SetTargetFPS 120
 
-let mcyclesPerSec = 1000 / 60
 
-let printBits =
-    rateLimitFunc 1000 (fun (s: uint8) -> printfn $"{System.Convert.ToString(s, 2).PadLeft(8, '0')}")
-
-let frameTimesDuration = 120 // frame
-let frameTimes = Array.create frameTimesDuration 60f
-let mutable frameIndex = 0
-
-let printTotalFrameTime =
-    rateLimitFunc 1000 (fun () ->
-        let avg = Array.average frameTimes
-        printfn $"avg: %.4f{1f / avg} | last frame: %.4f{1f / Raylib.GetFrameTime()}")
-
-let bytes = File.ReadAllBytes "D:/personal/gb/tetris.gb"
+let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
 
 let mutable joypadState: JoypadState =
     { Up = false
@@ -37,22 +25,22 @@ let mutable joypadState: JoypadState =
       Start = false
       Select = false }
 
-let struct (frameBuffer, memory, stepEmulator) =
-    createEmulator bytes (fun () -> joypadState)
+let frameBuffer, memory, stepEmulator = createEmulator bytes (fun () -> joypadState)
+
+let targetCyclesPerMs = float32 cpuFrequency
+let maxCyclesPerFrame = float32 cpuFrequency / 60f // So if the emulator can't reach 60 FPS it won't drown itself in instructions
+let mutable accumulator = 0f
 
 while (not (windowShouldClose ())) do
-    // TODO: have a better frame time counter
-    let mutable counter = 16666
-    frameTimes[frameIndex] <- Raylib.GetFrameTime()
-    frameIndex <- (frameIndex + 1) % frameTimesDuration
+    let cycles = Math.Min(targetCyclesPerMs * Raylib.GetFrameTime(), maxCyclesPerFrame)
+    accumulator <- accumulator + cycles
 
     joypadState <- getJoypadState ()
 
-    printTotalFrameTime ()
 
-    while (counter > 0) do
-        let cpuCycles = stepEmulator ()
-        counter <- counter - cpuCycles
+    while (accumulator > 0f) do
+        let cpuCycles = stepEmulator () |> float32
+        accumulator <- accumulator - cpuCycles
 
     beginDrawing ()
     loadPpuFramebuffer frameBuffer

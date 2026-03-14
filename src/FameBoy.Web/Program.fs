@@ -43,7 +43,7 @@ let mutable currentAnimationFrame = None
 let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
-    let struct (frameBuffer, _, stepEmulator) = createEmulator bytes getJoypadState
+    let frameBuffer, _, stepEmulator = createEmulator bytes getJoypadState
     let mutable accumulator = 0.0
 
     let draw () =

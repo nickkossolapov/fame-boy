@@ -32,4 +32,4 @@ let createEmulator bytes getJoypadState =
 
         cpuCycles
 
-    struct (ppu.Framebuffer, memory, stepper)
+    ppu.Framebuffer, memory, stepper

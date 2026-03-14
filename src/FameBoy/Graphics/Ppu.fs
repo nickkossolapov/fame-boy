@@ -107,7 +107,7 @@ module private scanline =
 
         let getLoc byte =
             if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
-                0x8000us + 0x10us * (uint16 byte) 
+                0x8000us + 0x10us * (uint16 byte)
             else
                 0x8800us + ((uint16 byte + 0x80us) &&& 0xFFus) * 0x10us
 
@@ -213,17 +213,17 @@ let stepPpu (ppu: Ppu) =
             ppu.Dot <- 0
             ppu.Mode <- OamScan
 
-        if ppu.Ly >= vBlankStart then
-            ppu.Mode <- VBlank
-            triggerInterrupt ppu.Memory InterruptType.VBlank
+            if ppu.Ly >= vBlankStart then
+                ppu.Mode <- VBlank
+                triggerInterrupt ppu.Memory InterruptType.VBlank
     | VBlank ->
         if ppu.Dot > lineEnd then
             ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
             ppu.Dot <- 0
 
-        if ppu.Ly >= frameEnd then
-            ppu.Ly <- 0uy
-            ppu.Mode <- OamScan
+            if ppu.Ly >= frameEnd then
+                ppu.Ly <- 0uy
+                ppu.Mode <- OamScan
     | OamScan ->
         if ppu.Dot >= oamScanEnd then
             ppu.Mode <- Drawing
