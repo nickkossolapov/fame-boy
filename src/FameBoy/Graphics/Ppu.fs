@@ -107,9 +107,9 @@ module private scanline =
 
         let getLoc byte =
             if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
-                0x10us * (uint16 byte) + 0x8000us
+                0x8000us + 0x10us * (uint16 byte) 
             else
-                0x10us * uint16 (int8 byte) + 0x9000us
+                0x8800us + ((uint16 byte + 0x80us) &&& 0xFFus) * 0x10us
 
         let mapIndex = uint16 (start + (tileY * 32) + tileX)
 
