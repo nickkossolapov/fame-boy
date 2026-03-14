@@ -1,1 +1,1 @@
-dotnet run --project .\src\FameBoy.Benchmark\FameBoy.Benchmark.fsproj -c Release
+dotnet run --project ./src/FameBoy.Benchmark/FameBoy.Benchmark.fsproj -c Release

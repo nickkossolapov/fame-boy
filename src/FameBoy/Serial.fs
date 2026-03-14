@@ -16,7 +16,7 @@ let createSerial () = { Counter = 0; IsTransferring = false }
 let stepSerial (state: SerialState) (memory: Memory) =
     if state.IsTransferring then
         state.Counter <- state.Counter + 1
-        
+
         if state.Counter = cyclesPerByte then
             state.Counter <- 0
             state.IsTransferring <- false
@@ -24,5 +24,5 @@ let stepSerial (state: SerialState) (memory: Memory) =
             memory[IoRegisters.Sb] <- 0xFFuy // Not actually transferring data for now, just need the interrupt
             memory[IoRegisters.Sc] <- memory[IoRegisters.Sc] &&& 0b0111_1111uy
             triggerInterrupt memory InterruptType.Serial
-    else if (memory[IoRegisters.Sc] &&& 0b1000_0000uy) <> 0uy then
+    else if (memory[IoRegisters.Sc] &&& 0b1000_0001uy) = 0b1000_0001uy then
         state.IsTransferring <- true
