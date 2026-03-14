@@ -10,10 +10,10 @@ let joypadMapping =
        Down = KeyboardKey.S
        Left = KeyboardKey.A
        Right = KeyboardKey.D
-       A = KeyboardKey.J
-       B = KeyboardKey.K
+       A = KeyboardKey.K
+       B = KeyboardKey.J
        Start = KeyboardKey.N
-       Select = KeyboardKey.M |}
+       Select = KeyboardKey.B |}
 
 // Colemak-dh
 // let joypadMapping =

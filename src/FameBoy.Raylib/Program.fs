@@ -9,11 +9,27 @@ open FameBoy.Raylib.Joypad
 open FameBoy.Raylib.RaylibBindings
 open Raylib_cs
 
+let args = Environment.GetCommandLineArgs()
+
+if args.Length <> 2 then
+    eprintfn "Usage: fame-boy <rom-file>"
+    exit 1
+
+let romPath = args[1]
+
+if not (File.Exists romPath) then
+    eprintfn $"File not found: %s{romPath}"
+    exit 1
+
 Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
+
+let icon = Raylib.LoadImage("icon.png")
+Raylib.SetWindowIcon(icon)
+Raylib.UnloadImage(icon)
+
 Raylib.SetTargetFPS 120
 
-
-let bytes = File.ReadAllBytes "D:/gb/tetris.gb"
+let bytes = File.ReadAllBytes romPath
 
 let mutable joypadState: JoypadState =
     { Up = false
