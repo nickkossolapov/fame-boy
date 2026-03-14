@@ -7,7 +7,10 @@
 
     <ItemGroup>
         <Compile Include="Hardware.fs" />
-        <Compile Include="Cartridge.fs" />
+        <Compile Include="Cartridges\Mbc1Cart.fs" />
+        <Compile Include="Cartridges\Mbc3Cart.fs" />
+        <Compile Include="Cartridges\Mbc5Cart.fs" />
+        <Compile Include="Cartridges\Cartridge.fs" />
         <Compile Include="Interrupts.fs" />
         <Compile Include="Joypad.fs" />
         <Compile Include="IoController.fs" />
@@ -27,7 +30,6 @@
         <Compile Include="Serial.fs" />
         <Compile Include="Timer.fs" />
         <Compile Include="Emulator.fs" />
-
     </ItemGroup>
 
     <PropertyGroup>

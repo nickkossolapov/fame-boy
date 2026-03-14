@@ -27,7 +27,7 @@ type Memory =
                     0xFFuy
             elif address < 0xC000 then
                 if this.Cartridge.RamEnabled then
-                    this.Cartridge.Ram[this.Cartridge.RamOffset + address - 0xA000]
+                    readCartRam this.Cartridge address
                 else
                     0xFFuy
             elif address < 0xE000 then
@@ -58,7 +58,7 @@ type Memory =
                     this.VideoRam[address - 0x8000] <- v
             elif address < 0xC000 then
                 if this.Cartridge.RamEnabled then
-                    this.Cartridge.Ram[this.Cartridge.RamOffset + address - 0xA000] <- v
+                    writeCartRam this.Cartridge address v
             elif address < 0xE000 then
                 this.WorkRam[address - 0xC000] <- v
             elif address < 0xFE00 then

@@ -11,6 +11,12 @@ module Screen =
 [<Literal>]
 let cpuFrequency = 1048576 // M-Cycles
 
+[<Literal>]
+let CartRomBankSize = 0x4000
+
+[<Literal>]
+let CartRamBankSize = 0x2000
+
 
 /// Offsets, all IO registers' address will start with 0xFF
 [<RequireQualifiedAccess>]

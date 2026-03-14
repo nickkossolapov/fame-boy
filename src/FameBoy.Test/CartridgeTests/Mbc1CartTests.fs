@@ -1,7 +1,6 @@
-module FameBoy.Test.Mbc1Tests
+module FameBoy.Test.Mbc1CartTests
 
 open FameBoy.Cartridge
-open FameBoy.Cartridge.Mbcs
 open NUnit.Framework
 
 let private makeRom (bankCount: int) (cartType: byte) (ramSizeCode: byte) =

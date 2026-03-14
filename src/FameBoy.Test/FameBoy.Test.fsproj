@@ -20,7 +20,9 @@
         <Compile Include="InstructionTests\OtherTests.fs" />
         <Compile Include="JoypadTests.fs" />
         <Compile Include="TimerTests.fs" />
-        <Compile Include="CartridgeTests\Mbc1Tests.fs" />
+        <Compile Include="CartridgeTests\Mbc1CartTests.fs" />
+        <Compile Include="CartridgeTests\Mbc3CartTests.fs" />
+        <Compile Include="CartridgeTests\Mbc5CartTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
