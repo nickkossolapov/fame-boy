@@ -97,19 +97,12 @@ open StatRegister
 
 module Lcdc =
     let PpuEnable = 0b1000_0000uy
-
     let WindowMapArea = 0b0100_0000uy
-
     let WindowEnable = 0b0010_0000uy
-
     let TileDataArea = 0b0001_0000uy
-
     let BgMapArea = 0b0000_1000uy
-
     let ObjSize = 0b0000_0100uy
-
     let ObjEnable = 0b0000_0010uy
-
     let BgPriority = 0b0000_00001uy
 
     let inline isEnabled control (memory: Memory) =
@@ -118,62 +111,61 @@ module Lcdc =
 
 // TODO palettes
 module private scanline =
-    let fetchPixel pixelLoc offset (memory: Memory) =
-        let left = memory[pixelLoc]
-        let right = memory[(pixelLoc + 1us)]
+    let fetchPixel vramOffset offset (vram: uint8 array) =
+        let left = vram[vramOffset]
+        let right = vram[vramOffset + 1]
 
         let leftBit = left >>> offset &&& 1uy
         let rightBit = (right >>> offset &&& 1uy) <<< 1
 
         leftBit ||| rightBit |> Shade.ofByte
 
+    let getTileVramOffset tileX tileY areaBit (vram: uint8 array) (memory: Memory) =
+        let mapStart = if areaBit then 0x1C00 else 0x1800 // VRAM local addresses, actual: 0x9C00 and 0x9800
 
-    let getTileMemLoc tileX tileY areaBit (memory: Memory) =
-        let start = if areaBit then 0x9C00 else 0x9800
-
-        let getLoc byte =
+        let getVramOffset byte =
             if Lcdc.isEnabled Lcdc.TileDataArea memory then
-                0x8000us + 0x10us * (uint16 byte)
+                0x10 * int byte
             else
-                0x8800us + ((uint16 byte + 0x80us) &&& 0xFFus) * 0x10us
+                0x800 + ((int byte + 0x80) &&& 0xFF) * 0x10 // VRAM local address, actual: 0x8800us
 
-        let mapIndex = uint16 (start + (tileY * 32) + tileX)
+        let mapIndex = mapStart + (tileY * 32) + tileX
 
-        getLoc memory[mapIndex]
+        getVramOffset vram[mapIndex]
 
-    let decodeTileMapPixel mapX mapY areaBit (memory: Memory) =
+    let decodeTileMapPixel mapX mapY areaBit (vram: uint8 array) (memory: Memory) =
         let tileX = mapX / 8
         let tileY = mapY / 8
 
         let bitX = 7 - mapX % 8
         let bitY = mapY % 8
 
-        let tileLoc = getTileMemLoc tileX tileY areaBit memory
-        let pixelLoc = tileLoc + uint16 (bitY * 2)
+        let tileOffset = getTileVramOffset tileX tileY areaBit vram memory
+        let pixelOffset = tileOffset + bitY * 2
 
-        fetchPixel pixelLoc bitX memory
+        fetchPixel pixelOffset bitX vram
 
-    let fetchTileMapPixel screenX screenY windowOnLine (memory: Memory) =
+    let fetchTileMapPixel screenX screenY windowOnLine (vram: uint8 array) (memory: Memory) =
         if windowOnLine && screenX >= int memory[IoRegisters.Wx] - 7 then
             let wX = screenX - (int memory[IoRegisters.Wx] - 7)
             let wY = screenY - int memory[IoRegisters.Wy]
             let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea memory
 
-            decodeTileMapPixel wX wY areaBit memory
+            decodeTileMapPixel wX wY areaBit vram memory
         else
             let bgX = screenX + int memory[IoRegisters.Scx]
             let bgY = screenY + int memory[IoRegisters.Scy]
             let areaBit = Lcdc.isEnabled Lcdc.BgMapArea memory
 
-            decodeTileMapPixel bgX bgY areaBit memory
+            decodeTileMapPixel bgX bgY areaBit vram memory
 
-    let oamMap = [ 0xFE00us .. 4us .. 0xFE9Fus ]
+    let oamAddresses = [| 0..4..0x9C |] // OAM local addresses, actual: 0xFE00 ... 0xFE9C
 
-    let decodeObjectPixel screenX screenY oamLoc (memory: Memory) =
-        let objX = int memory[oamLoc + 1us]
-        let objY = int memory[oamLoc]
-        let objLoc = 0x8000us + 0x10us * (uint16 memory[oamLoc + 2us])
-        let attributes = OamAttributes.ofByte memory[oamLoc + 3us]
+    let decodeObjectPixel screenX screenY oamAddr (oam: uint8 array) (vram: uint8 array) =
+        let objX = int oam[oamAddr + 1]
+        let objY = int oam[oamAddr]
+        let tileOffset = 0x10 * int oam[oamAddr + 2]
+        let attributes = OamAttributes.ofByte oam[oamAddr + 3]
 
         let localX = screenX - (objX - 8)
         let localY = screenY - (objY - 16)
@@ -181,18 +173,17 @@ module private scanline =
         let bitX = if attributes.XFlip then localX else 7 - localX
         let bitY = if attributes.YFlip then 7 - localY else localY
 
-        let pixelLoc = objLoc + uint16 (bitY * 2)
+        let pixelOffset = tileOffset + bitY * 2
 
-        fetchPixel pixelLoc bitX memory
+        fetchPixel pixelOffset bitX vram
 
     // TODO 8x16 tiles
-    let fetchObjectPixel x y filteredOam (memory: Memory) =
-        let mutable found = false // mutable makes me sad, but this is a hot path
+    let fetchObjectPixel x y (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
+        let mutable found = false // mutable makes me sad, but this is a hot path, and it's needed for an early return
         let mutable i = 0
-        let len = List.length filteredOam
 
-        while i < len && not found do
-            let objX = int memory[filteredOam[i] + 1us]
+        while i < filteredOam.Length && not found do
+            let objX = int oam[filteredOam[i] + 1]
 
             if x >= objX - 8 && x < objX then
                 found <- true
@@ -200,35 +191,37 @@ module private scanline =
                 i <- i + 1
 
         if found then
-            decodeObjectPixel x y filteredOam[i] memory
+            decodeObjectPixel x y filteredOam[i] oam vram
         else
             Shade.White
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
+        let vram = ppu.Memory.VideoRam
+        let oam = ppu.Memory.OamRam
+        let memory = ppu.Memory
         let screenY = int ppu.Ly
 
         let windowOnLine =
-            Lcdc.isEnabled Lcdc.WindowEnable ppu.Memory
-            && screenY >= int ppu.Memory[IoRegisters.Wy]
+            Lcdc.isEnabled Lcdc.WindowEnable memory && screenY >= int memory[IoRegisters.Wy]
 
         let objectsInLine =
-            oamMap
-            |> List.where (fun loc -> ppu.Ly >= ppu.Memory[loc] - 16uy && ppu.Ly < ppu.Memory[loc] - 8uy)
-            |> List.sortBy (fun loc -> ppu.Memory[loc + 1us]) // DMG prioritises by X coordinate. TODO GCB prioritise by OAM only
-        // TODO List.take 10? Do I want to be hardware accurate?
+            oamAddresses
+            |> Array.filter (fun offset -> ppu.Ly >= oam[offset] - 16uy && ppu.Ly < oam[offset] - 8uy)
+            |> Array.sortBy (fun offset -> oam[offset + 1]) // DMG prioritises by X coordinate
+            |> Array.truncate 10
 
         for screenX in 0 .. Screen.width - 1 do
-            let bufferLoc = screenY * Screen.width + screenX
+            let bufferAddr = screenY * Screen.width + screenX
 
-            let objPixel = fetchObjectPixel screenX screenY objectsInLine ppu.Memory
+            let objPixel = fetchObjectPixel screenX screenY objectsInLine oam vram
 
             let pixel =
                 if objPixel = Shade.White then
-                    fetchTileMapPixel screenX screenY windowOnLine ppu.Memory
+                    fetchTileMapPixel screenX screenY windowOnLine vram memory
                 else
                     objPixel
 
-            buffer[bufferLoc] <- pixel
+            buffer[bufferAddr] <- pixel
 
 open scanline
 
