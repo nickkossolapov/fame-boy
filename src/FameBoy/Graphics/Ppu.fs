@@ -95,18 +95,44 @@ let createPpu (memory: Memory) =
 
 open StatRegister
 
+module Lcdc =
+    let PpuEnable = 0b1000_0000uy
+
+    let WindowMapArea = 0b0100_0000uy
+
+    let WindowEnable = 0b0010_0000uy
+
+    let TileDataArea = 0b0001_0000uy
+
+    let BgMapArea = 0b0000_1000uy
+
+    let ObjSize = 0b0000_0100uy
+
+    let ObjEnable = 0b0000_0010uy
+
+    let BgPriority = 0b0000_00001uy
+
+    let inline isEnabled control (memory: Memory) =
+        memory[IoRegisters.Lcdc] &&& control <> 0uy
+
 
 // TODO palettes
 module private scanline =
-    let getBgTileMemLoc tileX tileY (memory: Memory) =
-        let start =
-            if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
-                0x9C00
-            else
-                0x9800
+    let fetchPixel pixelLoc offset (memory: Memory) =
+        let left = memory[pixelLoc]
+        let right = memory[(pixelLoc + 1us)]
+
+        let leftBit = left >>> offset &&& 1uy
+        let rightBit = (right >>> offset &&& 1uy) <<< 1
+
+        leftBit ||| rightBit |> Shade.ofByte
+
+
+    let getTileMemLoc tileX tileY areaBit (memory: Memory) =
+        let start = if areaBit then 0x9C00 else 0x9800
 
         let getLoc byte =
-            if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
+            if Lcdc.isEnabled Lcdc.TileDataArea memory then
                 0x8000us + 0x10us * (uint16 byte)
             else
                 0x8800us + ((uint16 byte + 0x80us) &&& 0xFFus) * 0x10us
@@ -115,30 +141,35 @@ module private scanline =
 
         getLoc memory[mapIndex]
 
-    let fetchBgPixel screenX screenY (memory: Memory) =
-        let bgX = screenX + int memory[IoRegisters.Scx]
-        let bgY = screenY + int memory[IoRegisters.Scy]
+    let decodeTileMapPixel mapX mapY areaBit (memory: Memory) =
+        let tileX = mapX / 8
+        let tileY = mapY / 8
 
-        let tileX = bgX / 8
-        let tileY = bgY / 8
+        let bitX = 7 - mapX % 8
+        let bitY = mapY % 8
 
-        let bitX = 7 - bgX % 8
-        let bitY = bgY % 8
-
-        let tileLoc = getBgTileMemLoc tileX tileY memory
+        let tileLoc = getTileMemLoc tileX tileY areaBit memory
         let pixelLoc = tileLoc + uint16 (bitY * 2)
 
-        let left = memory[pixelLoc]
-        let right = memory[(pixelLoc + 1us)]
+        fetchPixel pixelLoc bitX memory
 
-        let leftBit = left >>> bitX &&& 1uy
-        let rightBit = (right >>> bitX &&& 1uy) <<< 1
+    let fetchTileMapPixel screenX screenY windowOnLine (memory: Memory) =
+        if windowOnLine && screenX >= int memory[IoRegisters.Wx] - 7 then
+            let wX = screenX - (int memory[IoRegisters.Wx] - 7)
+            let wY = screenY - int memory[IoRegisters.Wy]
+            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea memory
 
-        leftBit ||| rightBit |> Shade.ofByte
+            decodeTileMapPixel wX wY areaBit memory
+        else
+            let bgX = screenX + int memory[IoRegisters.Scx]
+            let bgY = screenY + int memory[IoRegisters.Scy]
+            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea memory
+
+            decodeTileMapPixel bgX bgY areaBit memory
 
     let oamMap = [ 0xFE00us .. 4us .. 0xFE9Fus ]
 
-    let fetchTransformedObjectPixel screenX screenY oamLoc (memory: Memory) =
+    let decodeObjectPixel screenX screenY oamLoc (memory: Memory) =
         let objX = int memory[oamLoc + 1us]
         let objY = int memory[oamLoc]
         let objLoc = 0x8000us + 0x10us * (uint16 memory[oamLoc + 2us])
@@ -152,13 +183,7 @@ module private scanline =
 
         let pixelLoc = objLoc + uint16 (bitY * 2)
 
-        let left = memory[pixelLoc]
-        let right = memory[(pixelLoc + 1us)]
-
-        let leftBit = left >>> bitX &&& 1uy
-        let rightBit = (right >>> bitX &&& 1uy) <<< 1
-
-        leftBit ||| rightBit |> Shade.ofByte
+        fetchPixel pixelLoc bitX memory
 
     // TODO 8x16 tiles
     let fetchObjectPixel x y filteredOam (memory: Memory) =
@@ -175,12 +200,16 @@ module private scanline =
                 i <- i + 1
 
         if found then
-            fetchTransformedObjectPixel x y filteredOam[i] memory
+            decodeObjectPixel x y filteredOam[i] memory
         else
             Shade.White
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
         let screenY = int ppu.Ly
+
+        let windowOnLine =
+            Lcdc.isEnabled Lcdc.WindowEnable ppu.Memory
+            && screenY >= int ppu.Memory[IoRegisters.Wy]
 
         let objectsInLine =
             oamMap
@@ -195,7 +224,7 @@ module private scanline =
 
             let pixel =
                 if objPixel = Shade.White then
-                    fetchBgPixel screenX screenY ppu.Memory
+                    fetchTileMapPixel screenX screenY windowOnLine ppu.Memory
                 else
                     objPixel
 
