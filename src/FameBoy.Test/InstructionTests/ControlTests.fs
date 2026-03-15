@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.ControlTests
+module FameBoy.Test.InstructionTests.ControlTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
@@ -15,9 +15,9 @@ let ``Jump to address - jp nn`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -37,7 +37,7 @@ let ``Jump to address in HL - jp hl`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x1234us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -56,9 +56,9 @@ let ``Jump if carry, taken - jp c,a16`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
     cpu.setFlag Flag.Carry true // C flag set, so jump is taken
 
     // Execute
@@ -78,9 +78,9 @@ let ``Jump if carry, not taken - jp c,a16`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
     cpu.setFlag Flag.Carry false // C flag not set, so jump is not taken
 
     // Execute
@@ -100,8 +100,8 @@ let ``Jump relative, positive - jr s8`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x20uy // s8 = +32
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x20uy // s8 = +32
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -120,8 +120,8 @@ let ``Jump relative, negative - jr s8`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0xFBuy // s8 = -5
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0xFBuy // s8 = -5
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -140,8 +140,8 @@ let ``Jump relative if not zero, taken - jr nz,s8`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x05uy // s8 = +5
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x05uy // s8 = +5
     cpu.setFlag Flag.Zero false // Z flag not set, so jump is taken
 
     // Execute
@@ -161,8 +161,8 @@ let ``Jump relative if not zero, not taken - jr nz,s8`` () =
     let cpu = createCpu (createTestMemory [||])
     
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x05uy // s8 = +5
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x05uy // s8 = +5
     cpu.setFlag Flag.Zero true // Z flag set, so jump is not taken
 
     // Execute
@@ -184,9 +184,9 @@ let ``Call function - call nn`` () =
     
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -209,9 +209,9 @@ let ``Call if no carry, taken - call nc,a16`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
     cpu.setFlag Flag.Carry false // C flag not set, so call is taken
 
     // Execute
@@ -235,9 +235,9 @@ let ``Call if no carry, not taken - call nc,a16`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy // LSB(nn)
-    cpu.Memory[0x102us] <- 0x12uy // MSB(nn)
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy // LSB(nn)
+    cpu.Memory.RomBase[0x102] <- 0x12uy // MSB(nn)
     cpu.setFlag Flag.Carry true // C flag set, so call is not taken
 
     // Execute
@@ -259,7 +259,7 @@ let ``Return from function - ret`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xFFFCus] <- 0x34uy // LSB of return address
     cpu.Memory[0xFFFDus] <- 0x12uy // MSB of return address
 
@@ -282,7 +282,7 @@ let ``Return if zero, taken - ret z`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xFFFCus] <- 0x34uy // LSB of return address
     cpu.Memory[0xFFFDus] <- 0x12uy // MSB of return address
     cpu.setFlag Flag.Zero true // Z flag set, so return is taken
@@ -306,7 +306,7 @@ let ``Return if zero, not taken - ret z`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xFFFCus] <- 0x34uy // LSB of return address
     cpu.Memory[0xFFFDus] <- 0x12uy // MSB of return address
     cpu.setFlag Flag.Zero false // Z flag not set, so return is not taken
@@ -331,7 +331,7 @@ let ``Return from interrupt - reti`` () =
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
     cpu.Ime <- false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xFFFCus] <- 0x34uy // LSB of return address
     cpu.Memory[0xFFFDus] <- 0x12uy // MSB of return address
 
@@ -355,7 +355,7 @@ let ``Restart to 0x18 - rst 0x18`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc

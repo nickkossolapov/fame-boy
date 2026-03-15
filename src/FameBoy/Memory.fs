@@ -28,92 +28,125 @@ module private IoRegistersOffsets =
     [<Literal>]
     let Dma = 0xFF46 - ioOffset
 
-type Memory =
-    abstract member writeIoDirect: uint16 -> uint8 -> unit
-    abstract member Item: uint16 -> uint8 with get
-    abstract member Item: uint16 -> uint8 with set
 
-type DmgMemory(arr: uint8 array) =
-    let romBase, romBanks = getRomBanks arr
-    let mutable currentBank = 0
-    let videoRam = Array.zeroCreate<uint8> memorySizes.vram
-    let externalRam = Array.zeroCreate<uint8> memorySizes.externalRam
-    let workRam = Array.zeroCreate<uint8> memorySizes.wram // TODO: GCB: split this and have banking
-    let oamRam = Array.zeroCreate<uint8> memorySizes.oam
-    let ioRegisters = Array.zeroCreate<uint8> memorySizes.ioRegisters
-    let highRam = Array.zeroCreate<uint8> memorySizes.hram
-    let mutable interruptEnable = 0uy
+/// NOTE Access via indexer syntax: memory[addr]
+type Memory =
+    { RomBase: uint8 array
+      RomBanks: uint8 array array
+      mutable CurrentBank: int
+      VideoRam: uint8 array
+      ExternalRam: uint8 array
+      WorkRam: uint8 array // TODO: GCB: split this and have banking
+      OamRam: uint8 array
+      IoRegisters: uint8 array
+      HighRam: uint8 array
+      mutable InterruptEnable: uint8 }
 
     member private this.writeIoRegisters address (value: uint8) =
         match address with
         | IoRegistersOffsets.Joypad ->
             // Lower nibble in Joypad register is read only
-            ioRegisters[address] <- (value &&& 0b11110000uy) ||| (ioRegisters[address] &&& 0b00001111uy)
+            this.IoRegisters[address] <- (value &&& 0b11110000uy) ||| (this.IoRegisters[address] &&& 0b00001111uy)
         | IoRegistersOffsets.Dma ->
-            ioRegisters[address] <- value
+            this.IoRegisters[address] <- value
             this.doDmaTransfer value
-        | _ -> ioRegisters[int address] <- value
+        | _ -> this.IoRegisters[address] <- value
 
     // TODO maybe move this out and do a m-cycle accurate transfer?
     member private this.doDmaTransfer(startPrefix: uint8) =
         let start = (int startPrefix) * 0x100
 
-        for i in 0..0xA0 do
-            let src = start + i
-            let dst = 0xFE00 + i
+        for i in 0..0x9F do
+            let src = uint16 (start + i)
+            let dst = uint16 (0xFE00 + i)
 
-            this.read src |> this.write dst
+            this[dst] <- this[src]
 
-    // TODO consider flattening memory. This is the biggest hot-path in the emulator
-    member private this.read(address: int) =
-        if address < 0x4000 then romBase[address]
-        elif address < 0x8000 then romBanks[currentBank][address - 0x4000]
-        elif address < 0xA000 then videoRam[address - 0x8000]
-        elif address < 0xC000 then externalRam[address - 0xA000]
-        elif address < 0xE000 then workRam[address - 0xC000]
-        elif address < 0xFE00 then workRam[address - 0xE000]
-        elif address < 0xFEA0 then oamRam[address - 0xFE00]
-        elif address < 0xFF00 then 0xFFuy
-        elif address < 0xFF80 then ioRegisters[address - 0xFF00]
-        elif address < 0xFFFF then highRam[address - 0xFF80]
-        else interruptEnable
+    member this.Item
+        with get (i: uint16) =
+            let address = int i
 
-    member private this.write address value =
-        if address < 0x4000 then ()
-        elif address < 0x8000 then ()
-        elif address < 0xA000 then videoRam[address - 0x8000] <- value
-        elif address < 0xC000 then externalRam[address - 0xA000] <- value
-        elif address < 0xE000 then workRam[address - 0xC000] <- value
-        elif address < 0xFE00 then workRam[address - 0xE000] <- value
-        elif address < 0xFEA0 then oamRam[address - 0xFE00] <- value
-        elif address < 0xFF00 then ()
-        elif address < 0xFF80 then this.writeIoRegisters (address - 0xFF00) value
-        elif address < 0xFFFF then highRam[address - 0xFF80] <- value
-        else interruptEnable <- value
+            if address < 0x4000 then
+                this.RomBase[address]
+            elif address < 0x8000 then
+                this.RomBanks[this.CurrentBank][address - 0x4000]
+            elif address < 0xA000 then
+                this.VideoRam[address - 0x8000]
+            elif address < 0xC000 then
+                this.ExternalRam[address - 0xA000]
+            elif address < 0xE000 then
+                this.WorkRam[address - 0xC000]
+            elif address < 0xFE00 then
+                this.WorkRam[address - 0xE000]
+            elif address < 0xFEA0 then
+                this.OamRam[address - 0xFE00]
+            elif address < 0xFF00 then
+                0xFFuy
+            elif address < 0xFF80 then
+                this.IoRegisters[address - 0xFF00]
+            elif address < 0xFFFF then
+                this.HighRam[address - 0xFF80]
+            else
+                this.InterruptEnable
 
-    interface Memory with
-        member this.writeIoDirect (address: uint16) value =
-            let offset = int address - IoRegistersOffsets.ioOffset
+        and set (i: uint16) (v: uint8) =
+            let address = int i
 
-            ioRegisters[offset] <- value
+            if address < 0x4000 then
+                ()
+            elif address < 0x8000 then
+                ()
+            elif address < 0xA000 then
+                this.VideoRam[address - 0x8000] <- v
+            elif address < 0xC000 then
+                this.ExternalRam[address - 0xA000] <- v
+            elif address < 0xE000 then
+                this.WorkRam[address - 0xC000] <- v
+            elif address < 0xFE00 then
+                this.WorkRam[address - 0xE000] <- v
+            elif address < 0xFEA0 then
+                this.OamRam[address - 0xFE00] <- v
+            elif address < 0xFF00 then
+                ()
+            elif address < 0xFF80 then
+                this.writeIoRegisters (address - 0xFF00) v
+            elif address < 0xFFFF then
+                this.HighRam[address - 0xFF80] <- v
+            else
+                this.InterruptEnable <- v
 
-        member this.Item
-            with get (i: uint16) = this.read (int i)
-            and set (i: uint16) (v: uint8) = this.write (int i) v
+    member this.writeIoDirect (address: uint16) (value: uint8) =
+        let offset = int address - IoRegistersOffsets.ioOffset
 
-type TestMemory(arr: uint8 array) =
-    interface Memory with
-        member _.Item
-            with get (i: uint16) = arr[int i]
-            and set (i: uint16) (v: uint8) = arr[int i] <- v
+        this.IoRegisters[offset] <- value
 
-        member _.writeIoDirect i value = arr[int i] <- value
+let createMemory (rom: uint8 array) : Memory =
+    let romBase, romBanks = getRomBanks rom
 
-let createMemory rom : Memory = DmgMemory rom
+    { RomBase = romBase
+      RomBanks = romBanks
+      CurrentBank = 0
+      VideoRam = Array.zeroCreate memorySizes.vram
+      ExternalRam = Array.zeroCreate memorySizes.externalRam
+      WorkRam = Array.zeroCreate memorySizes.wram
+      OamRam = Array.zeroCreate memorySizes.oam
+      IoRegisters = Array.zeroCreate memorySizes.ioRegisters
+      HighRam = Array.zeroCreate memorySizes.hram
+      InterruptEnable = 0uy }
 
-let createTestMemory arr : Memory =
+let createTestMemory (arr: uint8 array) : Memory =
     let memory = Array.zeroCreate 0x10000
-
     Array.blit arr 0 memory 0 arr.Length
 
-    TestMemory memory
+    let romBase, romBanks = getRomBanks memory[0..0x7FFF]
+
+    { RomBase = romBase
+      RomBanks = romBanks
+      CurrentBank = 0
+      VideoRam = memory[0x8000..0x9FFF]
+      ExternalRam = memory[0xA000..0xBFFF]
+      WorkRam = memory[0xC000..0xDFFF]
+      OamRam = memory[0xFE00..0xFE9F]
+      IoRegisters = memory[0xFF00..0xFF7F]
+      HighRam = memory[0xFF80..0xFFFE]
+      InterruptEnable = memory[0xFFFF] }

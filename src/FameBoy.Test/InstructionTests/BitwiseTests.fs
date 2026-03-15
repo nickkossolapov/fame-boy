@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.BitwiseTests
+module FameBoy.Test.InstructionTests.BitwiseTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
@@ -73,7 +73,7 @@ let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- data.Opcode
+    cpu.Memory.RomBase[0x100] <- data.Opcode
     cpu.Registers.A <- data.InputData
     setCpuFlags data.InputFlags cpu
 
@@ -202,8 +202,8 @@ let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- twoBitPrefix
-    cpu.Memory[0x101us] <- data.Opcode
+    cpu.Memory.RomBase[0x100] <- twoBitPrefix
+    cpu.Memory.RomBase[0x101] <- data.Opcode
     cpu.Registers.B <- data.InputData
     setCpuFlags data.InputFlags cpu
 
@@ -300,8 +300,8 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- twoBitPrefix
-    cpu.Memory[0x101us] <- data.Opcode
+    cpu.Memory.RomBase[0x100] <- twoBitPrefix
+    cpu.Memory.RomBase[0x101] <- data.Opcode
     cpu.Registers.HL <- 0xC000us
     cpu.Memory[0xC000us] <- data.InputData
     setCpuFlags data.InputFlags cpu
@@ -324,8 +324,8 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- twoBitPrefix
-    cpu.Memory[0x101us] <- opcode
+    cpu.Memory.RomBase[0x100] <- twoBitPrefix
+    cpu.Memory.RomBase[0x101] <- opcode
     cpu.Registers.H <- 0b10000000uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
@@ -350,8 +350,8 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- twoBitPrefix
-    cpu.Memory[0x101us] <- opcode
+    cpu.Memory.RomBase[0x100] <- twoBitPrefix
+    cpu.Memory.RomBase[0x101] <- opcode
     cpu.Registers.H <- 0b00000000uy
     cpu.setFlag Flag.Zero false
     cpu.setFlag Flag.Subtract true

@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.ArithmeticTests
+module FameBoy.Test.InstructionTests.ArithmeticTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
@@ -20,7 +20,7 @@ let ``Add 8-bit register to A (no carry, no half-carry, no zero) - add b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -49,7 +49,7 @@ let ``Add 8-bit register to A (result zero) - add b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -78,7 +78,7 @@ let ``Add 8-bit register to A (half-carry, no carry) - add b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -107,7 +107,7 @@ let ``Add 8-bit register to A (carry, no half-carry) - add b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -137,7 +137,7 @@ let ``Add with carry from (HL) to A (no carry, no half-carry, no zero) - adc (hl
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -167,7 +167,7 @@ let ``Add with carry from (HL) to A (result zero) - adc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -197,7 +197,7 @@ let ``Add with carry from (HL) to A (half-carry) - adc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -227,7 +227,7 @@ let ``Add with carry from (HL) to A (carry) - adc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -257,7 +257,7 @@ let ``Add with carry from (HL) to A (with initial carry) - adc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -281,8 +281,8 @@ let ``Subtract immediate from A (no borrow, no half-borrow, no zero) - sub n`` (
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x12uy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x12uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
@@ -310,8 +310,8 @@ let ``Subtract immediate from A (result zero) - sub n`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x35uy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x35uy
     cpu.setFlag Flag.Zero false
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
@@ -339,8 +339,8 @@ let ``Subtract immediate from A (half-borrow) - sub n`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x30uy
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x01uy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x01uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
@@ -368,8 +368,8 @@ let ``Subtract immediate from A (borrow) - sub n`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0x35uy
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x40uy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x40uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
@@ -402,7 +402,7 @@ let ``Subtract with carry from B to A (no borrow, no half-borrow, no zero) - sbc
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -431,7 +431,7 @@ let ``Subtract with carry from B to A (result zero) - sbc b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -460,7 +460,7 @@ let ``Subtract with carry from B to A (half-borrow) - sbc b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -489,7 +489,7 @@ let ``Subtract with carry from B to A (borrow) - sbc b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -518,7 +518,7 @@ let ``Subtract with carry from B to A (with initial carry) - sbc b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -548,7 +548,7 @@ let ``Compare A with (HL) (A > (HL)) - cp (hl)`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -578,7 +578,7 @@ let ``Compare A with (HL) (A == (HL)) - cp (hl)`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -608,7 +608,7 @@ let ``Compare A with (HL) (half-borrow) - cp (hl)`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -638,7 +638,7 @@ let ``Compare A with (HL) (borrow) - cp (hl)`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -666,7 +666,7 @@ let ``Increment 8-bit register (no zero, no half-carry) - inc b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -694,7 +694,7 @@ let ``Increment 8-bit register (result zero) - inc b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -722,7 +722,7 @@ let ``Increment 8-bit register (half-carry) - inc b`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -750,7 +750,7 @@ let ``Increment 8-bit register (all flags) - inc a`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -779,7 +779,7 @@ let ``Increment (HL) (no zero, no half-carry) - inc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -808,7 +808,7 @@ let ``Increment (HL) (result zero) - inc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -837,7 +837,7 @@ let ``Increment (HL) (half-carry) - inc (hl)`` () =
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -865,7 +865,7 @@ let ``Decrement 8-bit register (no zero, no half-carry) - dec b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -893,7 +893,7 @@ let ``Decrement 8-bit register (result zero) - dec b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -921,7 +921,7 @@ let ``Decrement 8-bit register (half-carry) - dec b`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -949,7 +949,7 @@ let ``Decrement 8-bit register (from 0x00) - dec a`` () =
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false // Carry flag should not be affected
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -973,7 +973,7 @@ let ``Decrement value at address HL (no zero, no half-carry) - dec (hl)`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xC000us] <- 0x51uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
@@ -1002,7 +1002,7 @@ let ``Decrement value at address HL (result zero) - dec (hl)`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xC000us] <- 0x01uy
     cpu.setFlag Flag.Zero false
     cpu.setFlag Flag.Subtract false
@@ -1031,7 +1031,7 @@ let ``Decrement value at address HL (half-carry) - dec (hl)`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xC000us] <- 0x10uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
@@ -1060,7 +1060,7 @@ let ``Decrement value at address HL (wrap around) - dec (hl)`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Memory[0xC000us] <- 0x00uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract false
@@ -1089,7 +1089,7 @@ let ``Increment 16-bit register BC - inc bc`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x1234us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -1108,7 +1108,7 @@ let ``Increment 16-bit register BC (wrap around) - inc bc`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0xFFFFus
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -1128,7 +1128,7 @@ let ``Decrement 16-bit register BC - dec bc`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x1234us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -1147,7 +1147,7 @@ let ``Decrement 16-bit register BC (wrap around) - dec bc`` () =
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0x0000us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -1167,7 +1167,7 @@ let ``Add 16-bit register BC to HL (no carry, no half-carry) - add hl,bc`` () =
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x1234us
     cpu.Registers.BC <- 0x0102us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false
@@ -1193,7 +1193,7 @@ let ``Add 16-bit register BC to HL (half carry) - add hl,bc`` () =
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x0FFFus
     cpu.Registers.BC <- 0x0001us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry true
@@ -1219,7 +1219,7 @@ let ``Add 16-bit register BC to HL (carry) - add hl,bc`` () =
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xFFFFus
     cpu.Registers.BC <- 0x0001us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
     cpu.setFlag Flag.Carry false
@@ -1245,7 +1245,7 @@ let ``Add 16-bit register BC to HL (half carry and carry) - add hl,bc`` () =
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0x0FFFus
     cpu.Registers.BC <- 0xF001us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
     cpu.setFlag Flag.Carry false
@@ -1270,8 +1270,8 @@ let ``Add signed immediate to SP (positive, no carry) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1234us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x10uy // e = 16
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x10uy // e = 16
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
@@ -1298,8 +1298,8 @@ let ``Add signed immediate to SP (positive, half carry) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x120Fus
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x01uy // e = 1
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x01uy // e = 1
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
@@ -1326,8 +1326,8 @@ let ``Add signed immediate to SP (positive, carry) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x12FFus
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x01uy // e = 1
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x01uy // e = 1
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
@@ -1355,8 +1355,8 @@ let ``Add signed immediate to SP (negative, no borrow) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1200us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0xFFuy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0xFFuy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true
@@ -1383,8 +1383,8 @@ let ``Add signed immediate to SP (negative, half borrow) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1204us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0xEFuy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0xEFuy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
@@ -1411,8 +1411,8 @@ let ``Add signed immediate to SP (negative, carry, no half borrow) - add sp, e``
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1210us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0xFFuy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0xFFuy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry false
@@ -1439,8 +1439,8 @@ let ``Add signed immediate to SP (negative, carry) - add sp, e`` () =
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0x1201us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0xFFuy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0xFFuy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
     cpu.setFlag Flag.HalfCarry true

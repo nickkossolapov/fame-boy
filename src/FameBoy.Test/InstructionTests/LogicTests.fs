@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.LogicTests
+module FameBoy.Test.InstructionTests.LogicTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
@@ -14,7 +14,7 @@ let ``Bitwise AND A with B - and b`` () =
     let opcode = 0xA0uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
     cpu.Registers.B <- 0x3Fuy
 
@@ -38,7 +38,7 @@ let ``Bitwise AND A with B (zero result) - and b`` () =
     let opcode = 0xA0uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
     cpu.Registers.B <- 0xA5uy
 
@@ -62,7 +62,7 @@ let ``Bitwise OR A with (HL) - or (hl)`` () =
     let opcode = 0xB6uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
     cpu.Registers.HL <- 0xC050us
     cpu.Memory[0xC050us] <- 0x0Fuy
@@ -87,7 +87,7 @@ let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
     let opcode = 0xB6uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x00uy
     cpu.Registers.HL <- 0xC050us
     cpu.Memory[0xC050us] <- 0x00uy
@@ -112,8 +112,8 @@ let ``Bitwise XOR A with n - xor n`` () =
     let opcode = 0xEEuy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x3Fuy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x3Fuy
     cpu.Registers.A <- 0x5Auy
 
     // Execute
@@ -136,8 +136,8 @@ let ``Bitwise XOR A with n (zero result) - xor n`` () =
     let opcode = 0xEEuy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x5Auy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x5Auy
     cpu.Registers.A <- 0x5Auy
 
     // Execute
@@ -160,7 +160,7 @@ let ``Complement carry flag (carry initially true) - ccf`` () =
     let opcode = 0x3Fuy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Carry true
     cpu.setFlag Flag.Subtract true // should be cleared
     cpu.setFlag Flag.HalfCarry true // should be cleared
@@ -185,7 +185,7 @@ let ``Complement carry flag (carry initially false) - ccf`` () =
     let opcode = 0x3Fuy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Carry false
     cpu.setFlag Flag.Subtract true // should be cleared
     cpu.setFlag Flag.HalfCarry true // should be cleared
@@ -210,7 +210,7 @@ let ``Set carry flag - scf`` () =
     let opcode = 0x37uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.setFlag Flag.Carry false // should be set
     cpu.setFlag Flag.Subtract true // should be cleared
     cpu.setFlag Flag.HalfCarry true // should be cleared
@@ -235,7 +235,7 @@ let ``Decimal adjust accumulator - daa`` () =
     let opcode = 0x27uy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x1Auy
     cpu.setFlag Flag.Subtract false
     cpu.setFlag Flag.HalfCarry false
@@ -260,7 +260,7 @@ let ``Complement accumulator - cpl`` () =
     let opcode = 0x2Fuy
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
+    cpu.Memory.RomBase[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
     cpu.setFlag Flag.Zero false // should be unaffected
     cpu.setFlag Flag.Carry true // should be unaffected

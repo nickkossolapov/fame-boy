@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.OpcodeTests
+module FameBoy.Test.OpcodeTests
 
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
@@ -15,9 +15,9 @@ let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H 
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- opcode
-    cpu.Memory[0x101us] <- 0x34uy
-    cpu.Memory[0x102us] <- 0x12uy
+    cpu.Memory.RomBase[0x100] <- opcode
+    cpu.Memory.RomBase[0x101] <- 0x34uy
+    cpu.Memory.RomBase[0x102] <- 0x12uy
 
     let instr = fetchAndDecode cpu.Memory cpu.Pc
     execute cpu instr |> ignore

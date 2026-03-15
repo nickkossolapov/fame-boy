@@ -1,4 +1,4 @@
-﻿module FameBoy.Test.InstructionTests.OtherTests
+module FameBoy.Test.InstructionTests.OtherTests
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Memory
@@ -12,7 +12,7 @@ let ``halt enables halt`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0x76uy
+    cpu.Memory.RomBase[0x100] <- 0x76uy
     cpu.Halted <- false
 
     // Execute
@@ -30,7 +30,7 @@ let ``di disables interrupts`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0xF3uy
+    cpu.Memory.RomBase[0x100] <- 0xF3uy
     cpu.Ime <- true
 
     // Execute
@@ -48,7 +48,7 @@ let ``ei enables interrupts`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0xFBuy
+    cpu.Memory.RomBase[0x100] <- 0xFBuy
     cpu.Ime <- false
 
     // Execute
@@ -66,7 +66,7 @@ let ``NOP changes nothing`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0x00uy
+    cpu.Memory.RomBase[0x100] <- 0x00uy
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
@@ -103,7 +103,7 @@ let ``Unknown opcode acts as NOP`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory[0x100us] <- 0xEBuy // 0xEB is unused/unknown
+    cpu.Memory.RomBase[0x100] <- 0xEBuy // 0xEB is unused/unknown
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
