@@ -52,7 +52,6 @@ let ``Initial state points switchable bank at bank 1`` () =
     let cart = makeMbc1Cart 4
 
     Assert.That(cart.RomOffset, Is.EqualTo 0x4000)
-    Assert.That(cart.RomBaseOffset, Is.EqualTo 0)
     Assert.That(cart.RamEnabled, Is.False)
 
 
@@ -143,25 +142,6 @@ let ``Upper register is masked to 2 bits`` () =
 
 
 [<Test>]
-let ``Enabling advanced mode remaps bank 0 region`` () =
-    let cart = makeMbc1Cart 128
-
-    handleCartridgeWrite cart 0x4000 0x02uy
-    handleCartridgeWrite cart 0x6000 0x01uy
-
-    Assert.That(cart.RomBaseOffset, Is.EqualTo(64 * 0x4000))
-
-[<Test>]
-let ``Disabling advanced mode resets bank 0 region to zero`` () =
-    let cart = makeMbc1Cart 128
-
-    handleCartridgeWrite cart 0x4000 0x02uy
-    handleCartridgeWrite cart 0x6000 0x01uy
-    handleCartridgeWrite cart 0x6000 0x00uy
-
-    Assert.That(cart.RomBaseOffset, Is.EqualTo 0)
-
-[<Test>]
 let ``Advanced mode switches RAM bank on multi-bank RAM cart`` () =
     let cart = makeMbc1CartWithRam 64 0x03uy
 
@@ -178,7 +158,6 @@ let ``Leaving advanced mode resets RAM offset`` () =
     handleCartridgeWrite cart 0x6000 0x01uy
     handleCartridgeWrite cart 0x6000 0x00uy
 
-    Assert.That(cart.RomBaseOffset, Is.EqualTo 0)
     Assert.That(cart.RamOffset, Is.EqualTo 0)
 
 
@@ -205,14 +184,6 @@ let ``Zero low-register translation applies even when high-register is set`` (up
     handleCartridgeWrite cart 0x2000 0x00uy
 
     Assert.That(cart.RomOffset, Is.EqualTo(expectedBank * 0x4000))
-
-[<Test>]
-let ``Simple mode upper register does not affect base ROM offset`` () =
-    let cart = makeMbc1Cart 128
-    
-    handleCartridgeWrite cart 0x4000 0x02uy
-    
-    Assert.That(cart.RomBaseOffset, Is.EqualTo 0)
 
 [<Test>]
 let ``Simple mode upper register does not affect RAM offset`` () =

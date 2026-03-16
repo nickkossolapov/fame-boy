@@ -68,7 +68,6 @@ type Cartridge =
       Rom: uint8 array
       RomCount: int
       mutable RomOffset: int
-      mutable RomBaseOffset: int // Bank 0 0000–3FFF
       Ram: uint8 array
       RamCount: int
       mutable RamOffset: int
@@ -83,7 +82,6 @@ let createCartridge (rom: uint8 array) =
       Rom = rom
       RomCount = romBankCount
       RomOffset = 0x4000
-      RomBaseOffset = 0x0
       Ram = Array.zeroCreate (ramBankCount * RamBankSize)
       RamCount = ramBankCount
       RamOffset = 0
@@ -93,16 +91,9 @@ let private updateMbc1BankOffsets (cart: Cartridge) (state: Mbc1State) =
     let romBank = getMbc1RomBank state
     cart.RomOffset <- romBank * RomBankSize
 
-    if state.AdvancedMode then
-        let bank0 = (state.RomUpperOrRamReg <<< 5) &&& (state.RomBankCount - 1)
-        cart.RomBaseOffset <- bank0 * RomBankSize
-
-        if cart.RamCount > 1 then
-            cart.RamOffset <- state.RomUpperOrRamReg * RamBankSize
-        else
-            cart.RamOffset <- 0
+    if state.AdvancedMode && cart.RamCount > 1 then
+        cart.RamOffset <- state.RomUpperOrRamReg * RamBankSize
     else
-        cart.RomBaseOffset <- 0
         cart.RamOffset <- 0
 
 let handleCartridgeWrite (cart: Cartridge) address (byte: uint8) =

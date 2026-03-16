@@ -58,7 +58,7 @@ type Memory =
             let address = int i
 
             if address < 0x4000 then
-                this.Cartridge.Rom[this.Cartridge.RomBaseOffset + address]
+                this.Cartridge.Rom[address]
             elif address < 0x8000 then
                 this.Cartridge.Rom[this.Cartridge.RomOffset + address - 0x4000]
             elif address < 0xA000 then
