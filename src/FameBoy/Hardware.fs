@@ -185,7 +185,7 @@ module IoRegisters =
     let Ie = 0xFFFFus
 
 
-/// Used to dirctly access IO Registers instead of memory[addr] when it has special behaviour with CPU, e.g. read-only bits in byte
+/// Used to directly access IO Registers instead of memory[addr] when it has special behaviour with CPU, e.g. read-only bits in byte
 [<RequireQualifiedAccess>]
 module IoRegisterOffsets =
     [<Literal>]
