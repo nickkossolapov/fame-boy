@@ -53,7 +53,6 @@ while (not (windowShouldClose ())) do
 
     joypadState <- getJoypadState ()
 
-
     while (accumulator > 0f) do
         let cpuCycles = stepEmulator () |> float32
         accumulator <- accumulator - cpuCycles

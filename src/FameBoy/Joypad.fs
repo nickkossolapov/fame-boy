@@ -51,4 +51,4 @@ let applyJoypadState (state: JoypadState) (memory: Memory) =
         if interruptTriggered prevReg nextReg then
             triggerInterrupt memory InterruptType.Joypad
 
-        memory.writeIoDirect IoRegisters.Joyp nextReg
+        memory.IoRegisters[IoRegisterOffsets.Joyp] <- nextReg

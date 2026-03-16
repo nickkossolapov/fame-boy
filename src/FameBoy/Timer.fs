@@ -42,7 +42,7 @@ let stepTimers (state: TimerState) (memory: Memory) =
 
     if state.DividerCount = dividerFrequency then
         state.DividerCount <- 0
-        memory.writeIoDirect IoRegisters.Div ((memory[IoRegisters.Div] + 1uy) &&& 0xFFuy)
+        memory.IoRegisters[IoRegisterOffsets.Div] <- (memory[IoRegisters.Div] + 1uy) &&& 0xFFuy
 
     if state.HasTimerOverflowed then
         state.HasTimerOverflowed <- false

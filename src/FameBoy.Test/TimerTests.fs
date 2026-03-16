@@ -92,20 +92,18 @@ let ``Blargg test 4 scenario - timer overflow after 1024 M-cycles with TIMA star
     // After 1023 M-cycles, TIMA should NOT have overflowed
     // 1023 / 4 = 255 full increments, TIMA = 255 = 0xFF, no overflow yet
     stepN timer memory 1023
-    Assert.That(memory[IoRegisters.If] &&& 0x04uy, Is.EqualTo 0uy,
-        "Timer interrupt should NOT be set before 1024 M-cycles")
+    Assert.That(memory[IoRegisters.If] &&& 0x04uy, Is.EqualTo 0uy, "Timer interrupt should NOT be set before 1024 M-cycles")
 
     // The 1024th M-cycle causes the 256th increment: TIMA goes 0xFF -> 0x00 (overflow)
     stepN timer memory 1
-    Assert.That(memory[IoRegisters.If] &&& 0x04uy, Is.Not.EqualTo 0uy,
-        "Timer interrupt SHOULD be set at exactly 1024 M-cycles")
+    Assert.That(memory[IoRegisters.If] &&& 0x04uy, Is.Not.EqualTo 0uy, "Timer interrupt SHOULD be set at exactly 1024 M-cycles")
 
 [<Test>]
 let ``DIV register increments at correct rate`` () =
     let timer, memory = setupTimer ()
 
     let divFrequency = 1048576 / 16384 // = 64 M-cycles
-    memory.writeIoDirect IoRegisters.Div 0uy
+    memory.IoRegisters[IoRegisterOffsets.Div] <- 0uy
 
     stepN timer memory (divFrequency - 1)
     Assert.That(memory[IoRegisters.Div], Is.EqualTo 0uy)

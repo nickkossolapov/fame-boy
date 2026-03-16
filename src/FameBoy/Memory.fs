@@ -1,5 +1,7 @@
 ﻿module FameBoy.Memory
 
+open FameBoy.Hardware
+
 module private Helpers =
     let memorySizes =
         {| romBank = 0x4000
@@ -18,17 +20,6 @@ module private Helpers =
 
 open Helpers
 
-module private IoRegistersOffsets =
-    [<Literal>]
-    let ioOffset = 0xFF00
-
-    [<Literal>]
-    let Joypad = 0xFF00 - ioOffset
-
-    [<Literal>]
-    let Dma = 0xFF46 - ioOffset
-
-
 /// NOTE Access via indexer syntax: memory[addr]
 type Memory =
     { RomBase: uint8 array
@@ -44,10 +35,14 @@ type Memory =
 
     member private this.writeIoRegisters address (value: uint8) =
         match address with
-        | IoRegistersOffsets.Joypad ->
+        | IoRegisterOffsets.Joyp ->
             // Lower nibble in Joypad register is read only
-            this.IoRegisters[address] <- (value &&& 0b11110000uy) ||| (this.IoRegisters[address] &&& 0b00001111uy)
-        | IoRegistersOffsets.Dma ->
+            this.IoRegisters[address] <- (value &&& 0b1111_0000uy) ||| (this.IoRegisters[address] &&& 0b0000_1111uy)
+        | IoRegisterOffsets.Stat ->
+            // LYC == LY and PPU mode are read only
+            this.IoRegisters[address] <- (value &&& 0b1111_1000uy) ||| (this.IoRegisters[address] &&& 0b0000_0111uy)
+        | IoRegisterOffsets.Ly -> () // Read only, set directly in PPU
+        | IoRegisterOffsets.Dma ->
             this.IoRegisters[address] <- value
             this.doDmaTransfer value
         | _ -> this.IoRegisters[address] <- value
@@ -114,11 +109,6 @@ type Memory =
                 this.HighRam[address - 0xFF80] <- v
             else
                 this.InterruptEnable <- v
-
-    member this.writeIoDirect (address: uint16) (value: uint8) =
-        let offset = int address - IoRegistersOffsets.ioOffset
-
-        this.IoRegisters[offset] <- value
 
 let createMemory (rom: uint8 array) : Memory =
     let romBase, romBanks = getRomBanks rom
