@@ -1,4 +1,4 @@
-﻿module FameBoy.Ppu.Debug
+﻿module FameBoy.Raylib.TileViewer
 
 open FameBoy.Hardware
 open FameBoy.Memory
@@ -46,3 +46,4 @@ let dumpTiles (buffer: Shade array) (memory: Memory) =
             let mapIndex = 0x8000 + ((row * 32) + col) * 16
 
             renderTile (col * 8) (row * 8) (int mapIndex) memory buffer
+

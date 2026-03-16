@@ -19,8 +19,7 @@
         <Compile Include="Cpu\Interrupts.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
         <Compile Include="Cpu\Execute.fs" />
-        <Compile Include="Graphics\Ppu.fs" />
-        <Compile Include="Graphics\Debug.fs" />
+        <Compile Include="Ppu.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Serial.fs" />
         <Compile Include="Joypad.fs" />

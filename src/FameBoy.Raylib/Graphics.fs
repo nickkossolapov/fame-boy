@@ -3,9 +3,9 @@ module FameBoy.Raylib.Graphics
 open FameBoy.Graphics.Ppu
 open FameBoy.Hardware
 open FameBoy.Memory
-open FameBoy.Ppu.Debug
 open FameBoy.Raylib
 open FameBoy.Raylib.RaylibBindings
+open FameBoy.Raylib.TileViewer
 open FameBoy.Raylib.Utils.RateLimiting
 open Raylib_cs
 
