@@ -8,6 +8,7 @@
     <ItemGroup>
         <Content Include="Resources\flag.gb" CopyToOutputDirectory="PreserveNewest" />
         <Content Include="Resources\roboto.gb" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="Resources\merken.gb" CopyToOutputDirectory="PreserveNewest" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

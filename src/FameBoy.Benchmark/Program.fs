@@ -28,21 +28,28 @@ let runBenchmark filename cycles =
         remaining <- remaining - stepEmulator ()
 
 let benchmarkCycles =
-    dict [ "Flag", cpuFrequency * 5; "Roboto", cpuFrequency * 100 ]
-
+    [ "Flag", 5; "Roboto", 100; "Merken", 100 ]
+    |> List.map (fun (name, value) -> name, value * cpuFrequency)
+    |> Map.ofList
 
 type EmulatorComparison() =
     [<WarmupCount(5)>]
     [<IterationCount(15)>]
     [<Benchmark>]
     member _.Flag() =
-        runBenchmark "flag.gb" benchmarkCycles["Flag"]
+        runBenchmark "flag.gb" benchmarkCycles["Flag"] // short and cyclical
 
     [<WarmupCount(3)>]
     [<IterationCount(5)>]
     [<Benchmark>]
     member _.Roboto() =
-        runBenchmark "roboto.gb" benchmarkCycles["Roboto"]
+        runBenchmark "roboto.gb" benchmarkCycles["Roboto"] // longer running with various types of rendering, no MBC
+
+    [<WarmupCount(3)>]
+    [<IterationCount(5)>]
+    [<Benchmark>]
+    member _.Merken() =
+        runBenchmark "merken.gb" benchmarkCycles["Merken"] // longer running with MBC
 
 
 let mCyclesPerFrame = 17_556.0
