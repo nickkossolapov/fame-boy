@@ -4,11 +4,11 @@ open FameBoy.Hardware
 open FameBoy.Memory
 open FameBoy.Graphics.Ppu
 
-let renderTile x y loc (memory: Memory) (buffer: Shade array) =
+let renderTile x y vramOffset (memory: Memory) (buffer: Shade array) =
     for row in 0..7 do
-        let addr = uint16 (loc + (row * 2))
-        let left = memory[addr]
-        let right = memory[(addr + 1us)]
+        let addr = vramOffset + (row * 2)
+        let left = memory.VideoRam[addr]
+        let right = memory.VideoRam[addr + 1]
 
         for col in 0..7 do
             let bit = 7 - col
@@ -23,27 +23,26 @@ let renderTile x y loc (memory: Memory) (buffer: Shade array) =
 let dumpBackground (buffer: Shade array) (memory: Memory) =
     let start =
         if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
-            0x9C00
+            0x1C00
         else
-            0x9800
+            0x1800
 
-    let getLoc byte =
-        if memory[IoRegisters.Lcdc] &&& 0b10000uy <> 0uy then
-            0x10us * (uint16 byte) + 0x8000us
+    let getVramOffset byte =
+        if Lcdc.isEnabled Lcdc.TileDataArea memory then
+            0x10 * int byte
         else
-            0x10us * uint16 (int8 byte) + 0x9000us
+            0x800 + ((int byte + 0x80) &&& 0xFF) * 0x10
 
     for row in 0..31 do
         for col in 0..31 do
-            let mapIndex = uint16 (start + (row * 32) + col)
-            let tileIndex = getLoc memory[mapIndex]
+            let mapIndex = start + (row * 32) + col
+            let tileIndex = getVramOffset memory.VideoRam[mapIndex]
 
             renderTile (col * 8) (row * 8) (int tileIndex) memory buffer
 
 let dumpTiles (buffer: Shade array) (memory: Memory) =
     for row in 0..11 do // 384 total tiles -> 384/32 = 12 rows
         for col in 0..31 do
-            let mapIndex = 0x8000 + ((row * 32) + col) * 16
+            let mapIndex = ((row * 32) + col) * 16
 
             renderTile (col * 8) (row * 8) (int mapIndex) memory buffer
-

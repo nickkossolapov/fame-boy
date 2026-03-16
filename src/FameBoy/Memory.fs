@@ -2,6 +2,12 @@
 
 open FameBoy.Hardware
 
+type PpuMode =
+    | HBlank = 0uy
+    | VBlank = 1uy
+    | OamScan = 2uy
+    | Drawing = 3uy
+
 module private Helpers =
     let memorySizes =
         {| romBank = 0x4000
@@ -31,7 +37,8 @@ type Memory =
       OamRam: uint8 array
       IoRegisters: uint8 array
       HighRam: uint8 array
-      mutable InterruptEnable: uint8 }
+      mutable InterruptEnable: uint8
+      mutable PpuMode: PpuMode }
 
     member private this.writeIoRegisters address (value: uint8) =
         match address with
@@ -53,9 +60,8 @@ type Memory =
 
         for i in 0..0x9F do
             let src = uint16 (start + i)
-            let dst = uint16 (0xFE00 + i)
 
-            this[dst] <- this[src]
+            this.OamRam[i] <- this[src]
 
     member this.Item
         with get (i: uint16) =
@@ -66,7 +72,10 @@ type Memory =
             elif address < 0x8000 then
                 this.RomBanks[this.CurrentBank][address - 0x4000]
             elif address < 0xA000 then
-                this.VideoRam[address - 0x8000]
+                if this.PpuMode <> PpuMode.Drawing then
+                    this.VideoRam[address - 0x8000]
+                else
+                    0xFFuy
             elif address < 0xC000 then
                 this.ExternalRam[address - 0xA000]
             elif address < 0xE000 then
@@ -74,7 +83,10 @@ type Memory =
             elif address < 0xFE00 then
                 this.WorkRam[address - 0xE000]
             elif address < 0xFEA0 then
-                this.OamRam[address - 0xFE00]
+                if this.PpuMode = PpuMode.VBlank || this.PpuMode = PpuMode.HBlank then
+                    this.OamRam[address - 0xFE00]
+                else
+                    0xFFuy
             elif address < 0xFF00 then
                 0xFFuy
             elif address < 0xFF80 then
@@ -92,7 +104,8 @@ type Memory =
             elif address < 0x8000 then
                 ()
             elif address < 0xA000 then
-                this.VideoRam[address - 0x8000] <- v
+                if this.PpuMode <> PpuMode.Drawing then
+                    this.VideoRam[address - 0x8000] <- v
             elif address < 0xC000 then
                 this.ExternalRam[address - 0xA000] <- v
             elif address < 0xE000 then
@@ -100,7 +113,8 @@ type Memory =
             elif address < 0xFE00 then
                 this.WorkRam[address - 0xE000] <- v
             elif address < 0xFEA0 then
-                this.OamRam[address - 0xFE00] <- v
+                if this.PpuMode = PpuMode.VBlank || this.PpuMode = PpuMode.HBlank then
+                    this.OamRam[address - 0xFE00] <- v
             elif address < 0xFF00 then
                 ()
             elif address < 0xFF80 then
@@ -122,7 +136,8 @@ let createMemory (rom: uint8 array) : Memory =
       OamRam = Array.zeroCreate memorySizes.oam
       IoRegisters = Array.zeroCreate memorySizes.ioRegisters
       HighRam = Array.zeroCreate memorySizes.hram
-      InterruptEnable = 0uy }
+      InterruptEnable = 0uy
+      PpuMode = PpuMode.HBlank }
 
 let createTestMemory (arr: uint8 array) : Memory =
     let memory = Array.zeroCreate 0x10000
@@ -139,4 +154,5 @@ let createTestMemory (arr: uint8 array) : Memory =
       OamRam = memory[0xFE00..0xFE9F]
       IoRegisters = memory[0xFF00..0xFF7F]
       HighRam = memory[0xFF80..0xFFFE]
-      InterruptEnable = memory[0xFFFF] }
+      InterruptEnable = memory[0xFFFF]
+      PpuMode = PpuMode.HBlank }

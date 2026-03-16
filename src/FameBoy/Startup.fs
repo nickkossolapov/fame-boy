@@ -66,5 +66,6 @@ let createDmgCpu (memory: Memory) =
         cpu.Memory.IoRegisters[int reg - 0xFF00] <- value
 
     memory.InterruptEnable <- 0x00uy
+    memory.PpuMode <- LanguagePrimitives.EnumOfValue(memory[IoRegisters.Stat] &&& 0b0011uy)
 
     cpu
