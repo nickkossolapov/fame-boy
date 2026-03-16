@@ -16,10 +16,10 @@ let setCpuFlags (z: bool, n: bool, h: bool, c: bool) (cpu: Cpu) =
     cpu.setFlag Flag.Carry c
 
 let verifyCpuFlags (z: bool, n: bool, h: bool, c: bool) (cpu: Cpu) =
-    Assert.That (cpu.getFlag Flag.Zero, Is.EqualTo z)
-    Assert.That (cpu.getFlag Flag.Subtract, Is.EqualTo n)
-    Assert.That (cpu.getFlag Flag.HalfCarry, Is.EqualTo h)
-    Assert.That (cpu.getFlag Flag.Carry, Is.EqualTo c)
+    Assert.That(cpu.getFlag Flag.Zero, Is.EqualTo z)
+    Assert.That(cpu.getFlag Flag.Subtract, Is.EqualTo n)
+    Assert.That(cpu.getFlag Flag.HalfCarry, Is.EqualTo h)
+    Assert.That(cpu.getFlag Flag.Carry, Is.EqualTo c)
 
 type BitwiseTestData =
     { Description: string
@@ -73,7 +73,7 @@ let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- data.Opcode
+    cpu.Memory.Cartridge.Rom[0x100] <- data.Opcode
     cpu.Registers.A <- data.InputData
     setCpuFlags data.InputFlags cpu
 
@@ -82,10 +82,10 @@ let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
-    Assert.That (instr.MCycles, Is.EqualTo data.ExpectedMCycles)
+    Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
+    Assert.That(instr.MCycles, Is.EqualTo data.ExpectedMCycles)
 
-    Assert.That (cpu.Registers.A, Is.EqualTo data.ExpectedData)
+    Assert.That(cpu.Registers.A, Is.EqualTo data.ExpectedData)
     verifyCpuFlags data.ExpectedFlags cpu
 
 let registerDirectTestData =
@@ -202,8 +202,8 @@ let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- twoBitPrefix
-    cpu.Memory.RomBase[0x101] <- data.Opcode
+    cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
+    cpu.Memory.Cartridge.Rom[0x101] <- data.Opcode
     cpu.Registers.B <- data.InputData
     setCpuFlags data.InputFlags cpu
 
@@ -212,10 +212,10 @@ let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
-    Assert.That (instr.MCycles, Is.EqualTo data.ExpectedMCycles)
+    Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
+    Assert.That(instr.MCycles, Is.EqualTo data.ExpectedMCycles)
 
-    Assert.That (cpu.Registers.B, Is.EqualTo data.ExpectedData)
+    Assert.That(cpu.Registers.B, Is.EqualTo data.ExpectedData)
     verifyCpuFlags data.ExpectedFlags cpu
 
 let hlIndirectTestData =
@@ -300,8 +300,8 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- twoBitPrefix
-    cpu.Memory.RomBase[0x101] <- data.Opcode
+    cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
+    cpu.Memory.Cartridge.Rom[0x101] <- data.Opcode
     cpu.Registers.HL <- 0xC000us
     cpu.Memory[0xC000us] <- data.InputData
     setCpuFlags data.InputFlags cpu
@@ -311,10 +311,10 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo data.ExpectedLength)
-    Assert.That (instr.MCycles, Is.EqualTo data.ExpectedMCycles)
+    Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
+    Assert.That(instr.MCycles, Is.EqualTo data.ExpectedMCycles)
 
-    Assert.That (cpu.Memory[0xC000us], Is.EqualTo data.ExpectedData)
+    Assert.That(cpu.Memory[0xC000us], Is.EqualTo data.ExpectedData)
     verifyCpuFlags data.ExpectedFlags cpu
 
 [<Test>]
@@ -324,8 +324,8 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- twoBitPrefix
-    cpu.Memory.RomBase[0x101] <- opcode
+    cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
+    cpu.Memory.Cartridge.Rom[0x101] <- opcode
     cpu.Registers.H <- 0b10000000uy
     cpu.setFlag Flag.Zero true
     cpu.setFlag Flag.Subtract true
@@ -336,12 +336,12 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 2)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+    Assert.That(instr.Length, Is.EqualTo 2)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
-    Assert.That (cpu.getFlag Flag.Zero, Is.False)
-    Assert.That (cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)
+    Assert.That(cpu.getFlag Flag.Zero, Is.False)
+    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
+    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
 
 [<Test>]
 let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
@@ -350,8 +350,8 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     let cpu = createCpu (createTestMemory [||])
 
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- twoBitPrefix
-    cpu.Memory.RomBase[0x101] <- opcode
+    cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
+    cpu.Memory.Cartridge.Rom[0x101] <- opcode
     cpu.Registers.H <- 0b00000000uy
     cpu.setFlag Flag.Zero false
     cpu.setFlag Flag.Subtract true
@@ -362,9 +362,9 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 2)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 2))
+    Assert.That(instr.Length, Is.EqualTo 2)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
-    Assert.That (cpu.getFlag Flag.Zero, Is.True)
-    Assert.That (cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That (cpu.getFlag Flag.HalfCarry, Is.True)
+    Assert.That(cpu.getFlag Flag.Zero, Is.True)
+    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
+    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)

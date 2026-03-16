@@ -6,7 +6,7 @@ open FameBoy.Timer
 open NUnit.Framework
 
 let private setupTimer () =
-    let memory = createMemory [||]
+    let memory = createTestMemory [||]
     let timer = createTimer ()
     timer, memory
 

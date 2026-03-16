@@ -12,7 +12,7 @@ let ``halt enables halt`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- 0x76uy
+    cpu.Memory.Cartridge.Rom[0x100] <- 0x76uy
     cpu.Halted <- false
 
     // Execute
@@ -20,17 +20,17 @@ let ``halt enables halt`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 1)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+    Assert.That(instr.Length, Is.EqualTo 1)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That (cpu.Halted, Is.True)
+    Assert.That(cpu.Halted, Is.True)
 
 [<Test>]
 let ``di disables interrupts`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- 0xF3uy
+    cpu.Memory.Cartridge.Rom[0x100] <- 0xF3uy
     cpu.Ime <- true
 
     // Execute
@@ -38,17 +38,17 @@ let ``di disables interrupts`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 1)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+    Assert.That(instr.Length, Is.EqualTo 1)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That (cpu.Ime, Is.False)
+    Assert.That(cpu.Ime, Is.False)
 
 [<Test>]
 let ``ei enables interrupts`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- 0xFBuy
+    cpu.Memory.Cartridge.Rom[0x100] <- 0xFBuy
     cpu.Ime <- false
 
     // Execute
@@ -56,17 +56,17 @@ let ``ei enables interrupts`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 1)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+    Assert.That(instr.Length, Is.EqualTo 1)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That (cpu.EnableImeNextInstr, Is.True)
+    Assert.That(cpu.EnableImeNextInstr, Is.True)
 
 [<Test>]
 let ``NOP changes nothing`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- 0x00uy
+    cpu.Memory.Cartridge.Rom[0x100] <- 0x00uy
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
@@ -81,29 +81,29 @@ let ``NOP changes nothing`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 1)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+    Assert.That(instr.Length, Is.EqualTo 1)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That (cpu.Registers.A, Is.EqualTo 0x12uy)
-    Assert.That (cpu.Registers.B, Is.EqualTo 0x34uy)
-    Assert.That (cpu.Registers.C, Is.EqualTo 0x56uy)
-    Assert.That (cpu.Registers.D, Is.EqualTo 0x78uy)
-    Assert.That (cpu.Registers.E, Is.EqualTo 0x9Auy)
-    Assert.That (cpu.Registers.H, Is.EqualTo 0xBCuy)
-    Assert.That (cpu.Registers.L, Is.EqualTo 0xDEuy)
-    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
+    Assert.That(cpu.Registers.A, Is.EqualTo 0x12uy)
+    Assert.That(cpu.Registers.B, Is.EqualTo 0x34uy)
+    Assert.That(cpu.Registers.C, Is.EqualTo 0x56uy)
+    Assert.That(cpu.Registers.D, Is.EqualTo 0x78uy)
+    Assert.That(cpu.Registers.E, Is.EqualTo 0x9Auy)
+    Assert.That(cpu.Registers.H, Is.EqualTo 0xBCuy)
+    Assert.That(cpu.Registers.L, Is.EqualTo 0xDEuy)
+    Assert.That(cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    Assert.That (cpu.getFlag Flag.Zero, Is.False)
-    Assert.That (cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That (cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(cpu.getFlag Flag.Zero, Is.False)
+    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
+    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
+    Assert.That(cpu.getFlag Flag.Carry, Is.False)
 
 [<Test>]
 let ``Unknown opcode acts as NOP`` () =
     // Setup
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
-    cpu.Memory.RomBase[0x100] <- 0xEBuy // 0xEB is unused/unknown
+    cpu.Memory.Cartridge.Rom[0x100] <- 0xEBuy // 0xEB is unused/unknown
     cpu.Registers.A <- 0x12uy
     cpu.Registers.B <- 0x34uy
     cpu.Registers.C <- 0x56uy
@@ -118,22 +118,22 @@ let ``Unknown opcode acts as NOP`` () =
     execute cpu instr |> ignore
 
     // Evaluate
-    Assert.That (instr.Length, Is.EqualTo 1)
-    Assert.That (instr.MCycles, Is.EqualTo (Fixed 1))
+    Assert.That(instr.Length, Is.EqualTo 1)
+    Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That (cpu.Registers.A, Is.EqualTo 0x12uy)
-    Assert.That (cpu.Registers.B, Is.EqualTo 0x34uy)
-    Assert.That (cpu.Registers.C, Is.EqualTo 0x56uy)
-    Assert.That (cpu.Registers.D, Is.EqualTo 0x78uy)
-    Assert.That (cpu.Registers.E, Is.EqualTo 0x9Auy)
-    Assert.That (cpu.Registers.H, Is.EqualTo 0xBCuy)
-    Assert.That (cpu.Registers.L, Is.EqualTo 0xDEuy)
-    Assert.That (cpu.Sp, Is.EqualTo 0xFFFEus)
+    Assert.That(cpu.Registers.A, Is.EqualTo 0x12uy)
+    Assert.That(cpu.Registers.B, Is.EqualTo 0x34uy)
+    Assert.That(cpu.Registers.C, Is.EqualTo 0x56uy)
+    Assert.That(cpu.Registers.D, Is.EqualTo 0x78uy)
+    Assert.That(cpu.Registers.E, Is.EqualTo 0x9Auy)
+    Assert.That(cpu.Registers.H, Is.EqualTo 0xBCuy)
+    Assert.That(cpu.Registers.L, Is.EqualTo 0xDEuy)
+    Assert.That(cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    Assert.That (cpu.getFlag Flag.Zero, Is.False)
-    Assert.That (cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That (cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That (cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(cpu.getFlag Flag.Zero, Is.False)
+    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
+    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
+    Assert.That(cpu.getFlag Flag.Carry, Is.False)
 
 [<Test>]
 let ``Loading value into F register zeroes lowest 4 bits`` () =
@@ -143,4 +143,4 @@ let ``Loading value into F register zeroes lowest 4 bits`` () =
     cpu.Registers.F <- 0b10101111uy
 
     // Evaluate
-    Assert.That (cpu.Registers.F, Is.EqualTo 0b10100000uy)
+    Assert.That(cpu.Registers.F, Is.EqualTo 0b10100000uy)

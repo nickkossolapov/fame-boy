@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <Compile Include="Hardware.fs" />
+        <Compile Include="Cartridge.fs" />
         <Compile Include="Memory.fs" />
         <Compile Include="Cpu\State.fs" />
         <Compile Include="Cpu\Instructions.fs" />
