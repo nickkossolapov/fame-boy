@@ -140,8 +140,8 @@ module private scanline =
 
             decodeTileMapPixel wX wY areaBit vram memory
         else
-            let bgX = (screenX + int memory[IoRegisters.Scx]) % 255
-            let bgY = (screenY + int memory[IoRegisters.Scy]) % 255
+            let bgX = (screenX + int memory[IoRegisters.Scx]) % 256
+            let bgY = (screenY + int memory[IoRegisters.Scy]) % 256
             let areaBit = Lcdc.isEnabled Lcdc.BgMapArea memory
 
             decodeTileMapPixel bgX bgY areaBit vram memory
@@ -166,21 +166,21 @@ module private scanline =
 
     // TODO 8x16 tiles
     let fetchObjectPixel x y (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
-        let mutable found = false // mutable makes me sad, but this is a hot path, and it's needed for an early return
+        let mutable found = Shade.White // mutable makes me sad, but this is a hot path, and it's needed for an early return
         let mutable i = 0
 
-        while i < filteredOam.Length && not found do
+        while i < filteredOam.Length && found = Shade.White do
             let objX = int oam[filteredOam[i] + 1]
 
             if x >= objX - 8 && x < objX then
-                found <- true
-            else
-                i <- i + 1
+                let pixel = decodeObjectPixel x y filteredOam[i] oam vram
 
-        if found then
-            decodeObjectPixel x y filteredOam[i] oam vram
-        else
-            Shade.White
+                if pixel <> Shade.White then
+                    found <- pixel
+
+            i <- i + 1
+
+        found
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
         let vram = ppu.Memory.VideoRam
@@ -193,7 +193,7 @@ module private scanline =
 
         let objectsInLine =
             oamAddresses
-            |> Array.filter (fun offset -> ppu.Ly >= oam[offset] - 16uy && ppu.Ly < oam[offset] - 8uy)
+            |> Array.filter (fun offset -> int ppu.Ly >= int oam[offset] - 16 && int ppu.Ly < int oam[offset] - 8)
             |> Array.sortBy (fun offset -> oam[offset + 1]) // DMG prioritises by X coordinate
             |> Array.truncate 10
 
@@ -234,9 +234,8 @@ let stepPpu (ppu: Ppu) =
         ()
     else
         ppu.Dot <- ppu.Dot + 1
-        let mode = ppu.Memory.PpuMode
 
-        match mode with
+        match ppu.Memory.PpuMode with
         | PpuMode.HBlank ->
             if ppu.Dot >= lineEnd then
                 ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
@@ -272,9 +271,9 @@ let stepPpu (ppu: Ppu) =
         let stat = getUpdatedStatRegister ppu
 
         let newLine =
-            (stat &&& 0b0000_1000uy <> 0uy && mode = PpuMode.HBlank)
-            || (stat &&& 0b0001_0000uy <> 0uy && mode = PpuMode.VBlank)
-            || (stat &&& 0b0010_0000uy <> 0uy && mode = PpuMode.OamScan)
+            (stat &&& 0b0000_1000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.HBlank)
+            || (stat &&& 0b0001_0000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.VBlank)
+            || (stat &&& 0b0010_0000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.OamScan)
             || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.Memory[IoRegisters.Lyc])
 
         // Only trigger interrupt on the rising edge of the interrupt signal, needed for STAT blocking
