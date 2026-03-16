@@ -12,7 +12,7 @@ type PpuMode =
     | Drawing
 
 module private ScanlineTimings =
-    let lineEnd = 455 // dots, end of blanks
+    let lineEnd = 456 // dots, end of blanks
     let frameEnd = 153uy // lines per screen
     let vBlankStart = 144uy // lines
     let oamScanEnd = 80 // dots
@@ -31,24 +31,26 @@ module Shade =
 
 type Ppu =
     { Framebuffer: Shade array
+      Backbuffer: Shade array
       mutable Mode: PpuMode
       mutable Dot: int
+      mutable StatLine: bool
       Memory: Memory
       mutable Disabled: bool }
 
     member this.Ly
-        with get () = this.Memory[IoRegisters.Ly]
-        and set v = this.Memory[IoRegisters.Ly] <- v
+        with get () = this.Memory.IoRegisters[IoRegisterOffsets.Ly]
+        and set v = this.Memory.IoRegisters[IoRegisterOffsets.Ly] <- v
 
 module private Oam =
     // 0uy = OBP0, 1uy = OBP1
     type DmgPalette = byte
 
     [<Literal>]
-    let OBP0: DmgPalette = 0b00000uy
+    let OBP0: DmgPalette = 0b0000_0000uy
 
     [<Literal>]
-    let OBP1: DmgPalette = 0b10000uy
+    let OBP1: DmgPalette = 0b0001_0000uy
 
     type OamAttributes =
         { Priority: bool
@@ -57,9 +59,9 @@ module private Oam =
           DmgPalette: DmgPalette }
 
         static member ofByte b =
-            { Priority = b &&& 0b10000000uy <> 0uy
-              YFlip = b &&& 0b01000000uy <> 0uy
-              XFlip = b &&& 0b00100000uy <> 0uy
+            { Priority = b &&& 0b1000_0000uy <> 0uy
+              YFlip = b &&& 0b0100_0000uy <> 0uy
+              XFlip = b &&& 0b0010_0000uy <> 0uy
               DmgPalette = b &&& OBP1 }
 
 open Oam
@@ -82,14 +84,16 @@ module private StatRegister =
             else
                 0b0uy
 
-        (gpu.Memory[IoRegisters.Stat] &&& 0b11111000uy) + modeMask + lycMask
+        (gpu.Memory[IoRegisters.Stat] &&& 0b1111_1000uy) + modeMask + lycMask
 
 let createPpu (memory: Memory) =
     let mode = if memory[IoRegisters.Ly] >= 144uy then VBlank else OamScan
 
     { Framebuffer = Array.create (Screen.width * Screen.height) Shade.White
+      Backbuffer = Array.create (Screen.width * Screen.height) Shade.White
       Mode = mode
       Dot = 0
+      StatLine = false
       Memory = memory
       Disabled = false }
 
@@ -153,8 +157,8 @@ module private scanline =
 
             decodeTileMapPixel wX wY areaBit vram memory
         else
-            let bgX = screenX + int memory[IoRegisters.Scx]
-            let bgY = screenY + int memory[IoRegisters.Scy]
+            let bgX = (screenX + int memory[IoRegisters.Scx]) % 255
+            let bgY = (screenY + int memory[IoRegisters.Scy]) % 255
             let areaBit = Lcdc.isEnabled Lcdc.BgMapArea memory
 
             decodeTileMapPixel bgX bgY areaBit vram memory
@@ -230,7 +234,7 @@ let stepPpu (ppu: Ppu) =
 
     match ppu.Mode with
     | HBlank ->
-        if ppu.Dot > lineEnd then
+        if ppu.Dot >= lineEnd then
             ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
             ppu.Dot <- 0
             ppu.Mode <- OamScan
@@ -239,11 +243,12 @@ let stepPpu (ppu: Ppu) =
                 ppu.Mode <- VBlank
                 triggerInterrupt ppu.Memory InterruptType.VBlank
     | VBlank ->
-        if ppu.Dot > lineEnd then
+        if ppu.Dot >= lineEnd then
             ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
             ppu.Dot <- 0
 
-            if ppu.Ly >= frameEnd then
+            if ppu.Ly > frameEnd then
+                Array.blit ppu.Backbuffer 0 ppu.Framebuffer 0 ppu.Framebuffer.Length
                 ppu.Ly <- 0uy
                 ppu.Mode <- OamScan
     | OamScan ->
@@ -251,9 +256,22 @@ let stepPpu (ppu: Ppu) =
             ppu.Mode <- Drawing
     | Drawing ->
         if ppu.Dot = oamScanEnd + 1 then
-            renderScanline ppu.Framebuffer ppu
+            renderScanline ppu.Backbuffer ppu
 
-        if ppu.Dot >= 289 then
+        if ppu.Dot >= 290 then // Since it's scanline rendering, have the shortest drawing phase
             ppu.Mode <- HBlank
 
-    ppu.Memory[IoRegisters.Stat] <- getUpdatedStatRegister ppu
+    let stat = getUpdatedStatRegister ppu
+
+    let newLine =
+        (stat &&& 0b0000_1000uy <> 0uy && ppu.Mode = HBlank)
+        || (stat &&& 0b0001_0000uy <> 0uy && ppu.Mode = VBlank)
+        || (stat &&& 0b0010_0000uy <> 0uy && ppu.Mode = OamScan)
+        || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.Memory[IoRegisters.Lyc])
+
+    // Only trigger interrupt on the rising edge of this interrupt signal, needed for STAT blocking
+    if newLine && not ppu.StatLine then
+        triggerInterrupt ppu.Memory InterruptType.LcdStat
+
+    ppu.StatLine <- newLine
+    ppu.Memory.IoRegisters[IoRegisterOffsets.Stat] <- stat

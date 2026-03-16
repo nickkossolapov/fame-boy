@@ -13,7 +13,6 @@ let cpuFrequency = 1048576 // M-Cycles
 
 [<RequireQualifiedAccess>]
 module IoRegisters =
-    // Joypad
     [<Literal>]
     let Joyp = 0xFF00us
 
@@ -184,3 +183,25 @@ module IoRegisters =
 
     [<Literal>]
     let Ie = 0xFFFFus
+
+
+/// Used to dirctly access IO Registers instead of memory[addr] when it has special behaviour with CPU, e.g. read-only bits in byte
+[<RequireQualifiedAccess>]
+module IoRegisterOffsets =
+    [<Literal>]
+    let private memoryOffset = 0xFF00
+
+    [<Literal>]
+    let Joyp = 0xFF00 - memoryOffset
+
+    [<Literal>]
+    let Div = 0xFF04 - memoryOffset
+
+    [<Literal>]
+    let Stat = 0xFF41 - memoryOffset
+
+    [<Literal>]
+    let Ly = 0xFF44 - memoryOffset
+
+    [<Literal>]
+    let Dma = 0xFF46 - memoryOffset
