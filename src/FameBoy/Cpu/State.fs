@@ -4,8 +4,8 @@ open FameBoy.Memory
 
 
 type Registers() =
-    // Registers can't be a record type because the values need to be truncated to 8 bits when writing, i.e. need custom setters
-    // This is needed for the web renderer as Fable transpiles uint8 to Number (more than 8 bits) in JS and doesn't apply any truncation
+    // Registers can't be a record type because the values need to be truncated to 8 bits when writing, so setters are needed
+    // This is for the web renderer as Fable transpiles uint8 to Number (more than 8 bits) in JS and doesn't apply any truncation
     // Known non-standard behaviour in Fable (https://fable.io/docs/javascript/compatibility.html#numeric-types)
 
     let mutable f = 0uy

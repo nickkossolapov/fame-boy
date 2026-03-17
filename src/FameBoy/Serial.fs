@@ -1,9 +1,8 @@
 module FameBoy.Serial
 
-open FameBoy.Cpu.Interrupts
+open FameBoy.Interrupts
 open FameBoy.Hardware
-open FameBoy.Memory
-
+open FameBoy.IoController
 
 let private cyclesPerByte = 128 * 8 // 1024 M-cycles (8192 Hz bit rate, 8 bits)
 
@@ -13,7 +12,7 @@ type SerialState =
 
 let createSerial () = { Counter = 0; IsTransferring = false }
 
-let stepSerial (state: SerialState) (memory: Memory) =
+let stepSerial (state: SerialState) (io: IoController) =
     if state.IsTransferring then
         state.Counter <- state.Counter + 1
 
@@ -21,8 +20,8 @@ let stepSerial (state: SerialState) (memory: Memory) =
             state.Counter <- 0
             state.IsTransferring <- false
 
-            memory[IoRegisters.Sb] <- 0xFFuy // Not actually transferring data for now, just need the interrupt
-            memory[IoRegisters.Sc] <- memory[IoRegisters.Sc] &&& 0b0111_1111uy
-            triggerInterrupt memory InterruptType.Serial
-    else if (memory[IoRegisters.Sc] &&& 0b1000_0001uy) = 0b1000_0001uy then
+            io.Registers[Io.Sb] <- 0xFFuy // Not actually transferring data for now, just need the interrupt
+            io.Registers[Io.Sc] <- io.Registers[Io.Sc] &&& 0b0111_1111uy
+            io.TriggerInterrupt InterruptType.Serial
+    else if (io.Registers[Io.Sc] &&& 0b1000_0001uy) = 0b1000_0001uy then
         state.IsTransferring <- true

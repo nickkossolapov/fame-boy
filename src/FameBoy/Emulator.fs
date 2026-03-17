@@ -2,6 +2,7 @@
 
 open FameBoy.Cpu.Execute
 open FameBoy.Graphics.Ppu
+open FameBoy.IoController
 open FameBoy.Joypad
 open FameBoy.Memory
 open FameBoy.Serial
@@ -11,19 +12,26 @@ open FameBoy.Timer
 
 let createEmulator bytes getJoypadState =
     let timer = createTimer ()
-    let memory = createMemory bytes
-    let cpu = createDmgCpu memory
-    let ppu = createPpu memory
+    let io = createIoController ()
+    let memory = createMemory bytes io
+    let cpu = createDmgCpu memory io
+    let ppu = createPpu memory io
     let serial = createSerial ()
 
+    let applyJoypadState (state: JoypadState) = io.JoypadState <- state
+
     let stepper () =
-        // TODO Don't apply on every instruction. Modify memory to resolve joypad state on read, and handle interrupts
-        applyJoypadState (getJoypadState ()) memory
-        let cpuCycles = stepCpu cpu
+        let cpuCycles = stepCpu cpu io
+
+        match io.DmaRequest with
+        | ValueSome startPrefix ->
+            io.DmaRequest <- ValueNone
+            doDmaTransfer memory startPrefix
+        | ValueNone -> ()
 
         for _ in 1..cpuCycles do
-            stepTimers timer memory
-            stepSerial serial memory
+            stepTimers timer io
+            stepSerial serial io
 
         let ppuSteps = cpuCycles * 4
 
@@ -32,4 +40,4 @@ let createEmulator bytes getJoypadState =
 
         cpuCycles
 
-    ppu.Framebuffer, memory, stepper
+    ppu, stepper, applyJoypadState

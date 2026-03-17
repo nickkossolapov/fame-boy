@@ -1,14 +1,13 @@
 ﻿module FameBoy.Raylib.TileViewer
 
 open FameBoy.Hardware
-open FameBoy.Memory
 open FameBoy.Graphics.Ppu
 
-let renderTile x y vramOffset (memory: Memory) (buffer: Shade array) =
+let renderTile x y vramOffset (ppu: Ppu) (buffer: Shade array) =
     for row in 0..7 do
         let addr = vramOffset + (row * 2)
-        let left = memory.VideoRam[addr]
-        let right = memory.VideoRam[addr + 1]
+        let left = ppu.VideoRam[addr]
+        let right = ppu.VideoRam[addr + 1]
 
         for col in 0..7 do
             let bit = 7 - col
@@ -20,15 +19,15 @@ let renderTile x y vramOffset (memory: Memory) (buffer: Shade array) =
 
             buffer[bufferPos] <- Shade.ofByte net
 
-let dumpBackground (buffer: Shade array) (memory: Memory) =
+let dumpBackground (buffer: Shade array) (ppu: Ppu) =
     let start =
-        if memory[IoRegisters.Lcdc] &&& 0b1000uy <> 0uy then
+        if ppu.IoController.Registers[Io.Lcdc] &&& 0b1000uy <> 0uy then
             0x1C00
         else
             0x1800
 
     let getVramOffset byte =
-        if Lcdc.isEnabled Lcdc.TileDataArea memory then
+        if Lcdc.isEnabled Lcdc.TileDataArea ppu.IoController then
             0x10 * int byte
         else
             0x800 + ((int byte + 0x80) &&& 0xFF) * 0x10
@@ -36,13 +35,13 @@ let dumpBackground (buffer: Shade array) (memory: Memory) =
     for row in 0..31 do
         for col in 0..31 do
             let mapIndex = start + (row * 32) + col
-            let tileIndex = getVramOffset memory.VideoRam[mapIndex]
+            let tileIndex = getVramOffset ppu.VideoRam[mapIndex]
 
-            renderTile (col * 8) (row * 8) (int tileIndex) memory buffer
+            renderTile (col * 8) (row * 8) (int tileIndex) ppu buffer
 
-let dumpTiles (buffer: Shade array) (memory: Memory) =
+let dumpTiles (buffer: Shade array) (ppu: Ppu) =
     for row in 0..11 do // 384 total tiles -> 384/32 = 12 rows
         for col in 0..31 do
             let mapIndex = ((row * 32) + col) * 16
 
-            renderTile (col * 8) (row * 8) (int mapIndex) memory buffer
+            renderTile (col * 8) (row * 8) (int mapIndex) ppu buffer

@@ -7,12 +7,13 @@ open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open FameBoy.Memory
+open FameBoy.Test.TestHelpers
 open NUnit.Framework
 
 [<Test>]
 let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H = PC+2)`` () =
     let opcode = 0x21uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
@@ -20,7 +21,7 @@ let ``Check little endian order for 3-byte instruction - ld hl,n16 (L = PC+1, H 
     cpu.Memory.Cartridge.Rom[0x102] <- 0x12uy
 
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     Assert.That(cpu.Registers.H, Is.EqualTo 0x12uy)
     Assert.That(cpu.Registers.L, Is.EqualTo 0x34uy)

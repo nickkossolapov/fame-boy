@@ -11,197 +11,177 @@ module Screen =
 [<Literal>]
 let cpuFrequency = 1048576 // M-Cycles
 
+
+/// Offsets, all IO registers' address will start with 0xFF
 [<RequireQualifiedAccess>]
-module IoRegisters =
+module Io =
     [<Literal>]
-    let Joyp = 0xFF00us
+    let IoMemoryOffset = 0xFF00
 
     [<Literal>]
-    let Sb = 0xFF01us
+    let Joyp = 0x00
 
     [<Literal>]
-    let Sc = 0xFF02us
+    let Sb = 0x01
 
     [<Literal>]
-    let Div = 0xFF04us
+    let Sc = 0x02
 
     [<Literal>]
-    let Tima = 0xFF05us
+    let Div = 0x04
 
     [<Literal>]
-    let Tma = 0xFF06us
+    let Tima = 0x05
 
     [<Literal>]
-    let Tac = 0xFF07us
+    let Tma = 0x06
 
     [<Literal>]
-    let If = 0xFF0Fus
+    let Tac = 0x07
 
     [<Literal>]
-    let Nr10 = 0xFF10us
+    let If = 0x0F
 
     [<Literal>]
-    let Nr11 = 0xFF11us
+    let Nr10 = 0x10
 
     [<Literal>]
-    let Nr12 = 0xFF12us
+    let Nr11 = 0x11
 
     [<Literal>]
-    let Nr13 = 0xFF13us
+    let Nr12 = 0x12
 
     [<Literal>]
-    let Nr14 = 0xFF14us
+    let Nr13 = 0x13
 
     [<Literal>]
-    let Nr21 = 0xFF16us
+    let Nr14 = 0x14
 
     [<Literal>]
-    let Nr22 = 0xFF17us
+    let Nr21 = 0x16
 
     [<Literal>]
-    let Nr23 = 0xFF18us
+    let Nr22 = 0x17
 
     [<Literal>]
-    let Nr24 = 0xFF19us
+    let Nr23 = 0x18
 
     [<Literal>]
-    let Nr30 = 0xFF1Aus
+    let Nr24 = 0x19
 
     [<Literal>]
-    let Nr31 = 0xFF1Bus
+    let Nr30 = 0x1A
 
     [<Literal>]
-    let Nr32 = 0xFF1Cus
+    let Nr31 = 0x1B
 
     [<Literal>]
-    let Nr33 = 0xFF1Dus
+    let Nr32 = 0x1C
 
     [<Literal>]
-    let Nr34 = 0xFF1Eus
+    let Nr33 = 0x1D
 
     [<Literal>]
-    let Nr41 = 0xFF20us
+    let Nr34 = 0x1E
 
     [<Literal>]
-    let Nr42 = 0xFF21us
+    let Nr41 = 0x20
 
     [<Literal>]
-    let Nr43 = 0xFF22us
+    let Nr42 = 0x21
 
     [<Literal>]
-    let Nr44 = 0xFF23us
+    let Nr43 = 0x22
 
     [<Literal>]
-    let Nr50 = 0xFF24us
+    let Nr44 = 0x23
 
     [<Literal>]
-    let Nr51 = 0xFF25us
+    let Nr50 = 0x24
 
     [<Literal>]
-    let Nr52 = 0xFF26us
+    let Nr51 = 0x25
 
     [<Literal>]
-    let Lcdc = 0xFF40us
+    let Nr52 = 0x26
 
     [<Literal>]
-    let Stat = 0xFF41us
+    let Lcdc = 0x40
 
     [<Literal>]
-    let Scy = 0xFF42us
+    let Stat = 0x41
 
     [<Literal>]
-    let Scx = 0xFF43us
+    let Scy = 0x42
 
     [<Literal>]
-    let Ly = 0xFF44us
+    let Scx = 0x43
 
     [<Literal>]
-    let Lyc = 0xFF45us
+    let Ly = 0x44
 
     [<Literal>]
-    let Dma = 0xFF46us
+    let Lyc = 0x45
 
     [<Literal>]
-    let Bgp = 0xFF47us
+    let Dma = 0x46
 
     [<Literal>]
-    let Obp0 = 0xFF48us
+    let Bgp = 0x47
 
     [<Literal>]
-    let Obp1 = 0xFF49us
+    let Obp0 = 0x48
 
     [<Literal>]
-    let Wy = 0xFF4Aus
+    let Obp1 = 0x49
 
     [<Literal>]
-    let Wx = 0xFF4Bus
+    let Wy = 0x4A
 
     [<Literal>]
-    let Key0 = 0xFF4Cus
+    let Wx = 0x4B
 
     [<Literal>]
-    let Key1 = 0xFF4Dus
+    let Key0 = 0x4C
 
     [<Literal>]
-    let Vbk = 0xFF4Fus
+    let Key1 = 0x4D
 
     [<Literal>]
-    let Bank = 0xFF50us
+    let Vbk = 0x4F
 
     [<Literal>]
-    let Hdma1 = 0xFF51us
+    let Bank = 0x50
 
     [<Literal>]
-    let Hdma2 = 0xFF52us
+    let Hdma1 = 0x51
 
     [<Literal>]
-    let Hdma3 = 0xFF53us
+    let Hdma2 = 0x52
 
     [<Literal>]
-    let Hdma4 = 0xFF54us
+    let Hdma3 = 0x53
 
     [<Literal>]
-    let Hdma5 = 0xFF55us
+    let Hdma4 = 0x54
 
     [<Literal>]
-    let Rp = 0xFF56us
+    let Hdma5 = 0x55
 
     [<Literal>]
-    let Bcps = 0xFF68us
+    let Rp = 0x56
 
     [<Literal>]
-    let Bcpd = 0xFF69us
+    let Bcps = 0x68
 
     [<Literal>]
-    let Ocps = 0xFF6Aus
+    let Bcpd = 0x69
 
     [<Literal>]
-    let Ocpd = 0xFF6Bus
+    let Ocps = 0x6A
 
     [<Literal>]
-    let Svbk = 0xFF70us
+    let Ocpd = 0x6B
 
     [<Literal>]
-    let Ie = 0xFFFFus
-
-
-/// Used to directly access IO Registers instead of memory[addr] when it has special behaviour with CPU, e.g. read-only bits in byte
-[<RequireQualifiedAccess>]
-module IoRegisterOffsets =
-    [<Literal>]
-    let private memoryOffset = 0xFF00
-
-    [<Literal>]
-    let Joyp = 0xFF00 - memoryOffset
-
-    [<Literal>]
-    let Div = 0xFF04 - memoryOffset
-
-    [<Literal>]
-    let Stat = 0xFF41 - memoryOffset
-
-    [<Literal>]
-    let Ly = 0xFF44 - memoryOffset
-
-    [<Literal>]
-    let Dma = 0xFF46 - memoryOffset
+    let Svbk = 0x70

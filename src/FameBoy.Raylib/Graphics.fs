@@ -2,7 +2,6 @@ module FameBoy.Raylib.Graphics
 
 open FameBoy.Graphics.Ppu
 open FameBoy.Hardware
-open FameBoy.Memory
 open FameBoy.Raylib
 open FameBoy.Raylib.RaylibBindings
 open FameBoy.Raylib.TileViewer
@@ -45,9 +44,9 @@ module GraphicsPipeline =
         float32 ((Screen.width + 1) * Config.scale), float32 ((mapSide + 1) * Config.scale)
 
     let private dumpVram =
-        rateLimitFunc 1000 (fun memory ->
-            dumpBackground backgroundFramebuffer memory
-            dumpTiles tilesFramebuffer memory)
+        rateLimitFunc 1000 (fun ppu ->
+            dumpBackground backgroundFramebuffer ppu
+            dumpTiles tilesFramebuffer ppu)
 
     let loadFramebuffer pos texture (framebuffer: Shade array) =
         framebuffer
@@ -58,8 +57,8 @@ module GraphicsPipeline =
     let loadPpuFramebuffer = loadFramebuffer (0f, 0f) screenTexture
     let loadTilesFramebuffer = loadFramebuffer (0f, 0f) tilesTexture
 
-    let loadDebugFramebuffers (memory: Memory) =
-        dumpVram memory
+    let loadDebugFramebuffers (ppu: Ppu) =
+        dumpVram ppu
 
         loadFramebuffer mapPos mapTexture backgroundFramebuffer
         loadFramebuffer tilePos tilesTexture tilesFramebuffer

@@ -1,8 +1,6 @@
 module FameBoy.Joypad
 
-open FameBoy.Cpu.Interrupts
-open FameBoy.Hardware
-open FameBoy.Memory
+open FameBoy.Interrupts
 
 type JoypadState =
     { Up: bool
@@ -37,18 +35,16 @@ let toJoypadRegisterValue (state: JoypadState) (current: uint8) =
 
     (current &&& 0b11110000uy) ||| joypadFlags
 
-let private interruptTriggered (prevReg: uint8) (nextReg: uint8) =
-    let mask = 0b1111uy
-    let highToLow = (prevReg &&& mask) &&& ~~~(nextReg &&& mask)
-
-    highToLow <> 0uy
-
-let applyJoypadState (state: JoypadState) (memory: Memory) =
-    let prevReg = memory[IoRegisters.Joyp]
+let applyJoypadState (state: JoypadState) prevReg triggerInterrupt =
     let nextReg = toJoypadRegisterValue state prevReg
 
-    if not (prevReg = nextReg) then
-        if interruptTriggered prevReg nextReg then
-            triggerInterrupt memory InterruptType.Joypad
+    let interruptTriggered =
+        let mask = 0b1111uy
+        let highToLow = (prevReg &&& mask) &&& ~~~(nextReg &&& mask)
 
-        memory.IoRegisters[IoRegisterOffsets.Joyp] <- nextReg
+        highToLow <> 0uy
+
+    if interruptTriggered then
+        triggerInterrupt InterruptType.Joypad
+
+    nextReg

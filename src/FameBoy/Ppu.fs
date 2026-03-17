@@ -1,8 +1,9 @@
 ﻿module FameBoy.Graphics.Ppu
 
 open System
-open FameBoy.Cpu.Interrupts
+open FameBoy.Interrupts
 open FameBoy.Hardware
+open FameBoy.IoController
 open FameBoy.Memory
 
 module private ScanlineTimings =
@@ -25,15 +26,17 @@ module Shade =
 type Ppu =
     { Framebuffer: Shade array
       Backbuffer: Shade array
+      OamRam: uint8 array
+      VideoRam: uint8 array
+      IoController: IoController
       mutable Dot: int
       mutable WindowLine: int
       mutable StatSignal: bool
-      Memory: Memory
       mutable Disabled: bool }
 
     member this.Ly
-        with get () = this.Memory.IoRegisters[IoRegisterOffsets.Ly]
-        and set v = this.Memory.IoRegisters[IoRegisterOffsets.Ly] <- v
+        with get () = this.IoController.Registers[Io.Ly]
+        and set v = this.IoController.Registers[Io.Ly] <- v
 
 module private Oam =
 
@@ -58,24 +61,26 @@ module private StatRegister =
     // Based on https://gbdev.io/pandocs/STAT.html#ff41--stat-lcd-status
     let getUpdatedStatRegister (ppu: Ppu) =
         let lycMask =
-            if ppu.Ly = ppu.Memory[IoRegisters.Lyc] then
+            if ppu.Ly = ppu.IoController.Registers[Io.Lyc] then
                 0b0100uy
             else
                 0b0uy
 
-        (ppu.Memory[IoRegisters.Stat] &&& 0b1111_1000uy)
-        + (uint8 ppu.Memory.PpuMode)
+        (ppu.IoController.Registers[Io.Stat] &&& 0b1111_1000uy)
+        + (uint8 ppu.IoController.PpuMode)
         + lycMask
 
 let private bufferWidth = (Screen.width * Screen.height)
 
-let createPpu (memory: Memory) =
+let createPpu (memory: Memory) (io: IoController) =
     { Framebuffer = Array.create bufferWidth Shade.White
       Backbuffer = Array.create bufferWidth Shade.White
+      OamRam = memory.OamRam
+      VideoRam = memory.VideoRam
+      IoController = io
       Dot = 0
       WindowLine = 0
       StatSignal = false
-      Memory = memory
       Disabled = false }
 
 open StatRegister
@@ -90,8 +95,8 @@ module Lcdc =
     let ObjEnable = 0b0000_0010uy
     let BgEnable = 0b0000_0001uy
 
-    let inline isEnabled control (memory: Memory) =
-        memory[IoRegisters.Lcdc] &&& control <> 0uy
+    let inline isEnabled control (io: IoController) =
+        io.Registers[Io.Lcdc] &&& control <> 0uy
 
 module private Palettes =
     let private parsePaletteData byte =
@@ -101,8 +106,8 @@ module private Palettes =
            byte >>> 6 &&& 0b0011uy |]
         |> Array.map (int >> LanguagePrimitives.EnumOfValue)
 
-    let fetchPaletteMaps (memory: Memory) =
-        parsePaletteData memory[IoRegisters.Bgp], parsePaletteData memory[IoRegisters.Obp0], parsePaletteData memory[IoRegisters.Obp1]
+    let fetchPaletteMaps (io: IoController) =
+        parsePaletteData io.Registers[Io.Bgp], parsePaletteData io.Registers[Io.Obp0], parsePaletteData io.Registers[Io.Obp1]
 
 open Palettes
 
@@ -121,11 +126,11 @@ module private scanline =
 
         leftBit ||| rightBit |> Shade.ofByte
 
-    let getTileVramOffset tileX tileY areaBit (vram: uint8 array) (memory: Memory) =
+    let getTileVramOffset tileX tileY areaBit (vram: uint8 array) (io: IoController) =
         let mapStart = if areaBit then 0x1C00 else 0x1800 // VRAM local addresses, actual: 0x9C00 and 0x9800
 
         let getVramOffset byte =
-            if Lcdc.isEnabled Lcdc.TileDataArea memory then
+            if Lcdc.isEnabled Lcdc.TileDataArea io then
                 0x10 * int byte
             else
                 0x800 + ((int byte + 0x80) &&& 0xFF) * 0x10 // VRAM local address, actual: 0x8800us
@@ -134,30 +139,30 @@ module private scanline =
 
         getVramOffset vram[mapIndex]
 
-    let decodeTileMapPixel mapX mapY areaBit (vram: uint8 array) (memory: Memory) =
+    let decodeTileMapPixel mapX mapY areaBit (vram: uint8 array) (io: IoController) =
         let tileX = mapX / 8
         let tileY = mapY / 8
 
         let bitX = 7 - mapX % 8
         let bitY = mapY % 8
 
-        let tileOffset = getTileVramOffset tileX tileY areaBit vram memory
+        let tileOffset = getTileVramOffset tileX tileY areaBit vram io
         let pixelOffset = tileOffset + bitY * 2
 
         fetchPixel pixelOffset bitX vram
 
     let fetchTileMapPixel screenX screenY windowOnLine (ppu: Ppu) =
-        if windowOnLine && screenX >= int ppu.Memory[IoRegisters.Wx] - 7 then
-            let wX = screenX - (int ppu.Memory[IoRegisters.Wx] - 7)
-            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea ppu.Memory
+        if windowOnLine && screenX >= int ppu.IoController.Registers[Io.Wx] - 7 then
+            let wX = screenX - (int ppu.IoController.Registers[Io.Wx] - 7)
+            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea ppu.IoController
 
-            decodeTileMapPixel wX ppu.WindowLine areaBit ppu.Memory.VideoRam ppu.Memory
+            decodeTileMapPixel wX ppu.WindowLine areaBit ppu.VideoRam ppu.IoController
         else
-            let bgX = (screenX + int ppu.Memory[IoRegisters.Scx]) % 256
-            let bgY = (screenY + int ppu.Memory[IoRegisters.Scy]) % 256
-            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea ppu.Memory
+            let bgX = (screenX + int ppu.IoController.Registers[Io.Scx]) % 256
+            let bgY = (screenY + int ppu.IoController.Registers[Io.Scy]) % 256
+            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea ppu.IoController
 
-            decodeTileMapPixel bgX bgY areaBit ppu.Memory.VideoRam ppu.Memory
+            decodeTileMapPixel bgX bgY areaBit ppu.VideoRam ppu.IoController
 
     let decodeObjectPixel screenX screenY isDoubleHeight oamAddr (oam: uint8 array) (vram: uint8 array) =
         let objX = int oam[oamAddr + 1]
@@ -216,20 +221,20 @@ module private scanline =
     let oamAddresses = [| 0..4..0x9C |] // OAM local addresses, actual: 0xFE00 ... 0xFE9C
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
-        let vram = ppu.Memory.VideoRam
-        let oam = ppu.Memory.OamRam
-        let memory = ppu.Memory
+        let vram = ppu.VideoRam
+        let oam = ppu.OamRam
+        let io = ppu.IoController
         let screenY = int ppu.Ly
 
-        let bgpMap, obp0Map, obp1Map = fetchPaletteMaps memory
+        let bgpMap, obp0Map, obp1Map = fetchPaletteMaps io
 
         let windowOnLine =
-            Lcdc.isEnabled Lcdc.WindowEnable memory && screenY >= int memory[IoRegisters.Wy]
+            Lcdc.isEnabled Lcdc.WindowEnable io && screenY >= int io.Registers[Io.Wy]
 
-        let objEnable = Lcdc.isEnabled Lcdc.ObjEnable memory
-        let bgEnable = Lcdc.isEnabled Lcdc.BgEnable memory
+        let objEnable = Lcdc.isEnabled Lcdc.ObjEnable io
+        let bgEnable = Lcdc.isEnabled Lcdc.BgEnable io
 
-        let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize ppu.Memory
+        let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize io
         let objBottom = if isDoubleHeight then 0 else 8
 
         let objectsInLine =
@@ -284,7 +289,7 @@ open scanline
 let private disablePpu (ppu: Ppu) =
     if not ppu.Disabled then
         ppu.Disabled <- true
-        ppu.Memory.PpuMode <- PpuMode.HBlank
+        ppu.IoController.PpuMode <- PpuMode.HBlank
         ppu.Ly <- 0uy
         ppu.Dot <- 0
 
@@ -293,29 +298,29 @@ let private disablePpu (ppu: Ppu) =
             ppu.Backbuffer[i] <- Shade.White
 
 let stepPpu (ppu: Ppu) =
-    if not (Lcdc.isEnabled Lcdc.PpuEnable ppu.Memory) then
+    if not (Lcdc.isEnabled Lcdc.PpuEnable ppu.IoController) then
         disablePpu ppu
     else if ppu.Disabled then
         ppu.Disabled <- false
-        ppu.Memory.PpuMode <- PpuMode.OamScan
+        ppu.IoController.PpuMode <- PpuMode.OamScan
 
     if ppu.Disabled then
         ()
     else
         ppu.Dot <- ppu.Dot + 1
 
-        match ppu.Memory.PpuMode with
+        match ppu.IoController.PpuMode with
         | PpuMode.HBlank ->
             if ppu.Dot >= lineEnd then
                 ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
                 ppu.Dot <- 0
-                ppu.Memory.PpuMode <- PpuMode.OamScan
+                ppu.IoController.PpuMode <- PpuMode.OamScan
 
                 if ppu.Ly >= vBlankStart then
-                    ppu.Memory.PpuMode <- PpuMode.VBlank
+                    ppu.IoController.PpuMode <- PpuMode.VBlank
                     ppu.WindowLine <- 0
 
-                    triggerInterrupt ppu.Memory InterruptType.VBlank
+                    ppu.IoController.TriggerInterrupt InterruptType.VBlank
         | PpuMode.VBlank ->
             if ppu.Dot >= lineEnd then
                 ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
@@ -323,32 +328,32 @@ let stepPpu (ppu: Ppu) =
 
                 if ppu.Ly > frameEnd then
                     ppu.Ly <- 0uy
-                    ppu.Memory.PpuMode <- PpuMode.OamScan
+                    ppu.IoController.PpuMode <- PpuMode.OamScan
 
                     Array.blit ppu.Backbuffer 0 ppu.Framebuffer 0 ppu.Framebuffer.Length
         | PpuMode.OamScan ->
             if ppu.Dot >= oamScanEnd then
-                ppu.Memory.PpuMode <- PpuMode.Drawing
+                ppu.IoController.PpuMode <- PpuMode.Drawing
 
         | PpuMode.Drawing ->
             if ppu.Dot = oamScanEnd + 1 then
                 renderScanline ppu.Backbuffer ppu
 
             if ppu.Dot >= 253 then // Since it's scanline rendering, have the shortest drawing phase: 80+172 dots
-                ppu.Memory.PpuMode <- PpuMode.HBlank
+                ppu.IoController.PpuMode <- PpuMode.HBlank
         | _ -> ArgumentOutOfRangeException(nameof PpuMode) |> raise
 
         let stat = getUpdatedStatRegister ppu
 
         let newLine =
-            (stat &&& 0b0000_1000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.HBlank)
-            || (stat &&& 0b0001_0000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.VBlank)
-            || (stat &&& 0b0010_0000uy <> 0uy && ppu.Memory.PpuMode = PpuMode.OamScan)
-            || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.Memory[IoRegisters.Lyc])
+            (stat &&& 0b0000_1000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.HBlank)
+            || (stat &&& 0b0001_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.VBlank)
+            || (stat &&& 0b0010_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.OamScan)
+            || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.IoController.Registers[Io.Lyc])
 
         // Only trigger interrupt on the rising edge of the interrupt signal, needed for STAT blocking
         if newLine && not ppu.StatSignal then
-            triggerInterrupt ppu.Memory InterruptType.LcdStat
+            ppu.IoController.TriggerInterrupt InterruptType.LcdStat
 
         ppu.StatSignal <- newLine
-        ppu.Memory.IoRegisters[IoRegisterOffsets.Stat] <- stat
+        ppu.IoController.Registers[Io.Stat] <- stat

@@ -6,6 +6,7 @@ open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
 open FameBoy.Memory
+open FameBoy.Test.TestHelpers
 open NUnit.Framework
 
 let twoBitPrefix = 0xCBuy
@@ -68,7 +69,7 @@ let accumulatorTestData =
 [<TestCaseSource(nameof accumulatorTestData)>]
 let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- data.Opcode
@@ -77,7 +78,7 @@ let ``Test rotate accumulator instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
@@ -197,7 +198,7 @@ let registerDirectTestData =
 [<TestCaseSource(nameof registerDirectTestData)>]
 let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
@@ -207,7 +208,7 @@ let ``Test bitwise register (direct) instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
@@ -295,7 +296,7 @@ let hlIndirectTestData =
 [<TestCaseSource(nameof hlIndirectTestData)>]
 let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
@@ -306,7 +307,7 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo data.ExpectedLength)
@@ -319,7 +320,7 @@ let ``Test bitwise HL (indirect) instructions`` (data: BitwiseTestData) =
 let ``Test bit 7 of H register - bit 7,h`` () =
     // Setup
     let opcode = 0x7Cuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
@@ -329,7 +330,7 @@ let ``Test bit 7 of H register - bit 7,h`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -343,7 +344,7 @@ let ``Test bit 7 of H register - bit 7,h`` () =
 let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     // Setup
     let opcode = 0x7Cuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
@@ -353,7 +354,7 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)

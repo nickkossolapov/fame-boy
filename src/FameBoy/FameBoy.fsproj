@@ -8,6 +8,9 @@
     <ItemGroup>
         <Compile Include="Hardware.fs" />
         <Compile Include="Cartridge.fs" />
+        <Compile Include="Interrupts.fs" />
+        <Compile Include="Joypad.fs" />
+        <Compile Include="IoController.fs" />
         <Compile Include="Memory.fs" />
         <Compile Include="Cpu\State.fs" />
         <Compile Include="Cpu\Instructions.fs" />
@@ -17,13 +20,11 @@
         <Compile Include="Cpu\Executors\Control.fs" />
         <Compile Include="Cpu\Executors\Load.fs" />
         <Compile Include="Cpu\Executors\Logic.fs" />
-        <Compile Include="Cpu\Interrupts.fs" />
         <Compile Include="Cpu\Opcodes.fs" />
         <Compile Include="Cpu\Execute.fs" />
         <Compile Include="Ppu.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Serial.fs" />
-        <Compile Include="Joypad.fs" />
         <Compile Include="Timer.fs" />
         <Compile Include="Emulator.fs" />
 

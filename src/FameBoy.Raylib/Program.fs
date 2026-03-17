@@ -41,7 +41,8 @@ let mutable joypadState: JoypadState =
       Start = false
       Select = false }
 
-let frameBuffer, memory, stepEmulator = createEmulator bytes (fun () -> joypadState)
+let ppu, stepEmulator, applyJoypadState =
+    createEmulator bytes (fun () -> joypadState)
 
 let targetCyclesPerMs = float32 cpuFrequency
 let maxCyclesPerFrame = float32 cpuFrequency / 60f // So if the emulator can't reach 60 FPS it won't drown itself in instructions
@@ -51,17 +52,17 @@ while (not (windowShouldClose ())) do
     let cycles = Math.Min(targetCyclesPerMs * Raylib.GetFrameTime(), maxCyclesPerFrame)
     accumulator <- accumulator + cycles
 
-    joypadState <- getJoypadState ()
+    getJoypadState () |> applyJoypadState
 
     while (accumulator > 0f) do
         let cpuCycles = stepEmulator () |> float32
         accumulator <- accumulator - cpuCycles
 
     beginDrawing ()
-    loadPpuFramebuffer frameBuffer
+    loadPpuFramebuffer ppu.Framebuffer
 
     if Config.enableDebugView then
-        loadDebugFramebuffers memory
+        loadDebugFramebuffers ppu
 
     endDrawing ()
 

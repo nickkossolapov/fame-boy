@@ -43,17 +43,19 @@ let mutable currentAnimationFrame = None
 let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
-    let frameBuffer, _, stepEmulator = createEmulator bytes getJoypadState
+    let ppu, stepEmulator, applyJoypadState = createEmulator bytes getJoypadState
     let mutable accumulator = 0.0
 
     let draw () =
-        loadImageData frameBuffer
+        loadImageData ppu.Framebuffer
         ctx.putImageData (imageData, 0, 0)
 
     let rec runEmulator (last: float) (timestamp: float) =
         let dt = timestamp - last
         let cycles = Math.Min(targetCyclesPerMs * dt, maxCyclesPerFrame)
         accumulator <- accumulator + cycles
+
+        getJoypadState () |> applyJoypadState
 
         while accumulator > 0 do
             let mCycles = float (stepEmulator ())

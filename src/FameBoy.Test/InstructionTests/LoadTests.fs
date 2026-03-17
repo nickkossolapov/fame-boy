@@ -6,13 +6,14 @@ open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
 open FameBoy.Memory
+open FameBoy.Test.TestHelpers
 open NUnit.Framework
 
 [<Test>]
 let ``Load register (register) - ld b,c`` () =
     // Setup
     let opcode = 0x41uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0x00uy
@@ -21,7 +22,7 @@ let ``Load register (register) - ld b,c`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -34,7 +35,7 @@ let ``Load register (register) - ld b,c`` () =
 let ``Load register (immediate) - ld b,n`` () =
     // Setup
     let opcode = 0x06uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
@@ -42,7 +43,7 @@ let ``Load register (immediate) - ld b,n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -54,7 +55,7 @@ let ``Load register (immediate) - ld b,n`` () =
 let ``Load register (indirect HL) - ld b,(hl)`` () =
     // Setup
     let opcode = 0x46uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -63,7 +64,7 @@ let ``Load register (indirect HL) - ld b,(hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -75,7 +76,7 @@ let ``Load register (indirect HL) - ld b,(hl)`` () =
 let ``Load from register (indirect HL) - ld (hl),b`` () =
     // Setup
     let opcode = 0x70uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.B <- 0xABuy
@@ -84,7 +85,7 @@ let ``Load from register (indirect HL) - ld (hl),b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -96,7 +97,7 @@ let ``Load from register (indirect HL) - ld (hl),b`` () =
 let ``Load from immediate (indirect HL) - ld (hl),n`` () =
     // Setup
     let opcode = 0x36uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -105,7 +106,7 @@ let ``Load from immediate (indirect HL) - ld (hl),n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -117,7 +118,7 @@ let ``Load from immediate (indirect HL) - ld (hl),n`` () =
 let ``Load accumulator (indirect BC) - ld a,(bc)`` () =
     // Setup
     let opcode = 0x0Auy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.BC <- 0xC000us
@@ -126,7 +127,7 @@ let ``Load accumulator (indirect BC) - ld a,(bc)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -138,7 +139,7 @@ let ``Load accumulator (indirect BC) - ld a,(bc)`` () =
 let ``Load accumulator (indirect DE) - ld a,(de)`` () =
     // Setup
     let opcode = 0x1Auy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.DE <- 0xC000us
@@ -147,7 +148,7 @@ let ``Load accumulator (indirect DE) - ld a,(de)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -159,7 +160,7 @@ let ``Load accumulator (indirect DE) - ld a,(de)`` () =
 let ``Load from accumulator (indirect BC) - ld (bc),a`` () =
     // Setup
     let opcode = 0x02uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xABuy
@@ -168,7 +169,7 @@ let ``Load from accumulator (indirect BC) - ld (bc),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -180,7 +181,7 @@ let ``Load from accumulator (indirect BC) - ld (bc),a`` () =
 let ``Load from accumulator (indirect DE) - ld (de),a`` () =
     // Setup
     let opcode = 0x12uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xABuy
@@ -189,7 +190,7 @@ let ``Load from accumulator (indirect DE) - ld (de),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -201,7 +202,7 @@ let ``Load from accumulator (indirect DE) - ld (de),a`` () =
 let ``Load accumulator (direct) - ld a,(nn)`` () =
     // Setup
     let opcode = 0xFAuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
@@ -211,7 +212,7 @@ let ``Load accumulator (direct) - ld a,(nn)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 3)
@@ -223,7 +224,7 @@ let ``Load accumulator (direct) - ld a,(nn)`` () =
 let ``Load from accumulator (direct) - ld (nn),a`` () =
     // Setup
     let opcode = 0xEAuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xBEuy
@@ -233,7 +234,7 @@ let ``Load from accumulator (direct) - ld (nn),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 3)
@@ -245,7 +246,7 @@ let ``Load from accumulator (direct) - ld (nn),a`` () =
 let ``Load accumulator (indirect 0xFF00+C) - ldh a,(c)`` () =
     // Setup
     let opcode = 0xF2uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.C <- 0x80uy
@@ -254,7 +255,7 @@ let ``Load accumulator (indirect 0xFF00+C) - ldh a,(c)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -266,7 +267,7 @@ let ``Load accumulator (indirect 0xFF00+C) - ldh a,(c)`` () =
 let ``Load from accumulator (indirect 0xFF00+C) - ldh (c),a`` () =
     // Setup
     let opcode = 0xE2uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xDEuy
@@ -275,7 +276,7 @@ let ``Load from accumulator (indirect 0xFF00+C) - ldh (c),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -286,7 +287,7 @@ let ``Load from accumulator (indirect 0xFF00+C) - ldh (c),a`` () =
 let ``Load accumulator (direct 0xFF00+n) - ldh a,(n)`` () =
     // Setup
     let opcode = 0xF0uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
@@ -295,7 +296,7 @@ let ``Load accumulator (direct 0xFF00+n) - ldh a,(n)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -307,7 +308,7 @@ let ``Load accumulator (direct 0xFF00+n) - ldh a,(n)`` () =
 let ``Load from accumulator (direct 0xFF00+n) - ldh (n),a`` () =
     // Setup
     let opcode = 0xE0uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xDEuy
@@ -316,7 +317,7 @@ let ``Load from accumulator (direct 0xFF00+n) - ldh (n),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -328,7 +329,7 @@ let ``Load from accumulator (direct 0xFF00+n) - ldh (n),a`` () =
 let ``Load accumulator (indirect HL, decrement) - ld a,(hl-)`` () =
     // Setup
     let opcode = 0x3Auy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC001us
@@ -338,7 +339,7 @@ let ``Load accumulator (indirect HL, decrement) - ld a,(hl-)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -351,7 +352,7 @@ let ``Load accumulator (indirect HL, decrement) - ld a,(hl-)`` () =
 let ``Load from accumulator (indirect HL, decrement) - ld (hl-),a`` () =
     // Setup
     let opcode = 0x32uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xABuy
@@ -360,7 +361,7 @@ let ``Load from accumulator (indirect HL, decrement) - ld (hl-),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -373,7 +374,7 @@ let ``Load from accumulator (indirect HL, decrement) - ld (hl-),a`` () =
 let ``Load accumulator (indirect HL, increment) - ld a,(hl+)`` () =
     // Setup
     let opcode = 0x2Auy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xC000us
@@ -383,7 +384,7 @@ let ``Load accumulator (indirect HL, increment) - ld a,(hl+)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -396,7 +397,7 @@ let ``Load accumulator (indirect HL, increment) - ld a,(hl+)`` () =
 let ``Load from accumulator (indirect HL, increment) - ld (hl+),a`` () =
     // Setup
     let opcode = 0x22uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.A <- 0xABuy
@@ -405,7 +406,7 @@ let ``Load from accumulator (indirect HL, increment) - ld (hl+),a`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -418,7 +419,7 @@ let ``Load from accumulator (indirect HL, increment) - ld (hl+),a`` () =
 let ``Load 16-bit register - ld bc,nn`` () =
     // Setup
     let opcode = 0x01uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
@@ -427,7 +428,7 @@ let ``Load 16-bit register - ld bc,nn`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 3)
@@ -439,7 +440,7 @@ let ``Load 16-bit register - ld bc,nn`` () =
 let ``Load from stack pointer (direct) - ld (nn),sp`` () =
     // Setup
     let opcode = 0x08uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xABCDus
@@ -449,7 +450,7 @@ let ``Load from stack pointer (direct) - ld (nn),sp`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 3)
@@ -462,7 +463,7 @@ let ``Load from stack pointer (direct) - ld (nn),sp`` () =
 let ``Load stack pointer from HL - ld sp,hl`` () =
     // Setup
     let opcode = 0xF9uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Registers.HL <- 0xABCDus
@@ -471,7 +472,7 @@ let ``Load stack pointer from HL - ld sp,hl`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -483,7 +484,7 @@ let ``Load stack pointer from HL - ld sp,hl`` () =
 let ``Push to stack - push bc`` () =
     // Setup
     let opcode = 0xC5uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFEus
@@ -492,7 +493,7 @@ let ``Push to stack - push bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -506,7 +507,7 @@ let ``Push to stack - push bc`` () =
 let ``Pop from stack - pop bc`` () =
     // Setup
     let opcode = 0xC1uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -517,7 +518,7 @@ let ``Pop from stack - pop bc`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -530,7 +531,7 @@ let ``Pop from stack - pop bc`` () =
 let ``Pop from stack (flags) - pop af`` () =
     // Setup
     let opcode = 0xF1uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFFFCus
@@ -541,7 +542,7 @@ let ``Pop from stack (flags) - pop af`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -554,7 +555,7 @@ let ``Pop from stack (flags) - pop af`` () =
 let ``Load HL from adjusted stack pointer - ld hl,sp+e`` () =
     // Setup
     let opcode = 0xF8uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFEFEus
@@ -563,7 +564,7 @@ let ``Load HL from adjusted stack pointer - ld hl,sp+e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -579,7 +580,7 @@ let ``Load HL from adjusted stack pointer - ld hl,sp+e`` () =
 let ``Load HL from adjusted stack pointer (negative) - ld hl,sp+e`` () =
     // Setup
     let opcode = 0xF8uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Pc <- 0x100us
     cpu.Sp <- 0xFF01us
@@ -588,7 +589,7 @@ let ``Load HL from adjusted stack pointer (negative) - ld hl,sp+e`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)

@@ -2,6 +2,7 @@ module FameBoy.Test.InstructionTests.OtherTests
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Memory
+open FameBoy.Test.TestHelpers
 open NUnit.Framework
 open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
@@ -11,14 +12,14 @@ open FameBoy.Cpu.Execute
 [<Test>]
 let ``halt enables halt`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- 0x76uy
     cpu.Halted <- false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -29,14 +30,14 @@ let ``halt enables halt`` () =
 [<Test>]
 let ``di disables interrupts`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- 0xF3uy
     cpu.Ime <- true
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -47,14 +48,14 @@ let ``di disables interrupts`` () =
 [<Test>]
 let ``ei enables interrupts`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- 0xFBuy
     cpu.Ime <- false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -65,7 +66,7 @@ let ``ei enables interrupts`` () =
 [<Test>]
 let ``NOP changes nothing`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- 0x00uy
     cpu.Registers.A <- 0x12uy
@@ -79,7 +80,7 @@ let ``NOP changes nothing`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -102,7 +103,7 @@ let ``NOP changes nothing`` () =
 [<Test>]
 let ``Unknown opcode acts as NOP`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- 0xEBuy // 0xEB is unused/unknown
     cpu.Registers.A <- 0x12uy
@@ -116,7 +117,7 @@ let ``Unknown opcode acts as NOP`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -139,7 +140,7 @@ let ``Unknown opcode acts as NOP`` () =
 [<Test>]
 let ``Loading value into F register zeroes lowest 4 bits`` () =
     // Setup
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
 
     cpu.Registers.F <- 0b10101111uy
 

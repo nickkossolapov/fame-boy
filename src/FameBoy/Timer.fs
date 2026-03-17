@@ -1,8 +1,8 @@
 module FameBoy.Timer
 
-open FameBoy.Cpu.Interrupts
+open FameBoy.Interrupts
 open FameBoy.Hardware
-open FameBoy.Memory
+open FameBoy.IoController
 
 [<Literal>]
 let private dividerFrequency = cpuFrequency / 16384
@@ -19,10 +19,9 @@ type TimerState =
       mutable DividerCount: int
       mutable TimerCount: int }
 
-let private stepTimer (state: TimerState) (memory: Memory) =
-    // TODO Create an IoManager, so no need to check these on every m-cycle
-    let enabled = memory[IoRegisters.Tac] &&& 0b100uy <> 0uy
-    let frequency = memory[IoRegisters.Tac] &&& 0b011uy |> getTimerFrequency
+let private stepTim (state: TimerState) (io: IoController) =
+    let enabled = io.Registers[Io.Tac] &&& 0b100uy <> 0uy
+    let frequency = io.Registers[Io.Tac] &&& 0b011uy |> getTimerFrequency
 
     if enabled then
         state.TimerCount <- state.TimerCount + 1
@@ -30,25 +29,25 @@ let private stepTimer (state: TimerState) (memory: Memory) =
         if state.TimerCount >= frequency then
             state.TimerCount <- 0
 
-            let newTima = (memory[IoRegisters.Tima] + 1uy) &&& 0xFFuy
-            memory[IoRegisters.Tima] <- newTima
+            let newTima = (io.Registers[Io.Tima] + 1uy) &&& 0xFFuy
+            io.Registers[Io.Tima] <- newTima
 
             if newTima = 0uy then
                 state.HasTimerOverflowed <- true
-                triggerInterrupt memory InterruptType.Timer
+                io.TriggerInterrupt InterruptType.Timer
 
-let stepTimers (state: TimerState) (memory: Memory) =
+let stepTimers (state: TimerState) (io: IoController) =
     state.DividerCount <- state.DividerCount + 1
 
     if state.DividerCount = dividerFrequency then
         state.DividerCount <- 0
-        memory.IoRegisters[IoRegisterOffsets.Div] <- (memory[IoRegisters.Div] + 1uy) &&& 0xFFuy
+        io.Registers[Io.Div] <- (io.Registers[Io.Div] + 1uy) &&& 0xFFuy
 
     if state.HasTimerOverflowed then
         state.HasTimerOverflowed <- false
-        memory[IoRegisters.Tima] <- memory[IoRegisters.Tma]
+        io.Registers[Io.Tima] <- io.Registers[Io.Tma]
     else
-        stepTimer state memory
+        stepTim state io
 
 let createTimer () : TimerState =
     { HasTimerOverflowed = false

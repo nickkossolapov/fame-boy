@@ -3,10 +3,11 @@
 open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
 open FameBoy.Hardware
+open FameBoy.IoController
 open FameBoy.Memory
 
 // Set the CPU and hardware registers so a boot ROM isn't needed (https://gbdev.io/pandocs/Power_Up_Sequence.html#cpu-registers)
-let createDmgCpu (memory: Memory) =
+let createDmgCpu (memory: Memory) (io: IoController) =
     let cpu = createCpu memory
 
     cpu.Registers.A <- 0x01uy
@@ -21,52 +22,52 @@ let createDmgCpu (memory: Memory) =
     cpu.Sp <- 0xFFFEus
 
     let ioRegisters =
-        [ IoRegisters.Joyp, 0xCFuy
-          IoRegisters.Sb, 0x00uy
-          IoRegisters.Sc, 0x7Euy
-          IoRegisters.Div, 0x18uy
-          IoRegisters.Tima, 0x00uy
-          IoRegisters.Tma, 0x00uy
-          IoRegisters.Tac, 0xF8uy
-          IoRegisters.If, 0xE1uy
-          IoRegisters.Nr10, 0x80uy
-          IoRegisters.Nr11, 0xBFuy
-          IoRegisters.Nr12, 0xF3uy
-          IoRegisters.Nr13, 0xFFuy
-          IoRegisters.Nr14, 0xBFuy
-          IoRegisters.Nr21, 0x3Fuy
-          IoRegisters.Nr22, 0x00uy
-          IoRegisters.Nr23, 0xFFuy
-          IoRegisters.Nr24, 0xBFuy
-          IoRegisters.Nr30, 0x7Fuy
-          IoRegisters.Nr31, 0xFFuy
-          IoRegisters.Nr32, 0x9Fuy
-          IoRegisters.Nr33, 0xFFuy
-          IoRegisters.Nr34, 0xBFuy
-          IoRegisters.Nr41, 0xFFuy
-          IoRegisters.Nr42, 0x00uy
-          IoRegisters.Nr43, 0x00uy
-          IoRegisters.Nr44, 0xBFuy
-          IoRegisters.Nr50, 0x77uy
-          IoRegisters.Nr51, 0xF3uy
-          IoRegisters.Nr52, 0xF1uy
-          IoRegisters.Lcdc, 0x91uy
-          IoRegisters.Stat, 0x81uy
-          IoRegisters.Scy, 0x00uy
-          IoRegisters.Scx, 0x00uy
-          IoRegisters.Ly, 0x91uy
-          IoRegisters.Lyc, 0x00uy
-          IoRegisters.Dma, 0xFFuy
-          IoRegisters.Bgp, 0xFCuy
-          IoRegisters.Obp0, 0x00uy
-          IoRegisters.Obp1, 0x00uy
-          IoRegisters.Wy, 0x00uy
-          IoRegisters.Wx, 0x00uy ]
+        [ Io.Joyp, 0xCFuy
+          Io.Sb, 0x00uy
+          Io.Sc, 0x7Euy
+          Io.Div, 0x18uy
+          Io.Tima, 0x00uy
+          Io.Tma, 0x00uy
+          Io.Tac, 0xF8uy
+          Io.If, 0xE1uy
+          Io.Nr10, 0x80uy
+          Io.Nr11, 0xBFuy
+          Io.Nr12, 0xF3uy
+          Io.Nr13, 0xFFuy
+          Io.Nr14, 0xBFuy
+          Io.Nr21, 0x3Fuy
+          Io.Nr22, 0x00uy
+          Io.Nr23, 0xFFuy
+          Io.Nr24, 0xBFuy
+          Io.Nr30, 0x7Fuy
+          Io.Nr31, 0xFFuy
+          Io.Nr32, 0x9Fuy
+          Io.Nr33, 0xFFuy
+          Io.Nr34, 0xBFuy
+          Io.Nr41, 0xFFuy
+          Io.Nr42, 0x00uy
+          Io.Nr43, 0x00uy
+          Io.Nr44, 0xBFuy
+          Io.Nr50, 0x77uy
+          Io.Nr51, 0xF3uy
+          Io.Nr52, 0xF1uy
+          Io.Lcdc, 0x91uy
+          Io.Stat, 0x81uy
+          Io.Scy, 0x00uy
+          Io.Scx, 0x00uy
+          Io.Ly, 0x91uy
+          Io.Lyc, 0x00uy
+          Io.Dma, 0xFFuy
+          Io.Bgp, 0xFCuy
+          Io.Obp0, 0x00uy
+          Io.Obp1, 0x00uy
+          Io.Wy, 0x00uy
+          Io.Wx, 0x00uy ]
 
     for reg, value in ioRegisters do
-        cpu.Memory.IoRegisters[int reg - 0xFF00] <- value
+        io.Registers[reg] <- value
 
-    memory.InterruptEnable <- 0x00uy
-    memory.PpuMode <- LanguagePrimitives.EnumOfValue(memory[IoRegisters.Stat] &&& 0b0011uy)
+    io.InterruptEnable <- 0x00uy
+    io.PpuMode <- LanguagePrimitives.EnumOfValue(io.Registers[Io.Stat] &&& 0b0011uy)
 
     cpu

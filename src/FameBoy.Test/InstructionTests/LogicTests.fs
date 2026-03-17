@@ -6,6 +6,7 @@ open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
 open FameBoy.Cpu.Instructions
 open FameBoy.Memory
+open FameBoy.Test.TestHelpers
 open NUnit.Framework
 
 
@@ -13,7 +14,7 @@ open NUnit.Framework
 let ``Bitwise AND A with B - and b`` () =
     // Setup
     let opcode = 0xA0uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
@@ -21,7 +22,7 @@ let ``Bitwise AND A with B - and b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -37,7 +38,7 @@ let ``Bitwise AND A with B - and b`` () =
 let ``Bitwise AND A with B (zero result) - and b`` () =
     // Setup
     let opcode = 0xA0uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
@@ -45,7 +46,7 @@ let ``Bitwise AND A with B (zero result) - and b`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -61,7 +62,7 @@ let ``Bitwise AND A with B (zero result) - and b`` () =
 let ``Bitwise OR A with (HL) - or (hl)`` () =
     // Setup
     let opcode = 0xB6uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
@@ -70,7 +71,7 @@ let ``Bitwise OR A with (HL) - or (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -86,7 +87,7 @@ let ``Bitwise OR A with (HL) - or (hl)`` () =
 let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
     // Setup
     let opcode = 0xB6uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x00uy
@@ -95,7 +96,7 @@ let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -111,7 +112,7 @@ let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
 let ``Bitwise XOR A with n - xor n`` () =
     // Setup
     let opcode = 0xEEuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Memory.Cartridge.Rom[0x101] <- 0x3Fuy
@@ -119,7 +120,7 @@ let ``Bitwise XOR A with n - xor n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -135,7 +136,7 @@ let ``Bitwise XOR A with n - xor n`` () =
 let ``Bitwise XOR A with n (zero result) - xor n`` () =
     // Setup
     let opcode = 0xEEuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Memory.Cartridge.Rom[0x101] <- 0x5Auy
@@ -143,7 +144,7 @@ let ``Bitwise XOR A with n (zero result) - xor n`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 2)
@@ -159,14 +160,14 @@ let ``Bitwise XOR A with n (zero result) - xor n`` () =
 let ``Complement carry flag (carry initially true) - ccf`` () =
     // Setup
     let opcode = 0x3Fuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Flags <- cpu.Flags |> setZ false |> setN true |> setH true |> setC true
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -181,14 +182,14 @@ let ``Complement carry flag (carry initially true) - ccf`` () =
 let ``Complement carry flag (carry initially false) - ccf`` () =
     // Setup
     let opcode = 0x3Fuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Flags <- cpu.Flags |> setZ true |> setN true |> setH true |> setC false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -203,14 +204,14 @@ let ``Complement carry flag (carry initially false) - ccf`` () =
 let ``Set carry flag - scf`` () =
     // Setup
     let opcode = 0x37uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Flags <- cpu.Flags |> setZ true |> setN true |> setH true |> setC false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -225,7 +226,7 @@ let ``Set carry flag - scf`` () =
 let ``Decimal adjust accumulator - daa`` () =
     // Setup
     let opcode = 0x27uy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x1Auy
@@ -233,7 +234,7 @@ let ``Decimal adjust accumulator - daa`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)
@@ -248,7 +249,7 @@ let ``Decimal adjust accumulator - daa`` () =
 let ``Complement accumulator - cpl`` () =
     // Setup
     let opcode = 0x2Fuy
-    let cpu = createCpu (createTestMemory [||])
+    let cpu, io = createTestCpu [||]
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
@@ -256,7 +257,7 @@ let ``Complement accumulator - cpl`` () =
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
-    execute cpu instr |> ignore
+    execute cpu io instr |> ignore
 
     // Evaluate
     Assert.That(instr.Length, Is.EqualTo 1)

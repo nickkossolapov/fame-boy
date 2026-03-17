@@ -6,12 +6,36 @@ open FameBoy.Cpu.Executors.Control
 open FameBoy.Cpu.Executors.Logic
 open FameBoy.Cpu.Executors.Load
 open FameBoy.Cpu.Instructions
-open FameBoy.Cpu.Interrupts
+open FameBoy.Interrupts
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.Utils
 open FameBoy.Hardware
+open FameBoy.IoController
 
-let execute (cpu: Cpu) (instr: DecodedInstruction) =
+let checkForInterrupt (cpu: Cpu) (io: IoController) =
+    if cpu.Ime then
+        let enable = io.InterruptEnable
+        let flag = io.Registers[Io.If]
+        let pending = enable &&& flag &&& 0x1Fuy
+
+        if pending <> 0uy then
+            getInterruptForPending pending |> ValueSome
+        else
+            ValueNone
+    else
+        ValueNone
+
+let serviceInterrupt (cpu: Cpu) (io: IoController) (interrupt: InterruptType) : int =
+    cpu.Ime <- false
+    cpu.Halted <- false
+    io.ClearInterruptFlag interrupt
+    pushToStack cpu cpu.Pc
+    cpu.Pc <- getVector interrupt
+
+    5 // Interrupts take 5 m-cycles
+
+let execute (cpu: Cpu) (io: IoController) (instr: DecodedInstruction) =
     cpu.Pc <- (cpu.Pc + uint16 instr.Length) &&& 0xFFFFus
 
     if cpu.EnableImeNextInstr then
@@ -51,8 +75,8 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
         | Unknown -> false
 
     let cycles =
-        match checkForInterrupt cpu with
-        | ValueSome i -> serviceInterrupt cpu i
+        match checkForInterrupt cpu io with
+        | ValueSome i -> serviceInterrupt cpu io i
         | ValueNone ->
             match instr.MCycles with
             | Fixed c -> c
@@ -60,15 +84,15 @@ let execute (cpu: Cpu) (instr: DecodedInstruction) =
 
     cycles
 
-let stepCpu (cpu: Cpu) =
+let stepCpu (cpu: Cpu) (io: IoController) =
     if cpu.Halted then
-        if ((cpu.Memory[IoRegisters.Ie] &&& cpu.Memory[IoRegisters.If]) &&& 0x1Fuy) <> 0uy then
+        if ((io.InterruptEnable &&& io.Registers[Io.If]) &&& 0x1Fuy) <> 0uy then
             cpu.Halted <- false
 
-            match checkForInterrupt cpu with
-            | ValueSome i -> serviceInterrupt cpu i
-            | ValueNone -> fetchAndDecode cpu.Memory cpu.Pc |> execute cpu
+            match checkForInterrupt cpu io with
+            | ValueSome i -> serviceInterrupt cpu io i
+            | ValueNone -> fetchAndDecode cpu.Memory cpu.Pc |> execute cpu io
         else
             1
     else
-        fetchAndDecode cpu.Memory cpu.Pc |> execute cpu
+        fetchAndDecode cpu.Memory cpu.Pc |> execute cpu io
