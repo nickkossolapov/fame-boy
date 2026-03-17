@@ -111,7 +111,7 @@ module private Palettes =
 
 open Palettes
 
-module private scanline =
+module private Scanline =
     type ObjPixel =
         { Shade: Shade
           UseObp1: bool
@@ -284,7 +284,7 @@ module private scanline =
         if windowOnLine then
             ppu.WindowLine <- ppu.WindowLine + 1
 
-open scanline
+open Scanline
 
 let private disablePpu (ppu: Ppu) =
     if not ppu.Disabled then

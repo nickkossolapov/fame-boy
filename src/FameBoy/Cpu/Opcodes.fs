@@ -6,7 +6,7 @@ open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.Utils
 open FameBoy.Memory
 
-module private twoByteInstructions =
+module private TwoByteInstructions =
     let regOrder =
         [| Write.RegDirect B
            Write.RegDirect C
@@ -36,7 +36,7 @@ module private twoByteInstructions =
     let fetchAndDecode2Byte (opcode: uint8) =
         twoByteInstructionMap[int opcode] |> snd
 
-open twoByteInstructions
+open TwoByteInstructions
 
 let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
     let opcode = int memory[pc]
