@@ -194,6 +194,7 @@ type MCycles =
     | Fixed of int
     | Conditional of ConditionalCycle
 
+[<Struct>]
 type DecodedInstruction =
     { Instruction: Instruction
       Length: int

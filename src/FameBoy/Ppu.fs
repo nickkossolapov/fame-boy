@@ -88,7 +88,7 @@ module Lcdc =
     let BgMapArea = 0b0000_1000uy
     let ObjSize = 0b0000_0100uy
     let ObjEnable = 0b0000_0010uy
-    let BgEnable = 0b0000_00001uy
+    let BgEnable = 0b0000_0001uy
 
     let inline isEnabled control (memory: Memory) =
         memory[IoRegisters.Lcdc] &&& control <> 0uy

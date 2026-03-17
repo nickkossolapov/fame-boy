@@ -4,7 +4,10 @@ open FameBoy.Memory
 
 
 type Registers() =
-    // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
+    // Registers can't be a record type because the values need to be truncated to 8 bits when writing, i.e. need custom setters
+    // This is needed for the web renderer as Fable transpiles uint8 to Number (more than 8 bits) in JS and doesn't apply any truncation
+    // Known non-standard behaviour in Fable (https://fable.io/docs/javascript/compatibility.html#numeric-types)
+
     let mutable f = 0uy
     let mutable a = 0uy
     let mutable b = 0uy
@@ -14,7 +17,6 @@ type Registers() =
     let mutable h = 0uy
     let mutable l = 0uy
 
-    // Explicit masking needed for Fable (JS numbers don't auto-truncate like .NET uint8)
     member _.A
         with get () = a
         and set v = a <- v &&& 0xFFuy
