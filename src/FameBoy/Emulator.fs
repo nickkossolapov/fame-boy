@@ -17,7 +17,7 @@ let createEmulator bytes getJoypadState =
     let serial = createSerial ()
 
     let stepper () =
-        // TODO don't apply on every instruction. Modify memory to resolve joypad state on read, and handle interrupts
+        // TODO Don't apply on every instruction. Modify memory to resolve joypad state on read, and handle interrupts
         applyJoypadState (getJoypadState ()) memory
         let cpuCycles = stepCpu cpu
 

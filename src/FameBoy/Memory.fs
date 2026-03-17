@@ -22,7 +22,7 @@ open Helpers
 /// NOTE Access via indexer syntax: memory[addr]
 type Memory =
     { VideoRam: uint8 array
-      WorkRam: uint8 array // TODO: GCB: split this and have banking
+      WorkRam: uint8 array
       OamRam: uint8 array
       IoRegisters: uint8 array
       HighRam: uint8 array
@@ -44,7 +44,7 @@ type Memory =
             this.doDmaTransfer value
         | _ -> this.IoRegisters[address] <- value
 
-    // TODO maybe move this out and do a m-cycle accurate transfer?
+    // TODO Maybe move this out and do a m-cycle accurate transfer?
     member private this.doDmaTransfer(startPrefix: uint8) =
         let start = (int startPrefix) * 0x100
 

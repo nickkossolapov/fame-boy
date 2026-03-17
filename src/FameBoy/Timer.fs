@@ -20,7 +20,7 @@ type TimerState =
       mutable TimerCount: int }
 
 let private stepTimer (state: TimerState) (memory: Memory) =
-    // TODO create an IoManager, so no need to check these on every m-cycle
+    // TODO Create an IoManager, so no need to check these on every m-cycle
     let enabled = memory[IoRegisters.Tac] &&& 0b100uy <> 0uy
     let frequency = memory[IoRegisters.Tac] &&& 0b011uy |> getTimerFrequency
 

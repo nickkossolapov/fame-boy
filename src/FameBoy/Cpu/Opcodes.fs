@@ -46,7 +46,6 @@ let fetchAndDecode (memory: Memory) (pc: uint16) : DecodedInstruction =
 
     let withUint16 () = getWordFromMemory memory (pc + 1us)
 
-    // todo maybe convert to a map to avoid all the duplicates?
     match opcode with
     | 0x00 -> Nop
     | 0x01 -> Ld16FromWord (BC, withUint16 ()) |> Load

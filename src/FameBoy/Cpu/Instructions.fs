@@ -2,7 +2,6 @@
 
 open FameBoy.Cpu.State
 
-type uint3 = uint8 // todo maybe expand on this type for additional type safety
 
 type Reg8 =
     | A
@@ -139,9 +138,9 @@ type BitwiseInstr =
     | Sra of Write
     | Srl of Write
     | Swap of Write
-    | Bit of uint3 * Write
-    | Res of uint3 * Write
-    | Set of uint3 * Write
+    | Bit of uint8 * Write
+    | Res of uint8 * Write
+    | Set of uint8 * Write
 
 type ControlInstr =
     | Jp of uint16
