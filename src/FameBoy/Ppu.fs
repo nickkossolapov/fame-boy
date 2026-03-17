@@ -159,17 +159,32 @@ module private scanline =
 
             decodeTileMapPixel bgX bgY areaBit vram memory
 
-    let decodeObjectPixel screenX screenY oamAddr (oam: uint8 array) (vram: uint8 array) =
+    let decodeObjectPixel screenX screenY isDoubleHeight oamAddr (oam: uint8 array) (vram: uint8 array) =
         let objX = int oam[oamAddr + 1]
         let objY = int oam[oamAddr]
-        let tileOffset = 0x10 * int oam[oamAddr + 2]
+        let tileNum = int oam[oamAddr + 2]
         let attributes = OamAttributes.ofByte oam[oamAddr + 3]
 
+        let spriteHeight = if isDoubleHeight then 16 else 8
+        let spriteY = screenY - (objY - 16)
+
+        let flippedY = if attributes.YFlip then (spriteHeight - 1) - spriteY else spriteY
+        let isBottomTile = isDoubleHeight && flippedY >= 8
+
+        let effectiveTileNum =
+            if isDoubleHeight then
+                if isBottomTile then tileNum ||| 0x01
+                else tileNum &&& 0xFE
+            else
+                tileNum
+
+        let tileOffset = 0x10 * effectiveTileNum
+
         let localX = screenX - (objX - 8)
-        let localY = screenY - (objY - 16)
+        let localY = if isBottomTile then flippedY - 8 else flippedY
 
         let bitX = if attributes.XFlip then localX else 7 - localX
-        let bitY = if attributes.YFlip then 7 - localY else localY
+        let bitY = localY
 
         let pixelOffset = tileOffset + bitY * 2
 
@@ -177,8 +192,7 @@ module private scanline =
           UseObp1 = attributes.UseObp1
           BgPriority = attributes.Priority }
 
-    // TODO 8x16 tiles
-    let fetchObjectPixel x y (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
+    let fetchObjectPixel x y isDoubleHeight (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
         let mutable found = ValueNone // mutable makes me sad, but this is a hot path, and it's needed for an early return
         let mutable i = 0
 
@@ -186,7 +200,7 @@ module private scanline =
             let objX = int oam[filteredOam[i] + 1]
 
             if x >= objX - 8 && x < objX then
-                let pixel = decodeObjectPixel x y filteredOam[i] oam vram
+                let pixel = decodeObjectPixel x y isDoubleHeight filteredOam[i] oam vram
 
                 if pixel.Shade <> Shade.White then
                     found <- ValueSome pixel
@@ -210,10 +224,13 @@ module private scanline =
 
         let objEnable = Lcdc.isEnabled Lcdc.ObjEnable memory
         let bgEnable = Lcdc.isEnabled Lcdc.BgEnable memory
+        
+        let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize ppu.Memory
+        let objBottom = if isDoubleHeight then 0 else 8
 
         let objectsInLine =
             oamAddresses
-            |> Array.filter (fun offset -> int ppu.Ly >= int oam[offset] - 16 && int ppu.Ly < int oam[offset] - 8)
+            |> Array.filter (fun offset -> int ppu.Ly >= int oam[offset] - 16 && int ppu.Ly < int oam[offset] - objBottom)
             |> Array.sortBy (fun offset -> oam[offset + 1]) // DMG prioritises by X coordinate
             |> Array.truncate 10
 
@@ -224,7 +241,7 @@ module private scanline =
                 obp0Map[int pixel.Shade]
 
         let fetchPrioritisedPixels screenX =
-            let objPixel = fetchObjectPixel screenX screenY objectsInLine oam vram
+            let objPixel = fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
 
             match objPixel with
             | ValueSome p when p.Shade <> Shade.White ->
@@ -246,7 +263,7 @@ module private scanline =
                 match objEnable, bgEnable with
                 | true, true -> fetchPrioritisedPixels screenX
                 | true, false ->
-                    fetchObjectPixel screenX screenY objectsInLine oam vram
+                    fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
                     |> ValueOption.map mapObjPixel
                     |> ValueOption.defaultValue Shade.White
                 | false, true -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine vram memory)]
