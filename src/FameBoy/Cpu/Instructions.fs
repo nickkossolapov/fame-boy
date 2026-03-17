@@ -242,12 +242,12 @@ module private LengthsAndCycles =
         | Sra w -> forWriteByte w
         | Srl w
         | Swap w -> forWriteByte w
-        | Bit (_, w) ->
+        | Bit(_, w) ->
             match w with
             | Write.RegDirect _ -> 2, Fixed 2
             | Write.HLIndirect -> 2, Fixed 3
-        | Res (_, w) -> forWriteByte w
-        | Set (_, w) -> forWriteByte w
+        | Res(_, w) -> forWriteByte w
+        | Set(_, w) -> forWriteByte w
 
     let forControl =
         function
@@ -265,7 +265,7 @@ module private LengthsAndCycles =
 
     let forLoad =
         function
-        | Ld8 (w, s) ->
+        | Ld8(w, s) ->
             match w with
             | Write.RegDirect _ -> forReadByte s
             | Write.HLIndirect ->
@@ -273,14 +273,14 @@ module private LengthsAndCycles =
                 | Read.Immediate _ -> 2, Fixed 3
                 | Read.RegDirect _ -> 1, Fixed 2
                 | Read.HLIndirect -> 1, Fixed 1 // ld [hl],[hl] is actually decoded as HALT
-        | LdA (_, s) ->
+        | LdA(_, s) ->
             match s with
             | AtBC -> 1, Fixed 2
             | AtDE -> 1, Fixed 2
             | AtWord _ -> 3, Fixed 4
             | AtHLInc
             | AtHLDec -> 1, Fixed 2
-        | Ldh (_, s) ->
+        | Ldh(_, s) ->
             match s with
             | AtCHigh -> 1, Fixed 2
             | AtByteHigh _ -> 2, Fixed 3

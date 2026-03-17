@@ -188,16 +188,16 @@ let ``Zero low-register translation applies even when high-register is set`` (up
 [<Test>]
 let ``Simple mode upper register does not affect RAM offset`` () =
     let cart = makeMbc1CartWithRam 64 0x03uy
-    
+
     handleCartridgeWrite cart 0x4000 0x02uy
-    
+
     Assert.That(cart.RamOffset, Is.EqualTo 0)
 
 [<Test>]
 let ``RAM bank number wraps via RAM size mask`` () =
     let cart = makeMbc1CartWithRam 128 0x03uy
-    
+
     handleCartridgeWrite cart 0x4000 0x03uy
     handleCartridgeWrite cart 0x6000 0x01uy
-    
+
     Assert.That(cart.RamOffset, Is.EqualTo(3 * 0x2000))
