@@ -29,7 +29,7 @@ let executeControl (cpu: Cpu) (instr: ControlInstr) =
         cpu.Sp <- (cpu.Sp + 2us) &&& 0xFFFFus
 
     match instr with
-    | Jp w -> cpu.Pc <- w
+    | Jp s -> cpu.Pc <- s
     | JpHL -> cpu.Pc <- cpu.Registers.HL
     | JpCond(condition, w) ->
         if met condition then
@@ -38,9 +38,9 @@ let executeControl (cpu: Cpu) (instr: ControlInstr) =
     | JrCond(condition, b) ->
         if met condition then
             cpu.Pc <- uint16 (int16 cpu.Pc + int16 b)
-    | Call w ->
+    | Call s ->
         pushToStack cpu cpu.Pc
-        cpu.Pc <- w
+        cpu.Pc <- s
     | CallCond(condition, w) ->
         if met condition then
             pushToStack cpu cpu.Pc

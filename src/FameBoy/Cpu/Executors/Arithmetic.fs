@@ -6,16 +6,16 @@ open FameBoy.Cpu.State.Flags
 
 let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
     match instr with
-    | Add bs ->
-        let x, y = int cpu.Registers.A, int (bs.GetFrom cpu)
+    | Add s ->
+        let x, y = int cpu.Registers.A, int (s.GetFrom cpu)
         let res = x + y
         let hc = (x &&& 0xF) + (y &&& 0xF) > 0xF
         let c = res > 0xFF
 
         cpu.Registers.A <- uint8 res
         cpu.Flags <- cpu.Flags |> setZ (uint8 res = 0uy) |> setN false |> setH hc |> setC c
-    | Adc bs ->
-        let x, y = int cpu.Registers.A, int (bs.GetFrom cpu)
+    | Adc s ->
+        let x, y = int cpu.Registers.A, int (s.GetFrom cpu)
         let c = if isCarry cpu.Flags then 1 else 0
         let res = x + y + c
         let h = (x &&& 0xF) + (y &&& 0xF) + c > 0xF
@@ -23,16 +23,16 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
 
         cpu.Registers.A <- uint8 res
         cpu.Flags <- cpu.Flags |> setZ (uint8 res = 0uy) |> setN false |> setH h |> setC newC
-    | Sub bs ->
-        let x, y = int cpu.Registers.A, int (bs.GetFrom cpu)
+    | Sub s ->
+        let x, y = int cpu.Registers.A, int (s.GetFrom cpu)
         let res = x - y
         let h = (x &&& 0xF) < (y &&& 0xF)
         let c = res < 0
 
         cpu.Registers.A <- uint8 res
         cpu.Flags <- cpu.Flags |> setZ (uint8 res = 0uy) |> setN true |> setH h |> setC c
-    | Sbc bs ->
-        let x, y = int cpu.Registers.A, int (bs.GetFrom cpu)
+    | Sbc s ->
+        let x, y = int cpu.Registers.A, int (s.GetFrom cpu)
         let c = if isCarry cpu.Flags then 1 else 0
         let res = x - y - c
         let h = (x &&& 0xF) < (y &&& 0xF) + c
@@ -40,26 +40,26 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
 
         cpu.Registers.A <- uint8 res
         cpu.Flags <- cpu.Flags |> setZ (uint8 res = 0uy) |> setN true |> setH h |> setC newC
-    | Cp bs ->
-        let x, y = int cpu.Registers.A, int (bs.GetFrom cpu)
+    | Cp s ->
+        let x, y = int cpu.Registers.A, int (s.GetFrom cpu)
         let res = x - y
         let h = (x &&& 0xF) < (y &&& 0xF)
         let c = res < 0
 
         cpu.Flags <- cpu.Flags |> setZ (uint8 res = 0uy) |> setN true |> setH h |> setC c
-    | Inc ref ->
-        let value = ref.GetFrom cpu
+    | Inc s ->
+        let value = s.GetFrom cpu
         let res = (value + 1uy) &&& 0xFFuy
         let h = (value &&& 0xFuy) = 0xFuy
 
-        ref.SetTo cpu res
+        s.SetTo cpu res
         cpu.Flags <- cpu.Flags |> setZ (res = 0uy) |> setN false |> setH h
-    | Dec ref ->
-        let value = ref.GetFrom cpu
+    | Dec s ->
+        let value = s.GetFrom cpu
         let res = (value - 1uy) &&& 0xFFuy
         let h = (value &&& 0xFuy) = 0x0uy
 
-        ref.SetTo cpu res
+        s.SetTo cpu res
         cpu.Flags <- cpu.Flags |> setZ (res = 0uy) |> setN true |> setH h
     | IncReg16 reg -> ((reg.GetFrom cpu) + 1us) &&& 0xFFFFus |> reg.SetTo cpu
     | DecReg16 reg -> ((reg.GetFrom cpu) - 1us) &&& 0xFFFFus |> reg.SetTo cpu
@@ -71,8 +71,8 @@ let executeArithmetic (cpu: Cpu) (instr: ArithmeticInstr) =
 
         cpu.Registers.HL <- uint16 res
         cpu.Flags <- cpu.Flags |> setN false |> setH h |> setC c
-    | AddSPe s ->
-        let sp, e = cpu.Sp, uint16 s
+    | AddSPe b ->
+        let sp, e = cpu.Sp, uint16 b
         let res = (sp + e) &&& 0xFFFFus
 
         let h = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us

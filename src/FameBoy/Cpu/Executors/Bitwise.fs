@@ -41,34 +41,34 @@ let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     | Rrca -> shiftA cpu rotateRightCircular
     | Rla -> shiftA cpu (shiftLeft (isCarry cpu.Flags))
     | Rra -> shiftA cpu (shiftRight (isCarry cpu.Flags))
-    | Rlc w -> shiftBytes w cpu rotateLeftCircular
-    | Rrc w -> shiftBytes w cpu rotateRightCircular
-    | Rl w -> shiftBytes w cpu (shiftLeft (isCarry cpu.Flags))
-    | Rr w -> shiftBytes w cpu (shiftRight (isCarry cpu.Flags))
-    | Sla w -> shiftBytes w cpu (shiftLeft false)
-    | Sra w ->
-        let msb = ((w.GetFrom cpu &&& 0x80uy) <> 0uy)
+    | Rlc s -> shiftBytes s cpu rotateLeftCircular
+    | Rrc s -> shiftBytes s cpu rotateRightCircular
+    | Rl s -> shiftBytes s cpu (shiftLeft (isCarry cpu.Flags))
+    | Rr s -> shiftBytes s cpu (shiftRight (isCarry cpu.Flags))
+    | Sla s -> shiftBytes s cpu (shiftLeft false)
+    | Sra s ->
+        let msb = ((s.GetFrom cpu &&& 0x80uy) <> 0uy)
 
-        shiftBytes w cpu (shiftRight msb)
-    | Srl w -> shiftBytes w cpu (shiftRight false)
-    | Bit(u3, w) ->
-        let value = w.GetFrom cpu
+        shiftBytes s cpu (shiftRight msb)
+    | Srl s -> shiftBytes s cpu (shiftRight false)
+    | Bit(u3, s) ->
+        let value = s.GetFrom cpu
         let bitIsZero = ((value >>> (int u3)) &&& 1uy) = 0uy
 
         cpu.Flags <- cpu.Flags |> setZ bitIsZero |> setN false |> setH true
-    | Swap w ->
-        let value = w.GetFrom cpu
+    | Swap s ->
+        let value = s.GetFrom cpu
         let swapped = (((value <<< 4) &&& 0xF0uy) + (value >>> 4)) &&& 0xFFuy
 
-        w.SetTo cpu swapped
+        s.SetTo cpu swapped
         cpu.Flags <- cpu.Flags |> setZ (swapped = 0uy) |> setN false |> setH false |> setC false
-    | Res(u3, w) ->
+    | Res(u3, s) ->
         let mask = ~~~(1uy <<< (int u3)) &&& 0xFFuy
-        let res = (w.GetFrom cpu) &&& mask
+        let res = (s.GetFrom cpu) &&& mask
 
-        w.SetTo cpu res
-    | Set(u3, w) ->
+        s.SetTo cpu res
+    | Set(u3, s) ->
         let mask = (1uy <<< (int u3)) &&& 0xFFuy
-        let res = (w.GetFrom cpu) ||| mask
+        let res = (s.GetFrom cpu) ||| mask
 
-        w.SetTo cpu res
+        s.SetTo cpu res
