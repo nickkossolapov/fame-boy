@@ -3,14 +3,15 @@
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.Instructions.LoadTypes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Cpu.Utils
 
 let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     let getFullAddress (byte: uint8) = 0xFF00us + uint16 byte
 
     match instr with
-    | Ld8 (w, r) -> r.GetFrom cpu |> w.SetTo cpu
-    | LdA (d, s) ->
+    | Ld8(w, r) -> r.GetFrom cpu |> w.SetTo cpu
+    | LdA(d, s) ->
         match d, s with
         | From, AtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]
         | From, AtDE -> cpu.Registers.A <- cpu.Memory[cpu.Registers.DE]
@@ -30,13 +31,13 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
         | To, AtHLDec ->
             cpu.Memory[cpu.Registers.HL] <- cpu.Registers.A
             cpu.Registers.HL <- (cpu.Registers.HL - 1us) &&& 0xFFFFus
-    | Ldh (d, s) ->
+    | Ldh(d, s) ->
         match d, s with
         | From, AtCHigh -> cpu.Registers.A <- cpu.Memory[getFullAddress cpu.Registers.C]
         | To, AtCHigh -> cpu.Memory[getFullAddress cpu.Registers.C] <- cpu.Registers.A
         | From, AtByteHigh b -> cpu.Registers.A <- cpu.Memory[getFullAddress b]
         | To, AtByteHigh b -> cpu.Memory[getFullAddress b] <- cpu.Registers.A
-    | Ld16FromWord (reg, w) -> reg.SetTo cpu w
+    | Ld16FromWord(reg, w) -> reg.SetTo cpu w
     | LdAtWordFromSP w ->
         let msb, lsb = uint8 (cpu.Sp >>> 8), uint8 cpu.Sp
 
@@ -49,8 +50,8 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
         let sp, e = cpu.Sp, uint16 b
         let res = (sp + e) &&& 0xFFFFus
 
-        let halfCarry = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us
-        let carry = ((sp &&& 0xFFus) + (e &&& 0xFFus)) &&& 0x100us <> 0us
+        let hc = ((sp &&& 0x0Fus) + (e &&& 0x0Fus)) &&& 0x10us <> 0us
+        let c = ((sp &&& 0xFFus) + (e &&& 0xFFus)) &&& 0x100us <> 0us
 
         cpu.Registers.HL <- res
-        cpu.setFlags [ Zero, false; Subtract, false; HalfCarry, halfCarry; Carry, carry ]
+        cpu.Flags <- cpu.Flags |> setZ false |> setN false |> setH hc |> setC c

@@ -3,6 +3,7 @@ module FameBoy.Test.InstructionTests.LogicTests
 open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Cpu.Instructions
 open FameBoy.Memory
 open NUnit.Framework
@@ -27,10 +28,10 @@ let ``Bitwise AND A with B - and b`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x1Auy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.True)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Bitwise AND A with B (zero result) - and b`` () =
@@ -51,10 +52,10 @@ let ``Bitwise AND A with B (zero result) - and b`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x00uy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.True)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Bitwise OR A with (HL) - or (hl)`` () =
@@ -76,10 +77,10 @@ let ``Bitwise OR A with (HL) - or (hl)`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x5Fuy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
@@ -101,10 +102,10 @@ let ``Bitwise OR A with (HL) (zero result) - or (hl)`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x00uy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Bitwise XOR A with n - xor n`` () =
@@ -125,10 +126,10 @@ let ``Bitwise XOR A with n - xor n`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x65uy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Bitwise XOR A with n (zero result) - xor n`` () =
@@ -149,10 +150,10 @@ let ``Bitwise XOR A with n (zero result) - xor n`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x00uy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Complement carry flag (carry initially true) - ccf`` () =
@@ -161,10 +162,7 @@ let ``Complement carry flag (carry initially true) - ccf`` () =
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
-    cpu.setFlag Flag.Carry true
-    cpu.setFlag Flag.Subtract true // should be cleared
-    cpu.setFlag Flag.HalfCarry true // should be cleared
-    cpu.setFlag Flag.Zero false // should be unaffected
+    cpu.Flags <- cpu.Flags |> setZ false |> setN true |> setH true |> setC true
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -174,10 +172,10 @@ let ``Complement carry flag (carry initially true) - ccf`` () =
     Assert.That(instr.Length, Is.EqualTo 1)
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False) // Unaffected
+    Assert.That(isCarry cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False) // Unaffected
 
 [<Test>]
 let ``Complement carry flag (carry initially false) - ccf`` () =
@@ -186,10 +184,7 @@ let ``Complement carry flag (carry initially false) - ccf`` () =
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
-    cpu.setFlag Flag.Carry false
-    cpu.setFlag Flag.Subtract true // should be cleared
-    cpu.setFlag Flag.HalfCarry true // should be cleared
-    cpu.setFlag Flag.Zero true // should be unaffected
+    cpu.Flags <- cpu.Flags |> setZ true |> setN true |> setH true |> setC false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -199,10 +194,10 @@ let ``Complement carry flag (carry initially false) - ccf`` () =
     Assert.That(instr.Length, Is.EqualTo 1)
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That(cpu.getFlag Flag.Carry, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Zero, Is.True) // Unaffected
+    Assert.That(isCarry cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isZero cpu.Flags, Is.True) // Unaffected
 
 [<Test>]
 let ``Set carry flag - scf`` () =
@@ -211,10 +206,7 @@ let ``Set carry flag - scf`` () =
     let cpu = createCpu (createTestMemory [||])
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
-    cpu.setFlag Flag.Carry false // should be set
-    cpu.setFlag Flag.Subtract true // should be cleared
-    cpu.setFlag Flag.HalfCarry true // should be cleared
-    cpu.setFlag Flag.Zero true // should be unaffected
+    cpu.Flags <- cpu.Flags |> setZ true |> setN true |> setH true |> setC false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -224,10 +216,10 @@ let ``Set carry flag - scf`` () =
     Assert.That(instr.Length, Is.EqualTo 1)
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
-    Assert.That(cpu.getFlag Flag.Carry, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Zero, Is.True) // Unaffected
+    Assert.That(isCarry cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isZero cpu.Flags, Is.True) // Unaffected
 
 [<Test>]
 let ``Decimal adjust accumulator - daa`` () =
@@ -237,9 +229,7 @@ let ``Decimal adjust accumulator - daa`` () =
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x1Auy
-    cpu.setFlag Flag.Subtract false
-    cpu.setFlag Flag.HalfCarry false
-    cpu.setFlag Flag.Carry false
+    cpu.Flags <- cpu.Flags |> setN false |> setH false |> setC false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -250,9 +240,9 @@ let ``Decimal adjust accumulator - daa`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0x20uy)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Complement accumulator - cpl`` () =
@@ -262,8 +252,7 @@ let ``Complement accumulator - cpl`` () =
     cpu.Pc <- 0x100us
     cpu.Memory.Cartridge.Rom[0x100] <- opcode
     cpu.Registers.A <- 0x5Auy
-    cpu.setFlag Flag.Zero false // should be unaffected
-    cpu.setFlag Flag.Carry true // should be unaffected
+    cpu.Flags <- cpu.Flags |> setZ false |> setC true
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -274,7 +263,7 @@ let ``Complement accumulator - cpl`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 1))
 
     Assert.That(cpu.Registers.A, Is.EqualTo 0xA5uy)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.True)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False) // Unaffected
-    Assert.That(cpu.getFlag Flag.Carry, Is.True) // Unaffected
+    Assert.That(isSub cpu.Flags, Is.True)
+    Assert.That(isHalf cpu.Flags, Is.True)
+    Assert.That(isZero cpu.Flags, Is.False) // Unaffected
+    Assert.That(isCarry cpu.Flags, Is.True) // Unaffected

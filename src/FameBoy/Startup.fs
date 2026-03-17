@@ -1,6 +1,7 @@
 ﻿module FameBoy.Startup
 
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Hardware
 open FameBoy.Memory
 
@@ -9,7 +10,7 @@ let createDmgCpu (memory: Memory) =
     let cpu = createCpu memory
 
     cpu.Registers.A <- 0x01uy
-    cpu.setFlags [ Carry, true; HalfCarry, true; Zero, true ]
+    cpu.Flags <- cpu.Flags |> setC true |> setH true |> setZ true
     cpu.Registers.B <- 0x00uy
     cpu.Registers.C <- 0x13uy
     cpu.Registers.D <- 0x00uy

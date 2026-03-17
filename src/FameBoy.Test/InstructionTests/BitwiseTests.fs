@@ -4,22 +4,20 @@ open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Memory
 open NUnit.Framework
 
 let twoBitPrefix = 0xCBuy
 
 let setCpuFlags (z: bool, n: bool, h: bool, c: bool) (cpu: Cpu) =
-    cpu.setFlag Flag.Zero z
-    cpu.setFlag Flag.Subtract n
-    cpu.setFlag Flag.HalfCarry h
-    cpu.setFlag Flag.Carry c
+    cpu.Flags <- cpu.Flags |> setZ z |> setN n |> setH h |> setC c
 
 let verifyCpuFlags (z: bool, n: bool, h: bool, c: bool) (cpu: Cpu) =
-    Assert.That(cpu.getFlag Flag.Zero, Is.EqualTo z)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.EqualTo n)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.EqualTo h)
-    Assert.That(cpu.getFlag Flag.Carry, Is.EqualTo c)
+    Assert.That(isZero cpu.Flags, Is.EqualTo z)
+    Assert.That(isSub cpu.Flags, Is.EqualTo n)
+    Assert.That(isHalf cpu.Flags, Is.EqualTo h)
+    Assert.That(isCarry cpu.Flags, Is.EqualTo c)
 
 type BitwiseTestData =
     { Description: string
@@ -327,9 +325,7 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
     cpu.Memory.Cartridge.Rom[0x101] <- opcode
     cpu.Registers.H <- 0b10000000uy
-    cpu.setFlag Flag.Zero true
-    cpu.setFlag Flag.Subtract true
-    cpu.setFlag Flag.HalfCarry false
+    cpu.Flags <- cpu.Flags |> setZ true |> setN true |> setH false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -339,9 +335,9 @@ let ``Test bit 7 of H register - bit 7,h`` () =
     Assert.That(instr.Length, Is.EqualTo 2)
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.True)
 
 [<Test>]
 let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
@@ -353,9 +349,7 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     cpu.Memory.Cartridge.Rom[0x100] <- twoBitPrefix
     cpu.Memory.Cartridge.Rom[0x101] <- opcode
     cpu.Registers.H <- 0b00000000uy
-    cpu.setFlag Flag.Zero false
-    cpu.setFlag Flag.Subtract true
-    cpu.setFlag Flag.HalfCarry false
+    cpu.Flags <- cpu.Flags |> setZ false |> setN true |> setH false
 
     // Execute
     let instr = fetchAndDecode cpu.Memory cpu.Pc
@@ -365,6 +359,6 @@ let ``Test bit 7 of H register, bit not set - bit 7,h`` () =
     Assert.That(instr.Length, Is.EqualTo 2)
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 2))
 
-    Assert.That(cpu.getFlag Flag.Zero, Is.True)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
+    Assert.That(isZero cpu.Flags, Is.True)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.True)

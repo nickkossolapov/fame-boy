@@ -4,6 +4,7 @@ open FameBoy.Cpu.Instructions
 open FameBoy.Memory
 open NUnit.Framework
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.Execute
 
@@ -93,10 +94,10 @@ let ``NOP changes nothing`` () =
     Assert.That(cpu.Registers.L, Is.EqualTo 0xDEuy)
     Assert.That(cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Unknown opcode acts as NOP`` () =
@@ -130,10 +131,10 @@ let ``Unknown opcode acts as NOP`` () =
     Assert.That(cpu.Registers.L, Is.EqualTo 0xDEuy)
     Assert.That(cpu.Sp, Is.EqualTo 0xFFFEus)
 
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)
 
 [<Test>]
 let ``Loading value into F register zeroes lowest 4 bits`` () =

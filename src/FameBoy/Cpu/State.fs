@@ -2,38 +2,9 @@
 
 open FameBoy.Memory
 
-type Flag =
-    | Zero // z
-    | Subtract // n
-    | HalfCarry // h
-    | Carry // c
-
-module private Flags =
-    let ZMask = 0b10000000uy
-    let NMask = 0b01000000uy
-    let HMask = 0b00100000uy
-    let CMask = 0b00010000uy
-
-    let getFlag flag (reg: uint8) : bool =
-        match flag with
-        | Zero -> (reg &&& ZMask) <> 0uy
-        | Subtract -> (reg &&& NMask) <> 0uy
-        | HalfCarry -> (reg &&& HMask) <> 0uy
-        | Carry -> (reg &&& CMask) <> 0uy
-
-    let applyFlag flag (reg: uint8) (value: bool) =
-        let mask =
-            match flag with
-            | Zero -> ZMask
-            | Subtract -> NMask
-            | HalfCarry -> HMask
-            | Carry -> CMask
-
-        if value then reg ||| mask else reg &&& ~~~mask
 
 type Registers() =
     // Flags register is unique in that lowest 4 bits are always 0, so private state is needed
-    // TODO maybe make underlying types Flags instead of uint8, and have F member expose it as a uint8 instead
     let mutable f = 0uy
     let mutable a = 0uy
     let mutable b = 0uy
@@ -105,6 +76,29 @@ type Registers() =
             this.L <- uint8 (v &&& 0xFFus)
 
 
+module Flags =
+    let ZMask = 0b10000000uy
+    let NMask = 0b01000000uy
+    let HMask = 0b00100000uy
+    let CMask = 0b00010000uy
+
+    let inline setZ (v: bool) (f: uint8) =
+        if v then f ||| ZMask else f &&& ~~~ZMask
+
+    let inline setN (v: bool) (f: uint8) =
+        if v then f ||| NMask else f &&& ~~~NMask
+
+    let inline setH (v: bool) (f: uint8) =
+        if v then f ||| HMask else f &&& ~~~HMask
+
+    let inline setC (v: bool) (f: uint8) =
+        if v then f ||| CMask else f &&& ~~~CMask
+
+    let inline isZero (f: uint8) = (f &&& ZMask) <> 0uy
+    let inline isSub (f: uint8) = (f &&& NMask) <> 0uy
+    let inline isHalf (f: uint8) = (f &&& HMask) <> 0uy
+    let inline isCarry (f: uint8) = (f &&& CMask) <> 0uy
+
 type Cpu =
     { Memory: Memory
       Registers: Registers
@@ -114,17 +108,12 @@ type Cpu =
       mutable Halted: bool
       mutable EnableImeNextInstr: bool }
 
-    member this.setFlag flag value =
-        this.Registers.F <- Flags.applyFlag flag this.Registers.F value
-
-    member this.getFlag flag = Flags.getFlag flag this.Registers.F
-
-    member this.setFlags(flags: (Flag * bool) list) =
-        for flag, value in flags do
-            this.setFlag flag value
+    member this.Flags
+        with get () = this.Registers.F
+        and set v = this.Registers.F <- v
 
 let createCpu (memory: Memory) : Cpu =
-    let registers = Registers ()
+    let registers = Registers()
 
     { Memory = memory
       Registers = registers

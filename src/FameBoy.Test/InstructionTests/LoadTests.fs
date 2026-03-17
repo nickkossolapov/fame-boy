@@ -4,6 +4,7 @@ open FameBoy.Cpu.Execute
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.Opcodes
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 open FameBoy.Memory
 open NUnit.Framework
 
@@ -569,10 +570,10 @@ let ``Load HL from adjusted stack pointer - ld hl,sp+e`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 3))
 
     Assert.That(cpu.Registers.HL, Is.EqualTo 0xFF00us)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.True)
-    Assert.That(cpu.getFlag Flag.Carry, Is.True)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.True)
+    Assert.That(isCarry cpu.Flags, Is.True)
 
 [<Test>]
 let ``Load HL from adjusted stack pointer (negative) - ld hl,sp+e`` () =
@@ -594,7 +595,7 @@ let ``Load HL from adjusted stack pointer (negative) - ld hl,sp+e`` () =
     Assert.That(instr.MCycles, Is.EqualTo(Fixed 3))
 
     Assert.That(cpu.Registers.HL, Is.EqualTo 0xFEFFus)
-    Assert.That(cpu.getFlag Flag.Zero, Is.False)
-    Assert.That(cpu.getFlag Flag.Subtract, Is.False)
-    Assert.That(cpu.getFlag Flag.HalfCarry, Is.False)
-    Assert.That(cpu.getFlag Flag.Carry, Is.False)
+    Assert.That(isZero cpu.Flags, Is.False)
+    Assert.That(isSub cpu.Flags, Is.False)
+    Assert.That(isHalf cpu.Flags, Is.False)
+    Assert.That(isCarry cpu.Flags, Is.False)

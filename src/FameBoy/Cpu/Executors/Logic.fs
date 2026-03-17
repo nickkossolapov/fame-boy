@@ -2,31 +2,32 @@
 
 open FameBoy.Cpu.Instructions
 open FameBoy.Cpu.State
+open FameBoy.Cpu.State.Flags
 
 let turnAToBcd (cpu: Cpu) =
     let a = cpu.Registers.A
     let mutable correction = 0x00uy
-    let mutable carry = cpu.getFlag Carry
+    let mutable c = isCarry cpu.Flags
 
-    if cpu.getFlag Subtract then
-        if cpu.getFlag HalfCarry then
+    if isSub cpu.Flags then
+        if isHalf cpu.Flags then
             correction <- correction ||| 0x06uy
 
-        if carry then
+        if c then
             correction <- correction ||| 0x60uy
 
         cpu.Registers.A <- (a - correction) &&& 0xFFuy
     else
-        if a > 0x99uy || carry then
+        if a > 0x99uy || c then
             correction <- correction ||| 0x60uy
-            carry <- true
+            c <- true
 
-        if (a &&& 0x0Fuy) > 0x09uy || cpu.getFlag HalfCarry then
+        if (a &&& 0x0Fuy) > 0x09uy || isHalf cpu.Flags then
             correction <- correction ||| 0x06uy
 
         cpu.Registers.A <- (a + correction) &&& 0xFFuy
 
-    cpu.setFlags [ Zero, cpu.Registers.A = 0uy; HalfCarry, false; Carry, carry ]
+    cpu.Flags <- cpu.Flags |> setZ (cpu.Registers.A = 0uy) |> setH false |> setC c
 
 let executeLogic (cpu: Cpu) (instr: LogicInstr) =
     match instr with
@@ -35,22 +36,22 @@ let executeLogic (cpu: Cpu) (instr: LogicInstr) =
         let result = (cpu.Registers.A &&& value)
 
         cpu.Registers.A <- result
-        cpu.setFlags [ Zero, result = 0uy; Subtract, false; HalfCarry, true; Carry, false ]
+        cpu.Flags <- cpu.Flags |> setZ (result = 0uy) |> setN false |> setH true |> setC false
     | Or bs ->
         let value = bs.GetFrom cpu
         let result = (cpu.Registers.A ||| value)
 
         cpu.Registers.A <- result
-        cpu.setFlags [ Zero, result = 0uy; Subtract, false; HalfCarry, false; Carry, false ]
+        cpu.Flags <- cpu.Flags |> setZ (result = 0uy) |> setN false |> setH false |> setC false
     | Xor bs ->
         let value = bs.GetFrom cpu
         let result = (cpu.Registers.A ^^^ value)
 
         cpu.Registers.A <- result
-        cpu.setFlags [ Zero, result = 0uy; Subtract, false; HalfCarry, false; Carry, false ]
-    | Ccf -> cpu.setFlags [ Subtract, false; HalfCarry, false; Carry, not (cpu.getFlag Carry) ]
-    | Scf -> cpu.setFlags [ Subtract, false; HalfCarry, false; Carry, true ]
+        cpu.Flags <- cpu.Flags |> setZ (result = 0uy) |> setN false |> setH false |> setC false
+    | Ccf -> cpu.Flags <- cpu.Flags |> setN false |> setH false |> setC (not (isCarry cpu.Flags))
+    | Scf -> cpu.Flags <- cpu.Flags |> setN false |> setH false |> setC true
     | Daa -> turnAToBcd cpu
     | Cpl ->
         cpu.Registers.A <- ~~~cpu.Registers.A &&& 0xFFuy
-        cpu.setFlags [ Subtract, true; HalfCarry, true ]
+        cpu.Flags <- cpu.Flags |> setN true |> setH true
