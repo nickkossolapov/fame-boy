@@ -26,14 +26,14 @@ type Ppu =
     { Framebuffer: Shade array
       Backbuffer: Shade array
       mutable Dot: int
-      mutable StatLine: bool
+      mutable WindowLine: int
+      mutable StatSignal: bool
       Memory: Memory
       mutable Disabled: bool }
 
     member this.Ly
         with get () = this.Memory.IoRegisters[IoRegisterOffsets.Ly]
         and set v = this.Memory.IoRegisters[IoRegisterOffsets.Ly] <- v
-
 
 module private Oam =
 
@@ -73,7 +73,8 @@ let createPpu (memory: Memory) =
     { Framebuffer = Array.create bufferWidth Shade.White
       Backbuffer = Array.create bufferWidth Shade.White
       Dot = 0
-      StatLine = false
+      WindowLine = 0
+      StatSignal = false
       Memory = memory
       Disabled = false }
 
@@ -145,19 +146,18 @@ module private scanline =
 
         fetchPixel pixelOffset bitX vram
 
-    let fetchTileMapPixel screenX screenY windowOnLine (vram: uint8 array) (memory: Memory) =
-        if windowOnLine && screenX >= int memory[IoRegisters.Wx] - 7 then
-            let wX = screenX - (int memory[IoRegisters.Wx] - 7)
-            let wY = screenY - int memory[IoRegisters.Wy]
-            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea memory
+    let fetchTileMapPixel screenX screenY windowOnLine (ppu: Ppu) =
+        if windowOnLine && screenX >= int ppu.Memory[IoRegisters.Wx] - 7 then
+            let wX = screenX - (int ppu.Memory[IoRegisters.Wx] - 7)
+            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea ppu.Memory
 
-            decodeTileMapPixel wX wY areaBit vram memory
+            decodeTileMapPixel wX ppu.WindowLine areaBit ppu.Memory.VideoRam ppu.Memory
         else
-            let bgX = (screenX + int memory[IoRegisters.Scx]) % 256
-            let bgY = (screenY + int memory[IoRegisters.Scy]) % 256
-            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea memory
+            let bgX = (screenX + int ppu.Memory[IoRegisters.Scx]) % 256
+            let bgY = (screenY + int ppu.Memory[IoRegisters.Scy]) % 256
+            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea ppu.Memory
 
-            decodeTileMapPixel bgX bgY areaBit vram memory
+            decodeTileMapPixel bgX bgY areaBit ppu.Memory.VideoRam ppu.Memory
 
     let decodeObjectPixel screenX screenY isDoubleHeight oamAddr (oam: uint8 array) (vram: uint8 array) =
         let objX = int oam[oamAddr + 1]
@@ -168,13 +168,17 @@ module private scanline =
         let spriteHeight = if isDoubleHeight then 16 else 8
         let spriteY = screenY - (objY - 16)
 
-        let flippedY = if attributes.YFlip then (spriteHeight - 1) - spriteY else spriteY
+        let flippedY =
+            if attributes.YFlip then
+                (spriteHeight - 1) - spriteY
+            else
+                spriteY
+
         let isBottomTile = isDoubleHeight && flippedY >= 8
 
         let effectiveTileNum =
             if isDoubleHeight then
-                if isBottomTile then tileNum ||| 0x01
-                else tileNum &&& 0xFE
+                if isBottomTile then tileNum ||| 0x01 else tileNum &&& 0xFE
             else
                 tileNum
 
@@ -224,7 +228,7 @@ module private scanline =
 
         let objEnable = Lcdc.isEnabled Lcdc.ObjEnable memory
         let bgEnable = Lcdc.isEnabled Lcdc.BgEnable memory
-        
+
         let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize ppu.Memory
         let objBottom = if isDoubleHeight then 0 else 8
 
@@ -241,12 +245,13 @@ module private scanline =
                 obp0Map[int pixel.Shade]
 
         let fetchPrioritisedPixels screenX =
-            let objPixel = fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
+            let objPixel =
+                fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
 
             match objPixel with
             | ValueSome p when p.Shade <> Shade.White ->
                 if p.BgPriority then
-                    let bgPixel = fetchTileMapPixel screenX screenY windowOnLine vram memory
+                    let bgPixel = fetchTileMapPixel screenX screenY windowOnLine ppu
 
                     if bgPixel <> Shade.White then
                         bgpMap[int bgPixel]
@@ -254,7 +259,7 @@ module private scanline =
                         mapObjPixel p
                 else
                     mapObjPixel p
-            | _ -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine vram memory)]
+            | _ -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine ppu)]
 
         for screenX in 0 .. Screen.width - 1 do
             let bufferAddr = screenY * Screen.width + screenX
@@ -266,10 +271,13 @@ module private scanline =
                     fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
                     |> ValueOption.map mapObjPixel
                     |> ValueOption.defaultValue Shade.White
-                | false, true -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine vram memory)]
+                | false, true -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine ppu)]
                 | false, false -> Shade.White
 
             buffer[bufferAddr] <- pixel
+
+        if windowOnLine then
+            ppu.WindowLine <- ppu.WindowLine + 1
 
 open scanline
 
@@ -305,6 +313,7 @@ let stepPpu (ppu: Ppu) =
 
                 if ppu.Ly >= vBlankStart then
                     ppu.Memory.PpuMode <- PpuMode.VBlank
+                    ppu.WindowLine <- 0
 
                     triggerInterrupt ppu.Memory InterruptType.VBlank
         | PpuMode.VBlank ->
@@ -338,8 +347,8 @@ let stepPpu (ppu: Ppu) =
             || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.Memory[IoRegisters.Lyc])
 
         // Only trigger interrupt on the rising edge of the interrupt signal, needed for STAT blocking
-        if newLine && not ppu.StatLine then
+        if newLine && not ppu.StatSignal then
             triggerInterrupt ppu.Memory InterruptType.LcdStat
 
-        ppu.StatLine <- newLine
+        ppu.StatSignal <- newLine
         ppu.Memory.IoRegisters[IoRegisterOffsets.Stat] <- stat
