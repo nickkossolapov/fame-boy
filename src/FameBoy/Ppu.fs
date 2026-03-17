@@ -20,7 +20,7 @@ type Shade =
     | Black = 3
 
 module Shade =
-    let ofByte (i: uint8) = LanguagePrimitives.EnumOfValue(int i)
+    let ofByte (i: uint8) : Shade = LanguagePrimitives.EnumOfValue(int i)
 
 type Ppu =
     { Framebuffer: Shade array
@@ -34,7 +34,9 @@ type Ppu =
         with get () = this.Memory.IoRegisters[IoRegisterOffsets.Ly]
         and set v = this.Memory.IoRegisters[IoRegisterOffsets.Ly] <- v
 
+
 module private Oam =
+
     [<Literal>]
     let private OBP1 = 0b0001_0000uy
 
@@ -42,13 +44,13 @@ module private Oam =
         { Priority: bool
           XFlip: bool
           YFlip: bool
-          Palette: bool }
+          UseObp1: bool }
 
         static member ofByte b =
             { Priority = b &&& 0b1000_0000uy <> 0uy
               YFlip = b &&& 0b0100_0000uy <> 0uy
               XFlip = b &&& 0b0010_0000uy <> 0uy
-              Palette = b &&& OBP1 <> 0uy }
+              UseObp1 = b &&& OBP1 <> 0uy }
 
 open Oam
 
@@ -90,8 +92,25 @@ module Lcdc =
     let inline isEnabled control (memory: Memory) =
         memory[IoRegisters.Lcdc] &&& control <> 0uy
 
-// TODO palettes
+module private Palettes =
+    let private parsePaletteData byte =
+        [| byte >>> 0 &&& 0b0011uy
+           byte >>> 2 &&& 0b0011uy
+           byte >>> 4 &&& 0b0011uy
+           byte >>> 6 &&& 0b0011uy |]
+        |> Array.map (int >> LanguagePrimitives.EnumOfValue)
+
+    let fetchPaletteMaps (memory: Memory) =
+        parsePaletteData memory[IoRegisters.Bgp], parsePaletteData memory[IoRegisters.Obp0], parsePaletteData memory[IoRegisters.Obp1]
+
+open Palettes
+
 module private scanline =
+    type ObjPixel =
+        { Shade: Shade
+          UseObp1: bool
+          BgPriority: bool }
+
     let fetchPixel vramOffset offset (vram: uint8 array) =
         let left = vram[vramOffset]
         let right = vram[vramOffset + 1]
@@ -140,8 +159,6 @@ module private scanline =
 
             decodeTileMapPixel bgX bgY areaBit vram memory
 
-    let oamAddresses = [| 0..4..0x9C |] // OAM local addresses, actual: 0xFE00 ... 0xFE9C
-
     let decodeObjectPixel screenX screenY oamAddr (oam: uint8 array) (vram: uint8 array) =
         let objX = int oam[oamAddr + 1]
         let objY = int oam[oamAddr]
@@ -156,27 +173,29 @@ module private scanline =
 
         let pixelOffset = tileOffset + bitY * 2
 
-        fetchPixel pixelOffset bitX vram, attributes.Priority
+        { Shade = fetchPixel pixelOffset bitX vram
+          UseObp1 = attributes.UseObp1
+          BgPriority = attributes.Priority }
 
     // TODO 8x16 tiles
     let fetchObjectPixel x y (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
-        let mutable shade = Shade.White // mutable makes me sad, but this is a hot path, and it's needed for an early return
-        let mutable bgPriority = false
+        let mutable found = ValueNone // mutable makes me sad, but this is a hot path, and it's needed for an early return
         let mutable i = 0
 
-        while i < filteredOam.Length && shade = Shade.White do
+        while i < filteredOam.Length && found.IsNone do
             let objX = int oam[filteredOam[i] + 1]
 
             if x >= objX - 8 && x < objX then
-                let pixel, priority = decodeObjectPixel x y filteredOam[i] oam vram
+                let pixel = decodeObjectPixel x y filteredOam[i] oam vram
 
-                if pixel <> Shade.White then
-                    shade <- pixel
-                    bgPriority <- priority
+                if pixel.Shade <> Shade.White then
+                    found <- ValueSome pixel
 
             i <- i + 1
 
-        shade, bgPriority
+        found
+
+    let oamAddresses = [| 0..4..0x9C |] // OAM local addresses, actual: 0xFE00 ... 0xFE9C
 
     let renderScanline (buffer: Shade array) (ppu: Ppu) =
         let vram = ppu.Memory.VideoRam
@@ -184,7 +203,11 @@ module private scanline =
         let memory = ppu.Memory
         let screenY = int ppu.Ly
 
-        let windowOnLine = Lcdc.isEnabled Lcdc.WindowEnable memory && screenY >= int memory[IoRegisters.Wy]
+        let bgpMap, obp0Map, obp1Map = fetchPaletteMaps memory
+
+        let windowOnLine =
+            Lcdc.isEnabled Lcdc.WindowEnable memory && screenY >= int memory[IoRegisters.Wy]
+
         let objEnable = Lcdc.isEnabled Lcdc.ObjEnable memory
         let bgEnable = Lcdc.isEnabled Lcdc.BgEnable memory
 
@@ -194,26 +217,39 @@ module private scanline =
             |> Array.sortBy (fun offset -> oam[offset + 1]) // DMG prioritises by X coordinate
             |> Array.truncate 10
 
-        let fetchPrioritisedPixels screenX =
-            let objPixel, bgPriority = fetchObjectPixel screenX screenY objectsInLine oam vram
-
-            if objPixel = Shade.White then
-                fetchTileMapPixel screenX screenY windowOnLine vram memory
-            elif bgPriority then
-                let bgPixel = fetchTileMapPixel screenX screenY windowOnLine vram memory
-
-                if bgPixel <> Shade.White then bgPixel else objPixel
+        let inline mapObjPixel pixel =
+            if pixel.UseObp1 then
+                obp1Map[int pixel.Shade]
             else
-                objPixel
+                obp0Map[int pixel.Shade]
+
+        let fetchPrioritisedPixels screenX =
+            let objPixel = fetchObjectPixel screenX screenY objectsInLine oam vram
+
+            match objPixel with
+            | ValueSome p when p.Shade <> Shade.White ->
+                if p.BgPriority then
+                    let bgPixel = fetchTileMapPixel screenX screenY windowOnLine vram memory
+
+                    if bgPixel <> Shade.White then
+                        bgpMap[int bgPixel]
+                    else
+                        mapObjPixel p
+                else
+                    mapObjPixel p
+            | _ -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine vram memory)]
 
         for screenX in 0 .. Screen.width - 1 do
             let bufferAddr = screenY * Screen.width + screenX
-            
+
             let pixel =
                 match objEnable, bgEnable with
                 | true, true -> fetchPrioritisedPixels screenX
-                | true, false -> fetchObjectPixel screenX screenY objectsInLine oam vram |> fst
-                | false, true -> fetchTileMapPixel screenX screenY windowOnLine vram memory
+                | true, false ->
+                    fetchObjectPixel screenX screenY objectsInLine oam vram
+                    |> ValueOption.map mapObjPixel
+                    |> ValueOption.defaultValue Shade.White
+                | false, true -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine vram memory)]
                 | false, false -> Shade.White
 
             buffer[bufferAddr] <- pixel
