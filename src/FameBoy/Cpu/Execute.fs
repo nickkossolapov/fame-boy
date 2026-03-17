@@ -74,15 +74,17 @@ let execute (cpu: Cpu) (io: IoController) (instr: DecodedInstruction) =
             false
         | Unknown -> false
 
-    let cycles =
+    let interruptCycles =
         match checkForInterrupt cpu io with
         | ValueSome i -> serviceInterrupt cpu io i
-        | ValueNone ->
-            match instr.MCycles with
-            | Fixed c -> c
-            | Conditional cc -> if condTaken then cc.Met else cc.NotMet
+        | ValueNone -> 0
+            
+    let instructionCycles = 
+        match instr.MCycles with
+        | Fixed c -> c
+        | Conditional cc -> if condTaken then cc.Met else cc.NotMet
 
-    cycles
+    interruptCycles + instructionCycles
 
 let stepCpu (cpu: Cpu) (io: IoController) =
     if cpu.Halted then
