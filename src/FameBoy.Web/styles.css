@@ -268,10 +268,10 @@ body {
 }
 
 .shell {
-    height: calc(600px * var(--s));
-    width: calc(360px * var(--s));
+    height: 600px;
+    width: 360px;
     background: var(--color-shell);
-    border-radius: calc(15px * var(--s)) calc(15px * var(--s)) calc(60px * var(--s)) calc(15px * var(--s));
+    border-radius: 15px 15px 60px 15px;
     box-shadow: 3px 6px 16px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
@@ -280,37 +280,38 @@ body {
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
+    zoom: var(--s);
 }
 
 .screen-border {
     background: var(--color-bezel);
-    border-radius: calc(15px * var(--s)) calc(15px * var(--s)) calc(60px * var(--s)) calc(15px * var(--s));
-    padding: calc(25px * var(--s)) calc(55px * var(--s));
-    margin-top: calc(30px * var(--s));
+    border-radius: 15px 15px 60px 15px;
+    padding: 25px 55px;
+    margin-top: 30px;
 }
 
 #screen {
     image-rendering: pixelated;
-    height: calc(180px * var(--s));
+    height: 180px;
     aspect-ratio: 10/9;
-    border: calc(5px * var(--s)) solid var(--color-d-pad);
-    border-radius: calc(5px * var(--s));
+    border: 5px solid var(--color-d-pad);
+    border-radius: 5px;
     background: var(--color-d-pad);
 }
 
 .buttons {
     position: relative;
-    width: calc(300px * var(--s));
-    height: calc(150px * var(--s));
+    width: 300px;
+    height: 150px;
     perspective: 150px;
-    margin-bottom: calc(100px * var(--s));
+    margin-bottom: 100px;
 }
 
 .d-pad {
-    --d-pad-button-size: calc(35px * var(--s));
+    --d-pad-button-size: 35px;
     position: relative;
-    width: calc(105px * var(--s));
-    height: calc(105px * var(--s));
+    width: 105px;
+    height: 105px;
     transform-style: preserve-3d;
     transition: transform 0.1s ease;
 }
@@ -345,55 +346,55 @@ body {
 
 #up-button {
     width: var(--d-pad-button-size);
-    height: calc(var(--d-pad-button-size) + 2px * var(--s));
+    height: calc(var(--d-pad-button-size) + 2px);
     top: 0;
     left: var(--d-pad-button-size);
-    border-radius: calc(5px * var(--s)) calc(5px * var(--s)) 0 0;
+    border-radius: 5px 5px 0 0;
 }
 
 #down-button {
     width: var(--d-pad-button-size);
-    height: calc(var(--d-pad-button-size) + 2px * var(--s));
+    height: calc(var(--d-pad-button-size) + 2px);
     bottom: 0;
     left: var(--d-pad-button-size);
-    border-radius: 0 0 calc(5px * var(--s)) calc(5px * var(--s));
+    border-radius: 0 0 5px 5px;
 }
 
 #left-button {
-    width: calc(var(--d-pad-button-size) + 2px * var(--s));
+    width: calc(var(--d-pad-button-size) + 2px);
     height: var(--d-pad-button-size);
     top: var(--d-pad-button-size);
     left: 0;
-    border-radius: calc(5px * var(--s)) 0 0 calc(5px * var(--s));
+    border-radius: 5px 0 0 5px;
 }
 
 #right-button {
-    width: calc(var(--d-pad-button-size) + 2px * var(--s));
+    width: calc(var(--d-pad-button-size) + 2px);
     height: var(--d-pad-button-size);
     top: var(--d-pad-button-size);
     right: 0;
-    border-radius: 0 calc(5px * var(--s)) calc(5px * var(--s)) 0;
+    border-radius: 0 5px 5px 0;
 }
 
 .a-b-buttons {
     right: 0;
-    top: calc(25px * var(--s));
+    top: 25px;
     position: absolute;
-    width: calc(110px * var(--s));
+    width: 110px;
     display: flex;
     justify-content: space-between;
     rotate: -25deg;
 }
 
 .a-b-button {
-    width: calc(50px * var(--s));
-    height: calc(50px * var(--s));
+    width: 50px;
+    height: 50px;
     background: var(--color-a-b);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: calc(16px * var(--s));
+    font-size: 16px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.35);
 }
@@ -407,22 +408,22 @@ body {
     bottom: 0;
     width: 100%;
     display: flex;
-    gap: calc(15px * var(--s));
+    gap: 15px;
     justify-content: center;
 }
 
 .start-select-button {
-    width: calc(45px * var(--s));
-    height: calc(15px * var(--s));
+    width: 45px;
+    height: 15px;
     background: var(--color-start-select);
-    border-radius: calc(10px * var(--s));
+    border-radius: 10px;
     rotate: -25deg;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: calc(8px * var(--s));
+    font-size: 8px;
     font-weight: 600;
-    letter-spacing: calc(0.3px * var(--s));
+    letter-spacing: 0.3px;
     color: rgba(255, 255, 255, 0.35);
 }
 
@@ -437,8 +438,8 @@ button:focus-visible {
 }
 
 @media (max-width: 700px) {
-    :root {
-        --s: min(1, tan(atan2(100vw - 40px, 360px))) !important;
+    .shell {
+        zoom: min(1, calc((100vw - 40px) / 360));
     }
 
     #root {
