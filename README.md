@@ -2,6 +2,8 @@
 
 # Fame Boy
 
+[![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
+
 A Game Boy (DMG) emulator written in F#. This is a development exercise for me, so I prioritised readability and idiomatic F# over
 performance, but still with a few compromises for performance. It's quite far from being feature-complete, and may never reach there.
 
