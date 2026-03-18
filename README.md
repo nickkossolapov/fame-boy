@@ -1,24 +1,59 @@
-![Fame Boy icon](./assets/icon.png)
-
 # Fame Boy
+
+A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
+
+![pokemon demo](./assets/pokemon.gif) ![mario demo](./assets/mario.gif)  ![zelda demo](./assets/zelda.gif)
 
 [![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
 
-A Game Boy (DMG) emulator written in F#. This is a development exercise for me, so I prioritised readability and idiomatic F# over
-performance, but still with a few compromises for performance. It's quite far from being feature-complete, and may never reach there.
+### Features
 
-It runs natively on Linux, macOS, and Windows with [Raylib](https://www.raylib.com/) and in the browser with [Fable](https://fable.io/).
+- Supports most of the popular Game Boy games (incl. Tetris, Pokémon, Mario, Zelda, and more!).
+- Runs [in the browser](https://nickkossolapov.github.io/fame-boy/) with a touch-friendly fully responsive design built with [Fable](https://fable.io/).
+- Cross-platform too, it runs natively on Windows, macOS, and Linux (and others) with [Raylib](https://www.raylib.com/).
+- Zero-dependency [F# core](./src/FameBoy) with robust typing and built with functional programming in mind.
 
-Try it out [here](https://nickkossolapov.github.io/fame-boy/)!
+### Limitations/TODOs
 
-## Prerequisites
+This was a development exercise for me, so I prioritised readability, idiomatic F#, and fun over pure performance and hardware accuracy.
+It's quite far from being feature-complete, and here are some things that I may or may not get to (but would like to).
+
+- No Game Boy Color support.
+- No sound.
+- Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
+- Missing battery saves (SRAM) and save states.
+- Scanline-based rendering instead of using a pixel FIFO.
+- Not super accurate (e.g. uses instant DMA transfer, missing a few hardware bugs).
+- Only ROMs with MBC1, MBC3, and MBC5 are supported.
+
+### Controls
+
+| Game Boy | Key           |
+|----------|---------------|
+| D-pad    | W / A / S / D |
+| A        | K             |
+| B        | J             |
+| Start    | N             |
+| Select   | B             |
+
+The web version also supports mouse/touch.
+
+### Repo structure
+
+- `FameBoy` - Core emulator library (CPU, PPU, memory, cartridges)
+- `FameBoy.Raylib` - Native desktop frontend using Raylib
+- `FameBoy.Web` - Browser frontend using Fable and Vite
+- `FameBoy.Test` - Unit tests (NUnit)
+- `FameBoy.Benchmark` - Performance benchmarks (BenchmarkDotNet)
+
+## Getting Started
+
+### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - [Node.js](https://nodejs.org/) (for the web project only)
 
-## Getting Started
-
-### Run local debug build
+### Run local build
 
 #### Desktop
 
@@ -33,25 +68,23 @@ dotnet run --project src/FameBoy.Raylib -- <rom-file> [scale]
 ``` bash
 cd src/FameBoy.Web
 npm install
-```
-
-And then start Fable and serve the app with [Vite](https://vite.dev/):
-
-``` bash
 npm run dev
 ```
+
+This starts both Fable and Vite in watch mode.
 
 ### Create release builds
 
 #### Desktop
 
 ``` bash
-dotnet build .\src\FameBoy.Raylib\FameBoy.Raylib.fsproj -c release 
+dotnet build ./src/FameBoy.Raylib/FameBoy.Raylib.fsproj -c release 
 ```
 
 #### Web
 
 ``` bash
+cd src/FameBoy.Web
 npm run build
 ```
 
@@ -77,22 +110,9 @@ Or directly:
 dotnet run --project src/FameBoy.Benchmark -c Release
 ```
 
-## Controls
-
-| Game Boy | Key           |
-|----------|---------------|
-| D-pad    | W / A / S / D |
-| A        | K             |
-| B        | J             |
-| Start    | N             |
-| Select   | B             |
-
-The web version also supports mouse/touch.
-
 ## License
 
 The Fame Boy source code is licensed under the [MIT License](./LICENSE).
 
 This project redistributes an unmodified copy of [Tobu Tobu Girl DX](https://github.com/SimonLarsen/tobutobugirl) by Simon Larsen,
 included under its original MIT/CC-BY licensing terms and is not covered by the above license.
-
