@@ -7,6 +7,12 @@ open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Web.Joypad
 
+type private IResponse =
+    abstract arrayBuffer: unit -> JS.Promise<JS.ArrayBuffer>
+
+[<Global>]
+let private fetch (url: string) : JS.Promise<IResponse> = jsNative
+
 initOnScreenButtons ()
 
 let fileUploadButton = document.getElementById "rom-file"
@@ -92,4 +98,17 @@ let scaleSelector = document.querySelectorAll "input[name='scale']"
 for i in 0 .. int scaleSelector.length - 1 do
     let input = scaleSelector.[i] :?> HTMLInputElement
 
-    input.addEventListener ("change", fun _ -> emitJsExpr input.value "document.documentElement.style.setProperty('--s', $0)")
+    input.addEventListener ("change", fun _ -> document.documentElement?style?setProperty ("--s", input.value))
+
+let loadDefaultRom () =
+    async {
+        let! response = fetch "tobudx.gb" |> Async.AwaitPromise
+        let! arrayBuffer = response.arrayBuffer () |> Async.AwaitPromise
+        let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
+        let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
+
+        startEmulator bytes
+    }
+    |> Async.StartImmediate
+
+loadDefaultRom ()

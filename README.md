@@ -88,3 +88,11 @@ dotnet run --project src/FameBoy.Benchmark -c Release
 | Select   | B             |
 
 The web version also supports mouse/touch.
+
+## License
+
+The Fame Boy source code is licensed under the [MIT License](./LICENSE).
+
+This project redistributes an unmodified copy of [Tobu Tobu Girl DX](https://github.com/SimonLarsen/tobutobugirl) by Simon Larsen,
+included under its original MIT/CC-BY licensing terms and is not covered by the above license.
+

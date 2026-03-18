@@ -231,6 +231,22 @@ body {
     height: 35px;
 }
 
+.game-credit {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    text-align: center;
+}
+
+.game-credit a {
+    color: var(--color-subtle);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.game-credit a:hover {
+    color: var(--color-text);
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -419,11 +435,20 @@ button:focus-visible {
     }
 
     .sidebar {
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: auto auto;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
     }
 
     .scale-selector,
     .controls {
         display: none;
+    }
+
+    .game-credit {
+        grid-column: 1 / -1;
+        text-align: center;
     }
 }
