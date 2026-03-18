@@ -1,20 +1,17 @@
 [<RequireQualifiedAccess>]
 module FameBoy.Raylib.Config
 
+open System.Diagnostics
 open FameBoy.Hardware
 
-[<Literal>]
-let scale = 4
+let mutable scale = 4
 
-[<Literal>]
-let enableDebugView = true
+let enableDebugView = Debugger.IsAttached
 
-[<Literal>]
 let width =
     if enableDebugView then
         Screen.width + 256 + 1
     else
         Screen.width
 
-[<Literal>]
 let height = if enableDebugView then 256 + 96 + 1 else Screen.height

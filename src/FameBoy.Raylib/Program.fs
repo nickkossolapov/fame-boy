@@ -11,11 +11,18 @@ open Raylib_cs
 
 let args = Environment.GetCommandLineArgs()
 
-if args.Length <> 2 then
-    eprintfn "Usage: fame-boy <rom-file>"
+if args.Length < 2 || args.Length > 3 then
+    eprintfn "Usage: fame-boy <rom-file> [scale - optional, default 4]"
     exit 1
 
 let romPath = args[1]
+
+if args.Length = 3 then
+    match Int32.TryParse(args[2]) with
+    | true, s when s > 0 -> Config.scale <- s
+    | _ ->
+        eprintfn $"Invalid scale value: %s{args[2]} (must be a positive integer)"
+        exit 1
 
 if not (File.Exists romPath) then
     eprintfn $"File not found: %s{romPath}"

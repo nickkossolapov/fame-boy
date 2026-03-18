@@ -38,9 +38,10 @@ module GraphicsPipeline =
     let private tilesFramebuffer =
         Array.create<Shade> (mapSide * tilesHeight) Shade.White
 
-    let private mapPos = (float32 ((Screen.width + 1) * Config.scale), 0f)
+    let private mapPos () =
+        (float32 ((Screen.width + 1) * Config.scale), 0f)
 
-    let private tilePos =
+    let private tilePos () =
         float32 ((Screen.width + 1) * Config.scale), float32 ((mapSide + 1) * Config.scale)
 
     let private dumpVram =
@@ -60,8 +61,8 @@ module GraphicsPipeline =
     let loadDebugFramebuffers (ppu: Ppu) =
         dumpVram ppu
 
-        loadFramebuffer mapPos mapTexture backgroundFramebuffer
-        loadFramebuffer tilePos tilesTexture tilesFramebuffer
+        loadFramebuffer (mapPos ()) mapTexture backgroundFramebuffer
+        loadFramebuffer (tilePos ()) tilesTexture tilesFramebuffer
 
     let close () =
         Raylib.UnloadTexture screenTexture

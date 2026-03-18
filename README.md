@@ -5,7 +5,7 @@
 A Game Boy (DMG) emulator written in F#. This is a development exercise for me, so I prioritised readability and idiomatic F# over
 performance, but still with a few compromises for performance. It's quite far from being feature-complete, and may never reach there.
 
-It runs natively on desktop via [Raylib](https://www.raylib.com/) and in the browser via [Fable](https://fable.io/).
+It runs natively on Linux, macOS, and Windows with [Raylib](https://www.raylib.com/) and in the browser with [Fable](https://fable.io/).
 
 Try it out [here](https://nickkossolapov.github.io/fame-boy/)!
 
@@ -21,8 +21,10 @@ Try it out [here](https://nickkossolapov.github.io/fame-boy/)!
 #### Desktop
 
 ``` bash
-dotnet run --project src/FameBoy.Raylib -- <rom-file>
+dotnet run --project src/FameBoy.Raylib -- <rom-file> [scale]
 ```
+
+`scale` is an optional positive integer that controls the window size multiplier (default: 4).
 
 #### Web
 
