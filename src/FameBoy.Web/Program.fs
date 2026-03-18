@@ -2,6 +2,7 @@
 open Browser
 open Browser.Types
 open Fable.Core
+open Fable.Core.JsInterop
 open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Web.Joypad
@@ -85,3 +86,10 @@ let onFileLoaded (ev: Event) =
         reader.readAsArrayBuffer file
 
 fileUploadButton.addEventListener ("change", onFileLoaded)
+
+let scaleSelector = document.querySelectorAll "input[name='scale']"
+
+for i in 0 .. int scaleSelector.length - 1 do
+    let input = scaleSelector.[i] :?> HTMLInputElement
+
+    input.addEventListener ("change", fun _ -> emitJsExpr input.value "document.documentElement.style.setProperty('--s', $0)")
