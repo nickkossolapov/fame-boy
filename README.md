@@ -2,7 +2,7 @@
 
 A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
 
-![pokemon demo](./assets/pokemon.gif) ![mario demo](./assets/mario.gif)  ![zelda demo](./assets/zelda.gif)
+![pokemon demo](./assets/pokemon.gif) ![zelda demo](./assets/zelda.gif)
 
 [![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
 
