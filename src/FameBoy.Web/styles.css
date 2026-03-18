@@ -20,6 +20,7 @@
     --color-d-pad: #2a2a2a;
     --color-a-b: #8b2252;
     --color-start-select: #555;
+    --color-button-label: rgba(255, 255, 255, 0.50);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -389,6 +390,12 @@ body {
     height: calc(50px * var(--s));
     background: var(--color-a-b);
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(16px * var(--s));
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .a-b-button:active {
@@ -410,6 +417,13 @@ body {
     background: var(--color-start-select);
     border-radius: calc(10px * var(--s));
     rotate: -25deg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(8px * var(--s));
+    font-weight: 600;
+    letter-spacing: calc(0.3px * var(--s));
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .start-select-button:active {
