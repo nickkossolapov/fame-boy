@@ -13,9 +13,16 @@ A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https:
 - Cross-platform too, it runs natively on Windows, macOS, and Linux (and others) with [Raylib](https://www.raylib.com/).
 - Zero-dependency [F# core](./src/FameBoy) with robust typing and built with functional programming in mind.
 
+### About
+
+This was a development exercise for me to learn about computer hardware, and the Game Boy struck a great balance between well-defined in scope, a real system, and chock-full of nostalgia.
+
+As part of the process, I did use AI to generate most of the test cases and help review parts of my code, but most of the code was (unfortunately?) meticulously crafted by me.
+
 ### Limitations/TODOs
 
-This was a development exercise for me, so I prioritised readability, idiomatic F#, and fun over pure performance and hardware accuracy.
+Because this was a learning exercise, I prioritised readability, idiomatic F#, and fun over pure performance and perfect hardware accuracy.
+
 It's quite far from being feature-complete, and here are some things that I may or may not get to (but would like to).
 
 - No Game Boy Color support.
