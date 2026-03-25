@@ -1,6 +1,6 @@
 module FameBoy.Raylib.Graphics
 
-open FameBoy.Graphics.Ppu
+open FameBoy.Ppu
 open FameBoy.Hardware
 open FameBoy.Raylib
 open FameBoy.Raylib.RaylibBindings

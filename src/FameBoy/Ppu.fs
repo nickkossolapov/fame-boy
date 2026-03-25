@@ -1,4 +1,4 @@
-﻿module FameBoy.Graphics.Ppu
+﻿module FameBoy.Ppu
 
 open System
 open FameBoy.Interrupts

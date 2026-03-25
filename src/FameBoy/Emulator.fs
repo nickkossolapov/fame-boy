@@ -1,7 +1,7 @@
 ﻿module FameBoy.Emulator
 
 open FameBoy.Cpu.Execute
-open FameBoy.Graphics.Ppu
+open FameBoy.Ppu
 open FameBoy.IoController
 open FameBoy.Joypad
 open FameBoy.Memory
@@ -21,7 +21,7 @@ let createEmulator bytes getJoypadState =
     let applyJoypadState (state: JoypadState) = io.JoypadState <- state
 
     let stepper () =
-        let cpuCycles = stepCpu cpu io
+        let mCycles = stepCpu cpu io
 
         match io.DmaRequest with
         | ValueSome startPrefix ->
@@ -29,15 +29,17 @@ let createEmulator bytes getJoypadState =
             doDmaTransfer memory startPrefix
         | ValueNone -> ()
 
-        for _ in 1..cpuCycles do
+        for _ in 1..mCycles do
             stepTimers timer io
             stepSerial serial io
 
-        let ppuSteps = cpuCycles * 4
+        // Rest of Game Boy hardware operates at 4x cycles/s of the CPU 
+        let tCycles = mCycles * 4
 
-        for _ in 1..ppuSteps do
+        for _ in 1..tCycles do
             stepPpu ppu
+            // stepSound
 
-        cpuCycles
+        mCycles
 
     ppu, stepper, applyJoypadState

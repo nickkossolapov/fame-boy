@@ -1,7 +1,7 @@
 ﻿module FameBoy.Raylib.TileViewer
 
 open FameBoy.Hardware
-open FameBoy.Graphics.Ppu
+open FameBoy.Ppu
 
 let renderTile x y vramOffset (ppu: Ppu) (buffer: Shade array) =
     for row in 0..7 do
