@@ -1,5 +1,6 @@
 ﻿module FameBoy.Emulator
 
+open FameBoy.Apu
 open FameBoy.Cpu.Execute
 open FameBoy.Ppu
 open FameBoy.IoController
@@ -16,6 +17,7 @@ let createEmulator bytes getJoypadState =
     let memory = createMemory bytes io
     let cpu = createDmgCpu memory io
     let ppu = createPpu memory io
+    let apu = createApu ()
     let serial = createSerial ()
 
     let applyJoypadState (state: JoypadState) = io.JoypadState <- state
@@ -33,12 +35,12 @@ let createEmulator bytes getJoypadState =
             stepTimers timer io
             stepSerial serial io
 
-        // Rest of Game Boy hardware operates at 4x cycles/s of the CPU 
+        // Rest of Game Boy hardware operates at 4x cycles/s of the CPU
         let tCycles = mCycles * 4
 
         for _ in 1..tCycles do
             stepPpu ppu
-            // stepSound
+            stepApu apu
 
         mCycles
 
