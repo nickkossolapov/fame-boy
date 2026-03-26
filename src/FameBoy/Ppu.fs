@@ -293,6 +293,8 @@ let private disablePpu (ppu: Ppu) =
         ppu.Ly <- 0uy
         ppu.Dot <- 0
 
+        ppu.IoController.Registers[Io.Stat] <- getUpdatedStatRegister ppu
+
         for i in 0 .. (bufferWidth - 1) do
             ppu.Framebuffer[i] <- Shade.White
             ppu.Backbuffer[i] <- Shade.White
