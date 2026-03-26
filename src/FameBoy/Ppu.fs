@@ -229,7 +229,9 @@ module private Scanline =
         let bgpMap, obp0Map, obp1Map = fetchPaletteMaps io
 
         let windowOnLine =
-            Lcdc.isEnabled Lcdc.WindowEnable io && screenY >= int io.Registers[Io.Wy]
+            Lcdc.isEnabled Lcdc.WindowEnable io
+            && screenY >= int io.Registers[Io.Wy]
+            && int io.Registers[Io.Wx] <= 166
 
         let objEnable = Lcdc.isEnabled Lcdc.ObjEnable io
         let bgEnable = Lcdc.isEnabled Lcdc.BgEnable io

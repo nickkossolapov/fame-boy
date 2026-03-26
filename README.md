@@ -1,10 +1,10 @@
 # Fame Boy
 
+[![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
+
 A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
 
 ![pokemon demo](./assets/pokemon.gif) ![zelda demo](./assets/zelda.gif)
-
-[![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
 
 ### Features
 
@@ -15,43 +15,31 @@ A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https:
 
 ### About
 
-This was a development exercise for me to learn about computer hardware, and the Game Boy struck a great balance between well-defined in scope, a real system, and chock-full of nostalgia.
+This started as a way for me to learn more about computer hardware. The original Game Boy felt like the perfect target: well-defined in 
+scope while still complex enough to learn about a real system, and chock-full of nostalgia.
 
-As part of the process, I did use AI to generate most of the test cases and help review parts of my code, but most of the code was (unfortunately?) meticulously crafted by me.
+Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware 
+accuracy or maximum performance. 
 
-### Limitations/TODOs
+I did use AI to generate a lot of the test cases and help review parts of the code, but most of the code was
+(unfortunately?) meticulously crafted by me.
 
-Because this was a learning exercise, I prioritised readability, idiomatic F#, and fun over pure performance and perfect hardware accuracy.
+### Limitations
 
-It's quite far from being feature-complete, and here are some things that I may or may not get to (but would like to).
+There are still a few gaps with the real hardware that I may or may not get to (but would like to).
 
-- No Game Boy Color support.
-- No sound.
+- No Game Boy Color support or sound.
 - Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
 - Missing battery saves (SRAM) and save states.
-- Scanline-based rendering instead of using a pixel FIFO.
-- Not super accurate (e.g. uses instant DMA transfer, missing a few hardware bugs).
-- Only ROMs with MBC1, MBC3, and MBC5 are supported.
-
-### Controls
-
-| Game Boy | Key           |
-|----------|---------------|
-| D-pad    | W / A / S / D |
-| A        | K             |
-| B        | J             |
-| Start    | N             |
-| Select   | B             |
-
-The web version also supports mouse/touch.
+- Hardware inaccuracies (e.g. scanline-based rendering instead of pixel FIFOs, instant DMA transfer, and missing a few hardware bugs).
 
 ### Repo structure
 
-- `FameBoy` - Core emulator library (CPU, PPU, memory, cartridges)
+- `FameBoy` - Core emulator library (CPU, PPU, memory, cartridges, IO)
 - `FameBoy.Raylib` - Native desktop frontend using Raylib
 - `FameBoy.Web` - Browser frontend using Fable and Vite
-- `FameBoy.Test` - Unit tests (NUnit)
-- `FameBoy.Benchmark` - Performance benchmarks (BenchmarkDotNet)
+- `FameBoy.Test` - Unit and integration tests
+- `FameBoy.Benchmark` - Performance benchmarking project
 
 ## Getting Started
 
@@ -60,7 +48,7 @@ The web version also supports mouse/touch.
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - [Node.js](https://nodejs.org/) (for the web project only)
 
-### Run local build
+### Local Dev
 
 #### Desktop
 
@@ -80,7 +68,33 @@ npm run dev
 
 This starts both Fable and Vite in watch mode.
 
-### Create release builds
+### Tests
+
+The unit tests cover most of the core emulator, and the [integration tests](./src/FameBoy.Test/IntegrationTests.fs) run the
+emulator with the [dmg-acid2](https://github.com/mattcurrie/dmg-acid2) and [Blargg cpu_instrs](https://github.com/retrio/gb-test-roms)
+test ROMs, then compare the PPU's framebuffer with a known correct framebuffer.
+
+To run the tests:
+
+```bash
+dotnet test
+```
+
+### Benchmarks
+
+The benchmark includes a few ROMs to run the emulator with in headless mode with [BenchmarkDotNet](https://benchmarkdotnet.org/).
+
+``` powershell
+./benchmark.ps1
+```
+
+Or directly:
+
+``` bash
+dotnet run --project src/FameBoy.Benchmark -c Release
+```
+
+### Release builds
 
 #### Desktop
 
@@ -95,27 +109,17 @@ cd src/FameBoy.Web
 npm run build
 ```
 
-### Run tests
+### Controls
 
-Covers most of the core emulator (except PPU rendering).
+| Game Boy | Key           |
+|----------|---------------|
+| D-pad    | W / A / S / D |
+| A        | K             |
+| B        | J             |
+| Start    | N             |
+| Select   | B             |
 
-```bash
-dotnet test
-```
-
-### Run benchmarks
-
-The benchmark includes a few ROMs to run the emulator with in headless mode with [BenchmarkDotNet](https://benchmarkdotnet.org/).
-
-``` powershell
-./benchmark.ps1
-```
-
-Or directly:
-
-``` bash
-dotnet run --project src/FameBoy.Benchmark -c Release
-```
+The web version also supports mouse/touch.
 
 ## License
 

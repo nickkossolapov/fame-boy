@@ -8,6 +8,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Resources\dmg-acid2.gb" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Resources\dmg-acid2.bin" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Resources\cpu_instrs.gb" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Resources\cpu_instrs.bin" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Content Include=".prompts\InstructionTests.md" />
         <Content Include=".prompts\OpcodeTests.md" />
         <Compile Include="TestHelpers.fs" />
@@ -23,6 +30,7 @@
         <Compile Include="CartridgeTests\Mbc1CartTests.fs" />
         <Compile Include="CartridgeTests\Mbc3CartTests.fs" />
         <Compile Include="CartridgeTests\Mbc5CartTests.fs" />
+        <Compile Include="IntegrationTests.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
