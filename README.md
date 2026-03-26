@@ -99,7 +99,7 @@ dotnet run --project src/FameBoy.Benchmark -c Release
 #### Desktop
 
 ``` bash
-dotnet build ./src/FameBoy.Raylib/FameBoy.Raylib.fsproj -c release 
+dotnet build src/FameBoy.Raylib/FameBoy.Raylib.fsproj -c release 
 ```
 
 #### Web
