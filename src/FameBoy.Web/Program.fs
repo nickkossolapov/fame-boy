@@ -50,7 +50,7 @@ let mutable currentAnimationFrame = None
 let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
-    let ppu, stepEmulator, applyJoypadState = createEmulator bytes getJoypadState
+    let ppu, apu, stepEmulator, applyJoypadState = createEmulator bytes getJoypadState
     let mutable accumulator = 0.0
 
     let draw () =

@@ -19,7 +19,7 @@ let private defaultJoypadState: JoypadState =
 [<Test>]
 let ``dmg-acid2 framebuffer matches expected output after 150000 CPU cycles`` () =
     let rom = Path.Combine("Resources", "dmg-acid2.gb") |> File.ReadAllBytes
-    let ppu, stepEmulator, _ = createEmulator rom (fun () -> defaultJoypadState)
+    let ppu, _, stepEmulator, _ = createEmulator rom (fun () -> defaultJoypadState)
 
     for _ in 0..150000 do
         stepEmulator () |> ignore
@@ -32,7 +32,7 @@ let ``dmg-acid2 framebuffer matches expected output after 150000 CPU cycles`` ()
 [<Test>]
 let ``cpu_instrs framebuffer matches expected output after 25000000 CPU cycles`` () =
     let rom = Path.Combine("Resources", "cpu_instrs.gb") |> File.ReadAllBytes
-    let ppu, stepEmulator, _ = createEmulator rom (fun () -> defaultJoypadState)
+    let ppu, _, stepEmulator, _ = createEmulator rom (fun () -> defaultJoypadState)
 
     for _ in 0..25000000 do
         stepEmulator () |> ignore
