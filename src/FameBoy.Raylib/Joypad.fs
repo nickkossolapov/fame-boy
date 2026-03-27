@@ -15,17 +15,6 @@ let joypadMapping =
        Start = KeyboardKey.N
        Select = KeyboardKey.B |}
 
-// Colemak-dh
-// let joypadMapping =
-//     {| Up = KeyboardKey.F
-//        Down = KeyboardKey.S
-//        Left = KeyboardKey.R
-//        Right = KeyboardKey.T
-//        A = KeyboardKey.N
-//        B = KeyboardKey.E
-//        Start = KeyboardKey.H
-//        Select = KeyboardKey.K |}
-
 let getJoypadState () : JoypadState =
     { Up = isKeyDown joypadMapping.Up
       Down = isKeyDown joypadMapping.Down

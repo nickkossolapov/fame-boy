@@ -44,4 +44,4 @@ let createEmulator bytes getJoypadState =
 
         mCycles
 
-    ppu, stepper, applyJoypadState
+    ppu, apu, stepper, applyJoypadState

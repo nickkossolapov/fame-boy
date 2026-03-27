@@ -1,5 +1,6 @@
 ﻿open System
 open System.IO
+open FameBoy.Apu
 open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Joypad
@@ -34,7 +35,31 @@ let icon = Raylib.LoadImage("icon.png")
 Raylib.SetWindowIcon(icon)
 Raylib.UnloadImage(icon)
 
-Raylib.SetTargetFPS 120
+Raylib.SetTargetFPS 60
+
+
+// TODO maybe create an audio file?
+
+Raylib.InitAudioDevice()
+Raylib.SetAudioStreamBufferSizeDefault(bufferSize)
+let audioBuffer = Array.zeroCreate<float32> bufferSize
+let audioStream = Raylib.LoadAudioStream(uint32 samplingRate, 32u, 1u)
+
+Raylib.PlayAudioStream audioStream
+
+let tryQueueAudio (apu: Apu) =
+    while isAudioStreamProcessed audioStream do
+        for i in 0 .. bufferSize - 1 do
+            if apu.ReadHead < apu.WriteHead then
+                audioBuffer[i] <- apu.RingBuffer[apu.ReadHead % ringBufferSize]
+                apu.ReadHead <- apu.ReadHead + 1
+            else
+                audioBuffer[i] <- 0f
+
+        updateAudioStream audioStream audioBuffer
+
+// audio end
+
 
 let bytes = File.ReadAllBytes romPath
 
@@ -48,7 +73,7 @@ let mutable joypadState: JoypadState =
       Start = false
       Select = false }
 
-let ppu, stepEmulator, applyJoypadState =
+let ppu, apu, stepEmulator, applyJoypadState =
     createEmulator bytes (fun () -> joypadState)
 
 let targetCyclesPerMs = float32 cpuFrequency
@@ -59,11 +84,20 @@ while (not (windowShouldClose ())) do
     let cycles = Math.Min(targetCyclesPerMs * Raylib.GetFrameTime(), maxCyclesPerFrame)
     accumulator <- accumulator + cycles
 
-    getJoypadState () |> applyJoypadState
+    let joypadState = getJoypadState ()
+    joypadState |> applyJoypadState
+
+    if joypadState.Up then
+        apu.TestFrequency <- apu.TestFrequency + 5f
+
+    if joypadState.Down then
+        apu.TestFrequency <- apu.TestFrequency - 5f
 
     while (accumulator > 0f) do
         let cpuCycles = stepEmulator () |> float32
         accumulator <- accumulator - cpuCycles
+
+    tryQueueAudio apu
 
     beginDrawing ()
     loadPpuFramebuffer ppu.Framebuffer
