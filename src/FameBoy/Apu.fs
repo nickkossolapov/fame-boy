@@ -1,5 +1,6 @@
 ﻿module FameBoy.Apu
 
+open System
 open FameBoy.Hardware
 open FameBoy.IoController
 
@@ -24,15 +25,25 @@ module private Constants =
 
 open Constants
 
+[<Struct>]
+type Direction =
+    | Increasing
+    | Decreasing
+
+type Envelope =
+    { mutable Volume: int
+      mutable Direction: Direction
+      mutable Pace: int
+      mutable Timer: int }
+
 type PulseChannel =
     { mutable DutyCycle: int
-      mutable InitialVolume: int
       mutable Frequency: int
       mutable LengthEnabled: bool
       mutable Timer: int
       mutable DutyStep: int
-      mutable CurrentVolume: int
-      mutable Enabled: bool }
+      mutable Enabled: bool
+      Envelope: Envelope }
 
 type Apu =
     { RingBuffer: float32 array
@@ -40,28 +51,49 @@ type Apu =
       mutable WriteHead: int
       mutable ReadHead: int
       mutable Timer: int
-      mutable Counter: int }
+      mutable Counter: int
+      mutable SequencerStep: int }
 
 let createApu () =
     let channel2 =
         { DutyCycle = 0
-          InitialVolume = 0
           Frequency = 0
           LengthEnabled = false
           Timer = 0
           DutyStep = 0
-          CurrentVolume = 0
-          Enabled = false }
+          Enabled = false
+          Envelope =
+            { Volume = 0
+              Direction = Decreasing
+              Pace = 0
+              Timer = 0 } }
 
     { RingBuffer = Array.zeroCreate ringBufferSize
       Channel2 = channel2
       WriteHead = ringBufferSize / 2
       ReadHead = 0
       Timer = 0
-      Counter = 0 }
-    
-let inline private dac digital =
-    (float32 digital / 7.5f) - 1.0f
+      Counter = 0
+      SequencerStep = 0 }
+
+module private Helpers =
+    let inline dac digital = (float32 digital / 7.5f) - 1.0f
+
+    let stepEnvelope (env: Envelope) =
+        if env.Pace > 0 then
+            env.Timer <- env.Timer - 1
+
+            if env.Timer <= 0 then
+                env.Timer <- env.Pace
+
+                let newVolume =
+                    match env.Direction with
+                    | Decreasing -> env.Volume - 1
+                    | Increasing -> env.Volume + 1
+
+                env.Volume <- Math.Clamp(newVolume, 0, 15)
+
+open Helpers
 
 module private Channel2 =
     // Each bit represents one step of the 8-step duty cycle
@@ -75,13 +107,16 @@ module private Channel2 =
         let nr24 = int io.Registers[Io.Nr24]
 
         ch.DutyCycle <- (nr21 >>> 6) &&& 0b11
-        ch.InitialVolume <- (nr22 >>> 4) &&& 0b1111
-        ch.CurrentVolume <- ch.InitialVolume
         ch.Frequency <- nr23 ||| ((nr24 &&& 0b0111) <<< 8)
         ch.LengthEnabled <- (nr24 &&& 0b0100_0000) <> 0
         ch.Timer <- (2048 - ch.Frequency) * 4
         ch.DutyStep <- 0
         ch.Enabled <- (nr22 &&& 0b1111_1000) <> 0
+
+        ch.Envelope.Volume <- (nr22 >>> 4) &&& 0b1111
+        ch.Envelope.Direction <- if (nr22 >>> 3) &&& 1 = 0 then Decreasing else Increasing
+        ch.Envelope.Pace <- nr22 &&& 0b0111
+        ch.Envelope.Timer <- ch.Envelope.Pace
 
         io.Registers[Io.Nr24] <- io.Registers[Io.Nr24] &&& 0b0111_1111uy
 
@@ -98,16 +133,25 @@ module private Channel2 =
         else
             let pattern = dutyCycles[ch.DutyCycle]
             let bit = (pattern >>> ch.DutyStep) &&& 1
-            let digital = if bit = 0 then ch.CurrentVolume else 0
+            let digital = if bit = 0 then ch.Envelope.Volume else 0
 
             dac digital
 
+let stepSequencer (state: Apu) =
+    if state.SequencerStep &&& 1 = 0 then
+        () // TODO tick length counter
+    else if state.SequencerStep = 7 then
+        stepEnvelope state.Channel2.Envelope
+
+    state.SequencerStep <- (state.SequencerStep + 1) &&& 7
+
 let stepApu (state: Apu) (io: IoController) =
-    // Trigger channel when game writes NR24 with bit 7 set
-    if int io.Registers[Io.Nr24] &&& 0b1000_0000 <> 0 then
+    if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
         Channel2.trigger state.Channel2 io
 
-    // Advance channel's frequency timer (drives the duty cycle)
+    if state.Timer &&& 8191 = 0 then
+        stepSequencer state
+
     Channel2.step state.Channel2
 
     state.Timer <- state.Timer + 1
