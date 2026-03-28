@@ -24,29 +24,92 @@ module private Constants =
 
 open Constants
 
+type PulseChannel =
+    { mutable DutyCycle: int
+      mutable InitialVolume: int
+      mutable Frequency: int
+      mutable LengthEnabled: bool
+      mutable Timer: int
+      mutable DutyStep: int
+      mutable CurrentVolume: int
+      mutable Enabled: bool }
+
 type Apu =
     { RingBuffer: float32 array
+      Channel2: PulseChannel
       mutable WriteHead: int
       mutable ReadHead: int
       mutable Timer: int
-      mutable Counter: int
-      mutable TestFrequency: float }
+      mutable Counter: int }
 
 let createApu () =
+    let channel2 =
+        { DutyCycle = 0
+          InitialVolume = 0
+          Frequency = 0
+          LengthEnabled = false
+          Timer = 0
+          DutyStep = 0
+          CurrentVolume = 0
+          Enabled = false }
+
     { RingBuffer = Array.zeroCreate ringBufferSize
+      Channel2 = channel2
       WriteHead = ringBufferSize / 2
       ReadHead = 0
       Timer = 0
-      Counter = 0
-      TestFrequency = 200.0 }
+      Counter = 0 }
+    
+let inline private dac digital =
+    (float32 digital / 7.5f) - 1.0f
 
-module private SineWave =
-    let at fr apuTime : float32 =
-        let t = float apuTime / (float (cpuFrequency * 4))
+module private Channel2 =
+    // Each bit represents one step of the 8-step duty cycle
+    // 0 = HIGH (output volume), 1 = LOW (output zero)
+    let dutyCycles = [| 0b1111_1110; 0b0111_1110; 0b0111_1000; 0b1000_0001 |]
 
-        float32 (0.3 * sin (6.28318 * t * fr))
+    let trigger (ch: PulseChannel) (io: IoController) =
+        let nr21 = int io.Registers[Io.Nr21]
+        let nr22 = int io.Registers[Io.Nr22]
+        let nr23 = int io.Registers[Io.Nr23]
+        let nr24 = int io.Registers[Io.Nr24]
+
+        ch.DutyCycle <- (nr21 >>> 6) &&& 0b11
+        ch.InitialVolume <- (nr22 >>> 4) &&& 0b1111
+        ch.CurrentVolume <- ch.InitialVolume
+        ch.Frequency <- nr23 ||| ((nr24 &&& 0b0111) <<< 8)
+        ch.LengthEnabled <- (nr24 &&& 0b0100_0000) <> 0
+        ch.Timer <- (2048 - ch.Frequency) * 4
+        ch.DutyStep <- 0
+        ch.Enabled <- (nr22 &&& 0b1111_1000) <> 0
+
+        io.Registers[Io.Nr24] <- io.Registers[Io.Nr24] &&& 0b0111_1111uy
+
+    let step (ch: PulseChannel) =
+        ch.Timer <- ch.Timer - 1
+
+        if ch.Timer <= 0 then
+            ch.Timer <- (2048 - ch.Frequency) * 4
+            ch.DutyStep <- (ch.DutyStep + 1) &&& 7
+
+    let output (ch: PulseChannel) : float32 =
+        if not ch.Enabled then
+            0.0f
+        else
+            let pattern = dutyCycles[ch.DutyCycle]
+            let bit = (pattern >>> ch.DutyStep) &&& 1
+            let digital = if bit = 0 then ch.CurrentVolume else 0
+
+            dac digital
 
 let stepApu (state: Apu) (io: IoController) =
+    // Trigger channel when game writes NR24 with bit 7 set
+    if int io.Registers[Io.Nr24] &&& 0b1000_0000 <> 0 then
+        Channel2.trigger state.Channel2 io
+
+    // Advance channel's frequency timer (drives the duty cycle)
+    Channel2.step state.Channel2
+
     state.Timer <- state.Timer + 1
     state.Counter <- state.Counter + 1
 
@@ -54,7 +117,7 @@ let stepApu (state: Apu) (io: IoController) =
         state.Counter <- 0
 
         let i = state.WriteHead &&& ringBufferModulo
-        state.RingBuffer[i] <- SineWave.at state.TestFrequency state.Timer
+        state.RingBuffer[i] <- Channel2.output state.Channel2
         state.WriteHead <- state.WriteHead + 1
 
 

@@ -31,6 +31,9 @@ type IoController =
         | Io.Dma ->
             this.Registers[offset] <- value
             this.DmaRequest <- ValueSome value
+        | Io.Nr52 ->
+            // Only bit 7 (power) is writable - lower bits are read-only channel status
+            this.Registers[offset] <- (value &&& 0x80uy) ||| (this.Registers[offset] &&& 0x7Fuy)
         | _ -> this.Registers[offset] <- value
 
     member this.CpuRead fullAddress =

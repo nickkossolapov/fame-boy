@@ -80,12 +80,6 @@ while (not (windowShouldClose ())) do
     let joypadState = getJoypadState ()
     joypadState |> applyJoypadState
 
-    if joypadState.Up then
-        apu.TestFrequency <- apu.TestFrequency + 5.0
-
-    if joypadState.Down then
-        apu.TestFrequency <- apu.TestFrequency - 5.0
-
     while (accumulator > 0f) do
         let cpuCycles = stepEmulator () |> float32
         accumulator <- accumulator - cpuCycles
