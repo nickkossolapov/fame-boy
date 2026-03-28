@@ -101,13 +101,14 @@ module private Helpers =
 
                 env.Volume <- Math.Clamp(newVolume, 0, 15)
 
-    let stepLength (len: Length) =
+    let inline stepLength (ch: ^a when ^a: (member Length: Length) and ^a: (member Enabled: bool with set)) =
+        let len = (^a: (member Length: Length) (ch))
+
         if len.Enabled && len.Counter > 0 then
             len.Counter <- len.Counter - 1
 
-            len.Counter <> 0
-        else
-            false
+            if len.Counter = 0 then
+                (^a: (member set_Enabled: bool -> unit) (ch, false))
 
 open Helpers
 
@@ -158,8 +159,7 @@ module private Channel2 =
 
 let stepSequencer (state: Apu) =
     if state.SequencerStep &&& 1 = 0 then
-        if stepLength state.Channel2.Length then
-            state.Channel2.Enabled <- false
+        stepLength state.Channel2
     else if state.SequencerStep = 7 then
         stepEnvelope state.Channel2.Envelope
 
