@@ -29,37 +29,28 @@ if not (File.Exists romPath) then
     eprintfn $"File not found: %s{romPath}"
     exit 1
 
-Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
+[<Literal>]
+let audioSamplingRate = 48000
 
+[<Literal>]
+let bufferSize = 1024
+
+Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
 let icon = Raylib.LoadImage("icon.png")
+
 Raylib.SetWindowIcon(icon)
 Raylib.UnloadImage(icon)
-
 Raylib.SetTargetFPS 60
-
-
-// TODO maybe create an audio file?
-
 Raylib.InitAudioDevice()
 Raylib.SetAudioStreamBufferSizeDefault(bufferSize)
-let audioBuffer = Array.zeroCreate<float32> bufferSize
-let audioStream = Raylib.LoadAudioStream(uint32 samplingRate, 32u, 1u)
 
-Raylib.PlayAudioStream audioStream
+let audioBuffer = Array.zeroCreate<float32> bufferSize
+let audioStream = Raylib.LoadAudioStream(uint32 audioSamplingRate, 32u, 1u)
 
 let tryQueueAudio (apu: Apu) =
     while isAudioStreamProcessed audioStream do
-        for i in 0 .. bufferSize - 1 do
-            if apu.ReadHead < apu.WriteHead then
-                audioBuffer[i] <- apu.RingBuffer[apu.ReadHead % ringBufferSize]
-                apu.ReadHead <- apu.ReadHead + 1
-            else
-                audioBuffer[i] <- 0f
-
+        readResampledBuffer apu audioBuffer audioSamplingRate
         updateAudioStream audioStream audioBuffer
-
-// audio end
-
 
 let bytes = File.ReadAllBytes romPath
 
@@ -76,6 +67,8 @@ let mutable joypadState: JoypadState =
 let ppu, apu, stepEmulator, applyJoypadState =
     createEmulator bytes (fun () -> joypadState)
 
+Raylib.PlayAudioStream audioStream
+
 let targetCyclesPerMs = float32 cpuFrequency
 let maxCyclesPerFrame = float32 cpuFrequency / 60f // So if the emulator can't reach 60 FPS it won't drown itself in instructions
 let mutable accumulator = 0f
@@ -88,10 +81,10 @@ while (not (windowShouldClose ())) do
     joypadState |> applyJoypadState
 
     if joypadState.Up then
-        apu.TestFrequency <- apu.TestFrequency + 5f
+        apu.TestFrequency <- apu.TestFrequency + 5.0
 
     if joypadState.Down then
-        apu.TestFrequency <- apu.TestFrequency - 5f
+        apu.TestFrequency <- apu.TestFrequency - 5.0
 
     while (accumulator > 0f) do
         let cpuCycles = stepEmulator () |> float32

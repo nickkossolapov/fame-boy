@@ -40,7 +40,7 @@ let createEmulator bytes getJoypadState =
 
         for _ in 1..tCycles do
             stepPpu ppu
-            stepApu apu
+            stepApu apu io
 
         mCycles
 
