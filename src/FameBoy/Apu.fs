@@ -36,14 +36,22 @@ type Envelope =
       mutable Pace: int
       mutable Timer: int }
 
+type Length =
+    { mutable Counter: int
+      mutable Enabled: bool }
+
 type PulseChannel =
     { mutable DutyCycle: int
       mutable Frequency: int
-      mutable LengthEnabled: bool
       mutable Timer: int
       mutable DutyStep: int
       mutable Enabled: bool
+      Length: Length
       Envelope: Envelope }
+
+// type SweepChannel = TODO
+//     { Pulse: PulseChannel
+//       Sweep: Sweep }
 
 type Apu =
     { RingBuffer: float32 array
@@ -58,10 +66,10 @@ let createApu () =
     let channel2 =
         { DutyCycle = 0
           Frequency = 0
-          LengthEnabled = false
           Timer = 0
           DutyStep = 0
           Enabled = false
+          Length = { Counter = 0; Enabled = false }
           Envelope =
             { Volume = 0
               Direction = Decreasing
@@ -93,6 +101,14 @@ module private Helpers =
 
                 env.Volume <- Math.Clamp(newVolume, 0, 15)
 
+    let stepLength (len: Length) =
+        if len.Enabled && len.Counter > 0 then
+            len.Counter <- len.Counter - 1
+
+            len.Counter <> 0
+        else
+            false
+
 open Helpers
 
 module private Channel2 =
@@ -108,10 +124,12 @@ module private Channel2 =
 
         ch.DutyCycle <- (nr21 >>> 6) &&& 0b11
         ch.Frequency <- nr23 ||| ((nr24 &&& 0b0111) <<< 8)
-        ch.LengthEnabled <- (nr24 &&& 0b0100_0000) <> 0
         ch.Timer <- (2048 - ch.Frequency) * 4
         ch.DutyStep <- 0
         ch.Enabled <- (nr22 &&& 0b1111_1000) <> 0
+
+        ch.Length.Counter <- 64
+        ch.Length.Enabled <- (nr24 &&& 0b0100_0000) <> 0
 
         ch.Envelope.Volume <- (nr22 >>> 4) &&& 0b1111
         ch.Envelope.Direction <- if (nr22 >>> 3) &&& 1 = 0 then Decreasing else Increasing
@@ -121,11 +139,12 @@ module private Channel2 =
         io.Registers[Io.Nr24] <- io.Registers[Io.Nr24] &&& 0b0111_1111uy
 
     let step (ch: PulseChannel) =
-        ch.Timer <- ch.Timer - 1
+        if ch.Enabled then
+            ch.Timer <- ch.Timer - 1
 
-        if ch.Timer <= 0 then
-            ch.Timer <- (2048 - ch.Frequency) * 4
-            ch.DutyStep <- (ch.DutyStep + 1) &&& 7
+            if ch.Timer <= 0 then
+                ch.Timer <- (2048 - ch.Frequency) * 4
+                ch.DutyStep <- (ch.DutyStep + 1) &&& 7
 
     let output (ch: PulseChannel) : float32 =
         if not ch.Enabled then
@@ -139,7 +158,8 @@ module private Channel2 =
 
 let stepSequencer (state: Apu) =
     if state.SequencerStep &&& 1 = 0 then
-        () // TODO tick length counter
+        if stepLength state.Channel2.Length then
+            state.Channel2.Enabled <- false
     else if state.SequencerStep = 7 then
         stepEnvelope state.Channel2.Envelope
 
