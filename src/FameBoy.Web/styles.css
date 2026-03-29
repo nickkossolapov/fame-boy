@@ -29,6 +29,7 @@
     --color-d-pad: #2a2a2a;
     --color-a-b: #8b2252;
     --color-start-select: #555;
+    --color-mute: #b0aca7;
     --color-button-label: rgba(255, 255, 255, 0.50);
 }
 
@@ -333,9 +334,9 @@ body {
 .buttons {
     position: relative;
     width: 300px;
-    height: 150px;
+    height: 220px;
     perspective: 150px;
-    margin-bottom: 100px;
+    margin-bottom: 30px;
 }
 
 .d-pad {
@@ -436,7 +437,7 @@ body {
 
 .start-select-buttons {
     position: absolute;
-    bottom: 0;
+    bottom: 70px;
     width: 100%;
     display: flex;
     gap: 15px;
@@ -460,6 +461,29 @@ body {
 
 .start-select-button:active {
     transform: scale(0.95);
+}
+
+.mute-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-d-pad);
+    background: var(--color-mute);
+    border-radius: 50%;
+    transition: opacity 0.15s;
+}
+
+.mute-button:active {
+    transform: scale(0.95);
+}
+
+.hidden {
+    display: none;
 }
 
 

@@ -45,7 +45,7 @@ let loadImageData emulatorFramebuffer =
         imageData.data[j + 3] <- 255uy
 
 let targetCyclesPerMs = float cpuFrequency / 1000.0
-let maxCyclesPerFrame = float cpuFrequency / 60.0 // So if the emulator can't reach 60 FPS it won't drown itself in instructions
+let maxCyclesPerFrame = float cpuFrequency / 60.0
 let mutable currentAnimationFrame = None
 
 module private Audio =
@@ -55,8 +55,23 @@ module private Audio =
     [<Literal>]
     let audioBufferSize = 2048
 
+    [<Literal>]
+    let defaultVolume = 0.6
+
     [<Emit("new AudioContext({sampleRate: $0})")>]
     let private createAudioContext (_: int) : obj = jsNative
+
+    [<Emit("$0.createGain()")>]
+    let private createGain (ctx: obj) : obj = jsNative
+
+    [<Emit("$0.gain.value = $1")>]
+    let private setGainValue (gain: obj) (value: float) : unit = jsNative
+
+    [<Emit("$0.connect($1)")>]
+    let private connectNode (source: obj) (dest: obj) : unit = jsNative
+
+    [<Emit("$0.destination")>]
+    let private destination (ctx: obj) : obj = jsNative
 
     [<Emit("$0.createBuffer($1, $2, $3)")>]
     let private createBuffer (ctx: obj) (channels: int) (length: int) (sampleRate: int) : obj = jsNative
@@ -73,9 +88,6 @@ module private Audio =
     [<Emit("$0.buffer = $1")>]
     let private setBuffer (source: obj) (buffer: obj) : unit = jsNative
 
-    [<Emit("$0.connect($1.destination)")>]
-    let private connectToDestination (source: obj) (ctx: obj) : unit = jsNative
-
     [<Emit("$0.start($1)")>]
     let private startSource (source: obj) (time: float) : unit = jsNative
 
@@ -83,22 +95,36 @@ module private Audio =
     let private currentTime (ctx: obj) : float = jsNative
 
     let mutable private audioCtx: obj option = None
+    let mutable private gainNode: obj option = None
     let mutable audioInitialized = false
+    let mutable private muted = false
     let private audioBuffer = Array.zeroCreate<float32> audioBufferSize
     let mutable nextPlayTime = 0.0
 
     let initAudio () =
-        audioCtx <- Some(createAudioContext audioSamplingRate)
+        let ctx = createAudioContext audioSamplingRate
+        let gain = createGain ctx
+        setGainValue gain defaultVolume
+        connectNode gain (destination ctx)
+        audioCtx <- Some ctx
+        gainNode <- Some gain
+
+    let toggleMute () =
+        match gainNode with
+        | Some gain ->
+            muted <- not muted
+            setGainValue gain (if muted then 0.0 else defaultVolume)
+            muted
+        | None -> false
 
     let tryQueueAudio (apu: Apu) =
-        match audioCtx with
-        | Some ctx ->
+        match audioCtx, gainNode with
+        | Some ctx, Some gain ->
             let now = currentTime ctx
 
             if nextPlayTime < now then
                 nextPlayTime <- now
 
-            // Queue buffers to stay ahead of playback by ~50ms
             while nextPlayTime - now < 0.05 do
                 readResampledBuffer apu audioBuffer audioSamplingRate
 
@@ -110,10 +136,10 @@ module private Audio =
 
                 let source = createBufferSource ctx
                 setBuffer source buffer
-                connectToDestination source ctx
+                connectNode source gain
                 startSource source nextPlayTime
                 nextPlayTime <- nextPlayTime + bufferDuration buffer
-        | None -> ()
+        | _ -> ()
 
 open Audio
 
@@ -179,6 +205,18 @@ for i in 0 .. int scaleSelector.length - 1 do
     let input = scaleSelector.[i] :?> HTMLInputElement
 
     input.addEventListener ("change", fun _ -> document.documentElement?style?setProperty ("--s", input.value))
+
+let muteButton = document.getElementById "mute-button"
+let muteIconOn = document.getElementById "mute-icon-on"
+let muteIconOff = document.getElementById "mute-icon-off"
+
+muteButton.addEventListener (
+    "click",
+    fun _ ->
+        let isMuted = toggleMute ()
+        muteIconOn?classList?toggle ("hidden", isMuted)
+        muteIconOff?classList?toggle ("hidden", not isMuted)
+)
 
 // Pre-fetch the default ROM, then wait for user interaction to start
 let mutable private defaultRomBytes: byte array option = None
