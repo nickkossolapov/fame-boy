@@ -57,10 +57,17 @@ type PulseChannel =
 
 type SweepChannel = { Pulse: PulseChannel; Sweep: Sweep }
 
+type HighPassFilter =
+    { mutable LastIn: float32
+      mutable LastOut: float32
+      Alpha: float32 }
+
+// TODO Master Power switch - if NR52[7] is 0, the APU is off, and all registers (except NR52) are inaccessible
 type Apu =
     { RingBuffer: float32 array
       Channel1: SweepChannel
       Channel2: PulseChannel
+      Filter: HighPassFilter
       mutable WriteHead: int
       mutable ReadHead: int
       mutable Timer: int
@@ -91,11 +98,17 @@ let createApu () =
           Pace = 0
           Timer = 0 }
 
+    let createFilter () =
+        { LastIn = 0.0f
+          LastOut = 0.0f
+          Alpha = 0.996f }
+
     { RingBuffer = Array.zeroCreate ringBufferSize
       Channel1 =
         { Pulse = createPulse ()
           Sweep = createSweep () }
       Channel2 = createPulse ()
+      Filter = createFilter ()
       WriteHead = ringBufferSize / 2
       ReadHead = 0
       Timer = 0
@@ -238,26 +251,45 @@ module private SweepChannel =
                     ch.Pulse.Frequency <- newFreq
 
 let stepSequencer (state: Apu) =
-    if state.SequencerStep &&& 1 = 0 then
-        if state.SequencerStep &&& 0b0010 <> 0 then // Sweep only ticks on 2 and 6
-            SweepChannel.stepSweep state.Channel1
-
+    match state.SequencerStep with
+    | 0
+    | 2
+    | 4
+    | 6 ->
+        // Length clocks at 256 Hz
         if stepLength state.Channel1.Pulse.Length then
             state.Channel1.Pulse.Enabled <- false
 
         if stepLength state.Channel2.Length then
             state.Channel2.Enabled <- false
-    else if state.SequencerStep = 7 then
+
+        // Sweep clocks at 128 Hz (only on 2 and 6)
+        if state.SequencerStep = 2 || state.SequencerStep = 6 then
+            SweepChannel.stepSweep state.Channel1
+
+    | 7 ->
+        // Envelope clocks at 64 Hz
         stepEnvelope state.Channel1.Pulse.Envelope
         stepEnvelope state.Channel2.Envelope
+    | _ -> ()
 
     state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
-let private simpleMix ch1 ch2 =
-    (PulseChannel.output ch1.Pulse + PulseChannel.output ch2) / 2f
+module private SoundProcessing =
+    let stepFilter (f: HighPassFilter) (input: float32) =
+        let output = f.Alpha * (f.LastOut + input - f.LastIn)
+        f.LastIn <- input
+        f.LastOut <- output
 
+        output
+
+    let simpleMix ch1 ch2 =
+        (PulseChannel.output ch1.Pulse + PulseChannel.output ch2) / 2f
+
+open SoundProcessing
 
 let stepApu (state: Apu) (io: IoController) =
+    // TODO Don't just set ch.Enabled <- true on trigge, check if the DAC is on
     if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
         SweepChannel.trigger state.Channel1 io
 
@@ -276,8 +308,11 @@ let stepApu (state: Apu) (io: IoController) =
     if state.Counter >= tCyclesPerSample then
         state.Counter <- 0
 
+        let rawSample = simpleMix state.Channel1 state.Channel2
+        let filteredSample = stepFilter state.Filter rawSample
+        
         let i = state.WriteHead &&& ringBufferModulo
-        state.RingBuffer[i] <- simpleMix state.Channel1 state.Channel2
+        state.RingBuffer[i] <- filteredSample
         state.WriteHead <- state.WriteHead + 1
 
 // Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
