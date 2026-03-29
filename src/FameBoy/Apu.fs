@@ -57,6 +57,15 @@ type PulseChannel =
 
 type SweepChannel = { Pulse: PulseChannel; Sweep: Sweep }
 
+type NoiseChannel =
+    { mutable WideMode: bool // Wide is 15-bit LFSR, narrow is 7-bit LFSR
+      mutable Lfsr: int
+      mutable Timer: int
+      mutable Period: int
+      mutable Enabled: bool
+      Length: Length
+      Envelope: Envelope }
+
 type HighPassFilter =
     { mutable LastIn: float32
       mutable LastOut: float32
@@ -67,6 +76,7 @@ type Apu =
     { RingBuffer: float32 array
       Channel1: SweepChannel
       Channel2: PulseChannel
+      Channel4: NoiseChannel
       Filter: HighPassFilter
       mutable WriteHead: int
       mutable ReadHead: int
@@ -108,6 +118,14 @@ let createApu () =
         { Pulse = createPulse ()
           Sweep = createSweep () }
       Channel2 = createPulse ()
+      Channel4 =
+        { WideMode = true
+          Lfsr = 0x7FFF
+          Timer = 0
+          Period = 0
+          Enabled = false
+          Length = createLength ()
+          Envelope = createEnvelope () }
       Filter = createFilter ()
       WriteHead = ringBufferSize / 2
       ReadHead = 0
@@ -250,6 +268,68 @@ module private SweepChannel =
                 if newFreq <= 2047 && newFreq >= 0 then
                     ch.Pulse.Frequency <- newFreq
 
+module private NoiseChannel =
+    let private divisors = [| 8; 16; 32; 48; 64; 80; 96; 112 |]
+
+    let private getPeriod nr43 =
+        let divider = nr43 &&& 0b0111
+        let shift = (nr43 >>> 4) &&& 0b1111
+
+        divisors[divider] <<< shift
+
+    let trigger (ch: NoiseChannel) (io: IoController) =
+        let nr41 = int io.Registers[Io.Nr41]
+        let nr42 = int io.Registers[Io.Nr42]
+        let nr43 = (int io.Registers[Io.Nr43])
+        let nr44 = int io.Registers[Io.Nr44]
+
+        ch.Period <- getPeriod nr43
+        ch.Timer <- ch.Period
+        ch.Lfsr <- 0x7FFF
+        ch.WideMode <- not (nr43 &&& 0b1000 <> 0)
+        ch.Enabled <- (nr42 &&& 0b1111_1000) <> 0
+
+        ch.Length.Counter <- 64 - (nr41 &&& 0b0011_1111)
+        ch.Length.Enabled <- (nr44 &&& 0b0100_0000) <> 0
+
+        ch.Envelope.Volume <- (nr42 >>> 4) &&& 0b1111
+        ch.Envelope.Direction <- if (nr42 >>> 3) &&& 1 = 0 then Decreasing else Increasing
+        ch.Envelope.Pace <- nr42 &&& 0b0111
+        ch.Envelope.Timer <- ch.Envelope.Pace
+
+        io.Registers[Io.Nr44] <- io.Registers[Io.Nr44] &&& 0b0111_1111uy
+
+    let private stepLfsr value wideMode =
+        let b0 = value &&& 1
+        let b1 = (value >>> 1) &&& 1
+        let feedback = b0 ^^^ b1
+
+        let shifted = value >>> 1
+
+        let res = (shifted &&& ~~~(1 <<< 14)) ||| (feedback <<< 14)
+
+        if not wideMode then
+            (res &&& ~~~(1 <<< 6)) ||| (feedback <<< 6)
+        else
+            res
+
+    let step (ch: NoiseChannel) =
+        if ch.Enabled then
+            ch.Timer <- ch.Timer - 1
+
+            if ch.Timer <= 0 then
+                ch.Timer <- ch.Period
+                ch.Lfsr <- stepLfsr ch.Lfsr ch.WideMode
+
+    let output (ch: NoiseChannel) : float32 =
+        if not ch.Enabled then
+            0.0f
+        else
+            let bit = ch.Lfsr &&& 1
+            let digital = if bit = 0 then ch.Envelope.Volume else 0
+
+            dac digital
+
 let stepSequencer (state: Apu) =
     match state.SequencerStep with
     | 0
@@ -263,6 +343,9 @@ let stepSequencer (state: Apu) =
         if stepLength state.Channel2.Length then
             state.Channel2.Enabled <- false
 
+        if stepLength state.Channel4.Length then
+            state.Channel4.Enabled <- false
+
         // Sweep clocks at 128 Hz (only on 2 and 6)
         if state.SequencerStep = 2 || state.SequencerStep = 6 then
             SweepChannel.stepSweep state.Channel1
@@ -271,6 +354,7 @@ let stepSequencer (state: Apu) =
         // Envelope clocks at 64 Hz
         stepEnvelope state.Channel1.Pulse.Envelope
         stepEnvelope state.Channel2.Envelope
+        stepEnvelope state.Channel4.Envelope
     | _ -> ()
 
     state.SequencerStep <- (state.SequencerStep + 1) &&& 7
@@ -283,8 +367,11 @@ module private SoundProcessing =
 
         output
 
-    let simpleMix ch1 ch2 =
-        (PulseChannel.output ch1.Pulse + PulseChannel.output ch2) / 2f
+    let simpleMix ch1 ch2 ch4 =
+        (PulseChannel.output ch1.Pulse
+         + PulseChannel.output ch2
+         + NoiseChannel.output ch4)
+        / 4f
 
 open SoundProcessing
 
@@ -296,11 +383,15 @@ let stepApu (state: Apu) (io: IoController) =
     if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
         PulseChannel.trigger state.Channel2 io
 
+    if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
+        NoiseChannel.trigger state.Channel4 io
+
     if state.Timer &&& 8191 = 0 then
         stepSequencer state
 
     SweepChannel.step state.Channel1
     PulseChannel.step state.Channel2
+    NoiseChannel.step state.Channel4
 
     state.Timer <- state.Timer + 1
     state.Counter <- state.Counter + 1
@@ -308,9 +399,9 @@ let stepApu (state: Apu) (io: IoController) =
     if state.Counter >= tCyclesPerSample then
         state.Counter <- 0
 
-        let rawSample = simpleMix state.Channel1 state.Channel2
+        let rawSample = simpleMix state.Channel1 state.Channel2 state.Channel4
         let filteredSample = stepFilter state.Filter rawSample
-        
+
         let i = state.WriteHead &&& ringBufferModulo
         state.RingBuffer[i] <- filteredSample
         state.WriteHead <- state.WriteHead + 1
