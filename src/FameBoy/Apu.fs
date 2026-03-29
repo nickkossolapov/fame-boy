@@ -2,7 +2,6 @@
 
 open System
 open FameBoy.Hardware
-open FameBoy.IoController
 
 
 module private Constants =
@@ -77,7 +76,8 @@ type LowPassFilter =
       Alpha: float32 }
 
 type Apu =
-    { RingBuffer: float32 array
+    { Registers: uint8 array
+      RingBuffer: float32 array
       RingBufferMask: int
       Channel1: SweepChannel
       Channel2: PulseChannel
@@ -122,7 +122,8 @@ let createApu bufferSize =
 
     let createLowPass () = { LastOut = 0.0f; Alpha = 0.8f }
 
-    { RingBuffer = Array.zeroCreate bufferSize
+    { Registers = Array.zeroCreate 0x80
+      RingBuffer = Array.zeroCreate bufferSize
       RingBufferMask = bufferSize - 1
       Channel1 =
         { Pulse = createPulse ()
@@ -183,11 +184,11 @@ module private Shared =
 open Shared
 
 module private PulseChannel =
-    let trigger (ch: PulseChannel) (io: IoController) =
-        let nr21 = int io.Registers[Io.Nr21]
-        let nr22 = int io.Registers[Io.Nr22]
-        let nr23 = int io.Registers[Io.Nr23]
-        let nr24 = int io.Registers[Io.Nr24]
+    let trigger (ch: PulseChannel) (registers: uint8 array) =
+        let nr21 = int registers[Io.Nr21]
+        let nr22 = int registers[Io.Nr22]
+        let nr23 = int registers[Io.Nr23]
+        let nr24 = int registers[Io.Nr24]
 
         ch.DutyCycle <- (nr21 >>> 6) &&& 0b11
         ch.Frequency <- nr23 ||| ((nr24 &&& 0b0111) <<< 8)
@@ -202,14 +203,14 @@ module private PulseChannel =
         ch.Envelope.Pace <- nr22 &&& 0b0111
         ch.Envelope.Timer <- ch.Envelope.Pace
 
-        io.Registers[Io.Nr24] <- io.Registers[Io.Nr24] &&& 0b0111_1111uy
+        registers[Io.Nr24] <- registers[Io.Nr24] &&& 0b0111_1111uy
 
-    let step (ch: PulseChannel) (io: IoController) (freqLo: int) (freqHi: int) =
+    let step (ch: PulseChannel) (registers: uint8 array) (freqLo: int) (freqHi: int) =
         if ch.Enabled then
             ch.Timer <- ch.Timer - 4
 
             if ch.Timer <= 0 then
-                ch.Frequency <- int io.Registers[freqLo] ||| ((int io.Registers[freqHi] &&& 0b0111) <<< 8)
+                ch.Frequency <- int registers[freqLo] ||| ((int registers[freqHi] &&& 0b0111) <<< 8)
                 let period = (2048 - ch.Frequency) * 4
                 ch.Timer <- ch.Timer + period
                 ch.DutyStep <- (ch.DutyStep + 1) &&& 7
@@ -224,12 +225,12 @@ module private PulseChannel =
             if bit = 0 then ch.Envelope.Volume else 0
 
 module private SweepChannel =
-    let trigger (ch: SweepChannel) (io: IoController) =
-        let nr10 = int io.Registers[Io.Nr10]
-        let nr11 = int io.Registers[Io.Nr11]
-        let nr12 = int io.Registers[Io.Nr12]
-        let nr13 = int io.Registers[Io.Nr13]
-        let nr14 = int io.Registers[Io.Nr14]
+    let trigger (ch: SweepChannel) (registers: uint8 array) =
+        let nr10 = int registers[Io.Nr10]
+        let nr11 = int registers[Io.Nr11]
+        let nr12 = int registers[Io.Nr12]
+        let nr13 = int registers[Io.Nr13]
+        let nr14 = int registers[Io.Nr14]
 
         ch.Pulse.DutyCycle <- (nr11 >>> 6) &&& 0b0011
         ch.Pulse.Frequency <- nr13 ||| ((nr14 &&& 0b0111) <<< 8)
@@ -249,9 +250,9 @@ module private SweepChannel =
         ch.Pulse.Envelope.Pace <- nr12 &&& 0b0111
         ch.Pulse.Envelope.Timer <- ch.Pulse.Envelope.Pace
 
-        io.Registers[Io.Nr14] <- io.Registers[Io.Nr14] &&& 0b0111_1111uy
+        registers[Io.Nr14] <- registers[Io.Nr14] &&& 0b0111_1111uy
 
-    let step (ch: SweepChannel) (io: IoController) = PulseChannel.step ch.Pulse io Io.Nr13 Io.Nr14
+    let step (ch: SweepChannel) (registers: uint8 array) = PulseChannel.step ch.Pulse registers Io.Nr13 Io.Nr14
 
     let output (ch: SweepChannel) = PulseChannel.output ch.Pulse
 
@@ -268,7 +269,7 @@ module private SweepChannel =
         if newFreq > 2047 then
             ch.Pulse.Enabled <- false
 
-    let stepSweep (ch: SweepChannel) (io: IoController) =
+    let stepSweep (ch: SweepChannel) (registers: uint8 array) =
         let sweep = ch.Sweep
 
         sweep.Timer <- sweep.Timer - 1
@@ -283,18 +284,18 @@ module private SweepChannel =
                     ch.Pulse.Enabled <- false
                 elif newFreq >= 0 && sweep.Step > 0 then
                     ch.Pulse.Frequency <- newFreq
-                    io.Registers[Io.Nr13] <- byte (newFreq &&& 0xFF)
-                    io.Registers[Io.Nr14] <- (io.Registers[Io.Nr14] &&& 0b1111_1000uy) ||| byte ((newFreq >>> 8) &&& 0b0111)
+                    registers[Io.Nr13] <- byte (newFreq &&& 0xFF)
+                    registers[Io.Nr14] <- (registers[Io.Nr14] &&& 0b1111_1000uy) ||| byte ((newFreq >>> 8) &&& 0b0111)
 
                     if calcNewFreq ch > 2047 then
                         ch.Pulse.Enabled <- false
 
 module private WaveChannel =
-    let trigger (ch: WaveChannel) (io: IoController) =
-        let nr30 = int io.Registers[Io.Nr30]
-        let nr32 = int io.Registers[Io.Nr32]
-        let nr33 = int io.Registers[Io.Nr33]
-        let nr34 = int io.Registers[Io.Nr34]
+    let trigger (ch: WaveChannel) (registers: uint8 array) =
+        let nr30 = int registers[Io.Nr30]
+        let nr32 = int registers[Io.Nr32]
+        let nr33 = int registers[Io.Nr33]
+        let nr34 = int registers[Io.Nr34]
 
         let frequency = nr33 ||| ((nr34 &&& 0b0111) <<< 8)
 
@@ -304,10 +305,10 @@ module private WaveChannel =
         ch.OutputLevel <- (nr32 &&& 0b0110_0000) >>> 5
         ch.Enabled <- (nr30 &&& 0b1000_0000) <> 0
 
-        ch.Length.Counter <- 64 - int io.Registers[Io.Nr31]
+        ch.Length.Counter <- 64 - int registers[Io.Nr31]
         ch.Length.Enabled <- (nr34 &&& 0b0100_0000) <> 0
 
-        io.Registers[Io.Nr34] <- io.Registers[Io.Nr34] &&& 0b0111_1111uy
+        registers[Io.Nr34] <- registers[Io.Nr34] &&& 0b0111_1111uy
 
     let step (ch: WaveChannel) =
         if ch.Enabled then
@@ -319,11 +320,11 @@ module private WaveChannel =
                 ch.Timer <- ch.Timer + steps * ch.Period
                 ch.RamIndex <- (ch.RamIndex + steps) &&& 0x1F
 
-    let output (ch: WaveChannel) (io: IoController) =
+    let output (ch: WaveChannel) (registers: uint8 array) =
         if not ch.Enabled || ch.OutputLevel = 0 then
             0
         else
-            let byte = int io.Registers[Io.WaveRam + ch.RamIndex / 2]
+            let byte = int registers[Io.WaveRam + ch.RamIndex / 2]
 
             let nibble =
                 if (ch.RamIndex % 2) = 0 then
@@ -342,11 +343,11 @@ module private NoiseChannel =
 
         divisors[divider] <<< shift
 
-    let trigger (ch: NoiseChannel) (io: IoController) =
-        let nr41 = int io.Registers[Io.Nr41]
-        let nr42 = int io.Registers[Io.Nr42]
-        let nr43 = (int io.Registers[Io.Nr43])
-        let nr44 = int io.Registers[Io.Nr44]
+    let trigger (ch: NoiseChannel) (registers: uint8 array) =
+        let nr41 = int registers[Io.Nr41]
+        let nr42 = int registers[Io.Nr42]
+        let nr43 = (int registers[Io.Nr43])
+        let nr44 = int registers[Io.Nr44]
 
         ch.Period <- getPeriod nr43
         ch.Timer <- ch.Period
@@ -362,7 +363,7 @@ module private NoiseChannel =
         ch.Envelope.Pace <- nr42 &&& 0b0111
         ch.Envelope.Timer <- ch.Envelope.Pace
 
-        io.Registers[Io.Nr44] <- io.Registers[Io.Nr44] &&& 0b0111_1111uy
+        registers[Io.Nr44] <- registers[Io.Nr44] &&& 0b0111_1111uy
 
     let private stepLfsr value wideMode =
         let b0 = value &&& 1
@@ -406,14 +407,14 @@ module private SoundProcessing =
         f.LastOut <- f.Alpha * input + (1.0f - f.Alpha) * f.LastOut
         f.LastOut
 
-    let getMixedSample (state: Apu) (io: IoController) =
+    let getMixedSample (state: Apu) =
         let s1 = SweepChannel.output state.Channel1 |> dac
         let s2 = PulseChannel.output state.Channel2 |> dac
-        let s3 = WaveChannel.output state.Channel3 io |> dac
+        let s3 = WaveChannel.output state.Channel3 state.Registers |> dac
         let s4 = NoiseChannel.output state.Channel4 |> dac
 
-        let nr50 = int io.Registers[Io.Nr50]
-        let nr51 = int io.Registers[Io.Nr51]
+        let nr50 = int state.Registers[Io.Nr50]
+        let nr51 = int state.Registers[Io.Nr51]
 
         let leftVol = float32 ((nr50 >>> 4) &&& 0b0111) / 7f
         let rightVol = float32 (nr50 &&& 0b0111) / 7f
@@ -437,7 +438,15 @@ module private SoundProcessing =
 open SoundProcessing
 
 module private Apu =
-    let stepSequencer (state: Apu) (io: IoController) =
+    let private getMasterControl (state: Apu) =
+        let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
+        let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
+        let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
+        let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
+
+        ch1 ||| ch2 ||| ch3 ||| ch4
+
+    let stepSequencer (state: Apu) =
         match state.SequencerStep with
         | 0
         | 2
@@ -451,7 +460,7 @@ module private Apu =
 
             // Sweep clocks at 128 Hz (only on 2 and 6)
             if state.SequencerStep = 2 || state.SequencerStep = 6 then
-                SweepChannel.stepSweep state.Channel1 io
+                SweepChannel.stepSweep state.Channel1 state.Registers
 
         | 7 ->
             // Envelope clocks at 64 Hz
@@ -462,12 +471,26 @@ module private Apu =
 
         state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
-    let step (state: Apu) (io: IoController) =
-        if state.Timer &&& 8191 = 0 then
-            stepSequencer state io
+    let step (state: Apu) =
+        let registers = state.Registers
 
-        SweepChannel.step state.Channel1 io
-        PulseChannel.step state.Channel2 io Io.Nr23 Io.Nr24
+        if registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
+            SweepChannel.trigger state.Channel1 registers
+
+        if registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
+            PulseChannel.trigger state.Channel2 registers
+
+        if registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
+            WaveChannel.trigger state.Channel3 registers
+
+        if registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
+            NoiseChannel.trigger state.Channel4 registers
+
+        if state.Timer &&& 8191 = 0 then
+            stepSequencer state
+
+        SweepChannel.step state.Channel1 registers
+        PulseChannel.step state.Channel2 registers Io.Nr23 Io.Nr24
         WaveChannel.step state.Channel3
         NoiseChannel.step state.Channel4
 
@@ -477,7 +500,7 @@ module private Apu =
         if state.Counter >= tCyclesPerSample then
             state.Counter <- 0
 
-            let rawSample = getMixedSample state io
+            let rawSample = getMixedSample state
 
             let filteredSample =
                 rawSample |> stepHighPass state.HighPass |> stepLowPass state.LowPass
@@ -486,25 +509,11 @@ module private Apu =
             state.RingBuffer[i] <- filteredSample
             state.WriteHead <- state.WriteHead + 1
 
-let stepApu (state: Apu) (io: IoController) =
-    if io.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
-        Apu.step state io
+        registers[Io.Nr52] <- (registers[Io.Nr52] &&& 0x80uy) ||| getMasterControl state
 
-let triggerChannel (state: Apu) (io: IoController) (register: int) =
-    match register with
-    | Io.Nr14 -> SweepChannel.trigger state.Channel1 io
-    | Io.Nr24 -> PulseChannel.trigger state.Channel2 io
-    | Io.Nr34 -> WaveChannel.trigger state.Channel3 io
-    | Io.Nr44 -> NoiseChannel.trigger state.Channel4 io
-    | _ -> ()
-
-let getMasterControl (state: Apu) =
-    let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
-    let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
-    let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
-    let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
-
-    ch1 ||| ch2 ||| ch3 ||| ch4
+let stepApu (state: Apu) =
+    if state.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
+        Apu.step state
 
 // Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
 let private calculateAdjustmentRatio (ringBufferSize: int) (currentFill: int) : float =

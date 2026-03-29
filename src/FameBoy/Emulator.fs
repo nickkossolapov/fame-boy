@@ -20,8 +20,7 @@ let createEmulator bytes ringBufferSize getJoypadState =
     let apu = createApu ringBufferSize
     let serial = createSerial ()
 
-    io.GetApuChannelStates <- fun () -> getMasterControl apu
-    io.OnApuTrigger <- fun register -> triggerChannel apu io register
+    io.ApuRegisters <- apu.Registers
 
     let applyJoypadState (state: JoypadState) = io.JoypadState <- state
 
@@ -37,7 +36,7 @@ let createEmulator bytes ringBufferSize getJoypadState =
         for _ in 1..mCycles do
             stepTimers timer io
             stepSerial serial io
-            stepApu apu io
+            stepApu apu
 
         // Rest of Game Boy hardware operates at 4x cycles/s of the CPU
         let tCycles = mCycles * 4

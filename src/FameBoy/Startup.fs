@@ -65,7 +65,10 @@ let createDmgCpu (memory: Memory) (io: IoController) =
           Io.Wx, 0x00uy ]
 
     for reg, value in ioRegisters do
-        io.Registers[reg] <- value
+        if reg >= Io.Nr10 && reg <= 0x3F then
+            io.ApuRegisters[reg] <- value
+        else
+            io.Registers[reg] <- value
 
     io.InterruptEnable <- 0x00uy
     io.PpuMode <- LanguagePrimitives.EnumOfValue(io.Registers[Io.Stat] &&& 0b0011uy)
