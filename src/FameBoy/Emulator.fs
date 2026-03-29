@@ -36,13 +36,13 @@ let createEmulator bytes ringBufferSize getJoypadState =
         for _ in 1..mCycles do
             stepTimers timer io
             stepSerial serial io
+            stepApu apu io
 
         // Rest of Game Boy hardware operates at 4x cycles/s of the CPU
         let tCycles = mCycles * 4
 
         for _ in 1..tCycles do
             stepPpu ppu
-            stepApu apu io
 
         mCycles
 

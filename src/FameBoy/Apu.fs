@@ -206,11 +206,12 @@ module private PulseChannel =
 
     let step (ch: PulseChannel) (io: IoController) (freqLo: int) (freqHi: int) =
         if ch.Enabled then
-            ch.Timer <- ch.Timer - 1
+            ch.Timer <- ch.Timer - 4
 
             if ch.Timer <= 0 then
                 ch.Frequency <- int io.Registers[freqLo] ||| ((int io.Registers[freqHi] &&& 0b0111) <<< 8)
-                ch.Timer <- (2048 - ch.Frequency) * 4
+                let period = (2048 - ch.Frequency) * 4
+                ch.Timer <- ch.Timer + period
                 ch.DutyStep <- (ch.DutyStep + 1) &&& 7
 
     let output (ch: PulseChannel) =
@@ -310,11 +311,13 @@ module private WaveChannel =
 
     let step (ch: WaveChannel) =
         if ch.Enabled then
-            ch.Timer <- ch.Timer - 1
+            ch.Timer <- ch.Timer - 4
 
             if ch.Timer <= 0 then
-                ch.Timer <- ch.Period
-                ch.RamIndex <- (ch.RamIndex + 1) &&& 0x1F
+                // Period can be as low as 2, so we may need to advance multiple steps
+                let steps = 1 + ((-ch.Timer) / ch.Period)
+                ch.Timer <- ch.Timer + steps * ch.Period
+                ch.RamIndex <- (ch.RamIndex + steps) &&& 0x1F
 
     let output (ch: WaveChannel) (io: IoController) =
         if not ch.Enabled || ch.OutputLevel = 0 then
@@ -377,10 +380,10 @@ module private NoiseChannel =
 
     let step (ch: NoiseChannel) =
         if ch.Enabled then
-            ch.Timer <- ch.Timer - 1
+            ch.Timer <- ch.Timer - 4
 
             if ch.Timer <= 0 then
-                ch.Timer <- ch.Period
+                ch.Timer <- ch.Timer + ch.Period
                 ch.Lfsr <- stepLfsr ch.Lfsr ch.WideMode
 
     let output (ch: NoiseChannel) =
@@ -480,8 +483,8 @@ module private Apu =
         WaveChannel.step state.Channel3
         NoiseChannel.step state.Channel4
 
-        state.Timer <- state.Timer + 1
-        state.Counter <- state.Counter + 1
+        state.Timer <- state.Timer + 4
+        state.Counter <- state.Counter + 4
 
         if state.Counter >= tCyclesPerSample then
             state.Counter <- 0
