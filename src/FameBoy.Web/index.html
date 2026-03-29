@@ -17,6 +17,7 @@
             <div class="screen-wrapper">
                 <canvas aria-label="Game screen" id="screen" role="img"></canvas>
                 <div class="start-overlay" id="start-overlay">Press any<br>button to start</div>
+                <span class="fps-counter" id="fps-counter"></span>
             </div>
         </div>
         <div class="buttons">
@@ -69,6 +70,9 @@
                 <span>×2</span>
             </label>
         </fieldset>
+        <label class="fps-toggle">
+            <input id="show-fps" type="checkbox"> Show FPS
+        </label>
         <div class="controls">
             <span class="controls-heading">Keyboard Controls</span>
             <table aria-label="Keyboard controls">

@@ -258,6 +258,32 @@ body {
     color: var(--color-text);
 }
 
+.fps-counter {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 15px;
+    font-family: monospace;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1px 4px;
+    border-radius: 2px;
+    display: none;
+}
+
+#root:has(#show-fps:checked) .fps-counter {
+    display: block;
+}
+
+.fps-toggle {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -517,7 +543,22 @@ button:focus-visible {
         display: none;
     }
 
+    .rom-upload {
+        order: 1;
+    }
+
+    .github-link {
+        order: 2;
+    }
+
+    .fps-toggle {
+        order: 3;
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
+
     .game-credit {
+        order: 4;
         grid-column: 1 / -1;
         text-align: center;
     }

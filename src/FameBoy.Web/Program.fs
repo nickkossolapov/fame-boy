@@ -19,6 +19,7 @@ initOnScreenButtons ()
 let fileUploadButton = document.getElementById "rom-file"
 let screenCanvas = document.getElementById "screen" :?> HTMLCanvasElement
 let startOverlay = document.getElementById "start-overlay"
+let fpsCounter = document.getElementById "fps-counter"
 
 screenCanvas.width <- Screen.width
 screenCanvas.height <- Screen.height
@@ -190,6 +191,12 @@ let startEmulator bytes =
         loadImageData ppu.Framebuffer
         ctx.putImageData (imageData, 0, 0)
 
+    let fpsWindowSize = 30
+    let fpsHistory = Array.zeroCreate<float> fpsWindowSize
+    let mutable fpsIndex = 0
+    let mutable fpsFrameCount = 0
+    let mutable lastFpsLogTime = 0.0
+
     let rec runEmulator (last: float) (timestamp: float) =
         let dt = timestamp - last
         let cycles = Math.Min(targetCyclesPerMs * dt, maxCyclesPerFrame)
@@ -203,6 +210,21 @@ let startEmulator bytes =
 
         reportFrameTime dt
         tryQueueAudio apu
+
+        fpsHistory[fpsIndex] <- dt
+        fpsIndex <- (fpsIndex + 1) % fpsWindowSize
+        fpsFrameCount <- min (fpsFrameCount + 1) fpsWindowSize
+
+        if timestamp - lastFpsLogTime >= 500.0 then
+            let mutable total = 0.0
+
+            for i = 0 to fpsFrameCount - 1 do
+                total <- total + fpsHistory[i]
+
+            let avgDt = total / float fpsFrameCount
+            let fps = 1000.0 / avgDt
+            fpsCounter.textContent <- $"%.0f{fps}"
+            lastFpsLogTime <- timestamp
 
         draw ()
         currentAnimationFrame <- window.requestAnimationFrame (runEmulator timestamp) |> Some
