@@ -169,13 +169,13 @@ module private Shared =
 
                 env.Volume <- Math.Clamp(newVolume, 0, 15)
 
-    let stepLength (len: Length) =
-        if len.Enabled && len.Counter > 0 then
-            len.Counter <- len.Counter - 1
+    let inline stepLength (ch: ^a when ^a: (member Length: Length) and ^a: (member Enabled: bool)) =
+        if ch.Length.Enabled && ch.Length.Counter > 0 then
+            ch.Length.Counter <- ch.Length.Counter - 1
 
-            len.Counter = 0
+            ch.Enabled && ch.Length.Counter <> 0
         else
-            false
+            ch.Enabled
 
 open Shared
 
@@ -433,17 +433,10 @@ module private Apu =
         | 4
         | 6 ->
             // Length clocks at 256 Hz
-            if stepLength state.Channel1.Pulse.Length then
-                state.Channel1.Pulse.Enabled <- false
-
-            if stepLength state.Channel2.Length then
-                state.Channel2.Enabled <- false
-
-            if stepLength state.Channel3.Length then
-                state.Channel3.Enabled <- false
-
-            if stepLength state.Channel4.Length then
-                state.Channel4.Enabled <- false
+            state.Channel1.Pulse.Enabled <- stepLength state.Channel1.Pulse
+            state.Channel2.Enabled <- stepLength state.Channel2
+            state.Channel3.Enabled <- stepLength state.Channel3
+            state.Channel4.Enabled <- stepLength state.Channel4
 
             // Sweep clocks at 128 Hz (only on 2 and 6)
             if state.SequencerStep = 2 || state.SequencerStep = 6 then
@@ -458,19 +451,16 @@ module private Apu =
 
         state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
+    let checkTrigger io reg triggerFunc =
+        if io.Registers[reg] &&& 0b1000_0000uy <> 0uy then
+            triggerFunc io
+
     let step (state: Apu) (io: IoController) =
         // TODO Don't just set ch.Enabled <- true on trigge, check if the DAC is on
-        if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
-            SweepChannel.trigger state.Channel1 io
-
-        if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
-            PulseChannel.trigger state.Channel2 io
-
-        if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
-            WaveChannel.trigger state.Channel3 io
-
-        if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
-            NoiseChannel.trigger state.Channel4 io
+        checkTrigger io Io.Nr14 (SweepChannel.trigger state.Channel1)
+        checkTrigger io Io.Nr24 (PulseChannel.trigger state.Channel2)
+        checkTrigger io Io.Nr34 (WaveChannel.trigger state.Channel3)
+        checkTrigger io Io.Nr44 (NoiseChannel.trigger state.Channel4)
 
         if state.Timer &&& 8191 = 0 then
             stepSequencer state
