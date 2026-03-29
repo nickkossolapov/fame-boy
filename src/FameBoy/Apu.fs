@@ -156,7 +156,7 @@ module private Shared =
     // 0 = HIGH (output volume), 1 = LOW (output zero)
     let dutyCycles = [| 0b1111_1110; 0b0111_1110; 0b0111_1000; 0b1000_0001 |]
 
-    let inline dac digital = (float32 digital / 7.5f) - 1.0f
+    let inline dac (digital: int) = (float32 digital / 7.5f) - 1.0f
 
     let stepEnvelope (env: Envelope) =
         if env.Pace > 0 then
@@ -382,14 +382,13 @@ module private NoiseChannel =
                 ch.Timer <- ch.Period
                 ch.Lfsr <- stepLfsr ch.Lfsr ch.WideMode
 
-    let output (ch: NoiseChannel) : float32 =
+    let output (ch: NoiseChannel) =
         if not ch.Enabled then
-            dac 0
+            0
         else
             let bit = ch.Lfsr &&& 1
-            let digital = if bit = 0 then ch.Envelope.Volume else 0
 
-            dac digital
+            if bit = 0 then ch.Envelope.Volume else 0
 
 module private SoundProcessing =
     let stepHighPass (f: HighPassFilter) (input: float32) =
