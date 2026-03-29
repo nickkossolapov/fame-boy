@@ -8,18 +8,18 @@ A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https:
 
 ### Features
 
-- Supports most of the popular Game Boy games (incl. Tetris, Pokémon, Mario, Zelda, and more!).
+- Supports most of the popular Game Boy games with sound (incl. Tetris, Pokémon, Mario, Zelda, and more!).
 - Runs [in the browser](https://nickkossolapov.github.io/fame-boy/) with a touch-friendly fully responsive design built with [Fable](https://fable.io/).
 - Cross-platform too, it runs natively on Windows, macOS, and Linux (and others) with [Raylib](https://www.raylib.com/).
 - Zero-dependency [F# core](./src/FameBoy) with robust typing and built with functional programming in mind.
 
 ### About
 
-This started as a way for me to learn more about computer hardware. The original Game Boy felt like the perfect target: well-defined in 
+This started as a way for me to learn more about computer hardware. The original Game Boy felt like the perfect target: well-defined in
 scope while still complex enough to learn about a real system, and chock-full of nostalgia.
 
-Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware 
-accuracy or maximum performance. 
+Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware
+accuracy or maximum performance.
 
 I did use AI to generate a lot of the test cases and help review parts of the code, but most of the code was
 (unfortunately?) meticulously crafted by me.
@@ -28,7 +28,8 @@ I did use AI to generate a lot of the test cases and help review parts of the co
 
 There are still a few gaps with the real hardware that I may or may not get to (but would like to).
 
-- No Game Boy Color support or sound.
+- No Game Boy Color support.
+- Somewhat poor performance in web after adding sound (still investigating)
 - Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
 - Missing battery saves (SRAM) and save states.
 - Hardware inaccuracies (e.g. scanline-based rendering instead of pixel FIFOs, instant DMA transfer, and missing a few hardware bugs).

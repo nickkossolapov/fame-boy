@@ -242,19 +242,20 @@ body {
     height: 35px;
 }
 
-.game-credit {
+.credit-text {
     font-size: 0.75rem;
     color: var(--color-muted);
     text-align: center;
+    margin-bottom: 10px;
 }
 
-.game-credit a {
+.credit-text a {
     color: var(--color-subtle);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
-.game-credit a:hover {
+.credit-text a:hover {
     color: var(--color-text);
 }
 
@@ -553,13 +554,13 @@ button:focus-visible {
 
     .fps-toggle {
         order: 3;
-        grid-column: 1 / -1;
+        grid-column: 1 / span 2;
         justify-self: center;
     }
 
-    .game-credit {
+    .credit-container {
         order: 4;
-        grid-column: 1 / -1;
+        grid-column: 1 / span 2;
         text-align: center;
     }
 }
