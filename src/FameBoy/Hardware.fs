@@ -112,6 +112,9 @@ module Io =
     let Nr52 = 0x26
 
     [<Literal>]
+    let WaveRam = 0x30
+
+    [<Literal>]
     let Lcdc = 0x40
 
     [<Literal>]

@@ -57,6 +57,14 @@ type PulseChannel =
 
 type SweepChannel = { Pulse: PulseChannel; Sweep: Sweep }
 
+type WaveChannel =
+    { mutable RamIndex: int
+      mutable Timer: int
+      mutable Period: int
+      mutable OutputLevel: int
+      mutable Enabled: bool
+      Length: Length }
+
 type NoiseChannel =
     { mutable WideMode: bool // Wide is 15-bit LFSR, narrow is 7-bit LFSR
       mutable Lfsr: int
@@ -76,6 +84,7 @@ type Apu =
     { RingBuffer: float32 array
       Channel1: SweepChannel
       Channel2: PulseChannel
+      Channel3: WaveChannel
       Channel4: NoiseChannel
       Filter: HighPassFilter
       mutable WriteHead: int
@@ -118,6 +127,13 @@ let createApu () =
         { Pulse = createPulse ()
           Sweep = createSweep () }
       Channel2 = createPulse ()
+      Channel3 =
+        { RamIndex = 0
+          Timer = 0
+          Period = 0
+          OutputLevel = 0
+          Enabled = false
+          Length = createLength () }
       Channel4 =
         { WideMode = true
           Lfsr = 0x7FFF
@@ -268,6 +284,48 @@ module private SweepChannel =
                 if newFreq <= 2047 && newFreq >= 0 then
                     ch.Pulse.Frequency <- newFreq
 
+module private WaveChannel =
+    let trigger (ch: WaveChannel) (io: IoController) =
+        let nr30 = int io.Registers[Io.Nr30]
+        let nr32 = int io.Registers[Io.Nr32]
+        let nr33 = int io.Registers[Io.Nr33]
+        let nr34 = int io.Registers[Io.Nr34]
+
+        let frequency = nr33 ||| ((nr34 &&& 0b0111) <<< 8)
+
+        ch.RamIndex <- 0
+        ch.Period <- (2048 - frequency) * 2
+        ch.Timer <- ch.Period
+        ch.OutputLevel <- (nr32 &&& 0b0110_0000) >>> 5
+        ch.Enabled <- (nr30 &&& 0b1000_0000) <> 0
+
+        ch.Length.Counter <- 64 - int io.Registers[Io.Nr31]
+        ch.Length.Enabled <- (nr34 &&& 0b0100_0000) <> 0
+
+        io.Registers[Io.Nr34] <- io.Registers[Io.Nr34] &&& 0b0111_1111uy
+
+    let step (ch: WaveChannel) =
+        if ch.Enabled then
+            ch.Timer <- ch.Timer - 1
+
+            if ch.Timer <= 0 then
+                ch.Timer <- ch.Period
+                ch.RamIndex <- (ch.RamIndex + 1) &&& 0x1F
+
+    let output (ch: WaveChannel) (io: IoController) : float32 =
+        if not ch.Enabled || ch.OutputLevel = 0 then
+            0.0f
+        else
+            let byte = int io.Registers[Io.WaveRam + ch.RamIndex / 2]
+
+            let nibble =
+                if (ch.RamIndex % 2) = 0 then
+                    (byte &&& 0b1111_0000) >>> 4
+                else
+                    (byte &&& 0b1111)
+
+            dac (nibble >>> (ch.OutputLevel - 1))
+
 module private NoiseChannel =
     let private divisors = [| 8; 16; 32; 48; 64; 80; 96; 112 |]
 
@@ -343,6 +401,9 @@ let stepSequencer (state: Apu) =
         if stepLength state.Channel2.Length then
             state.Channel2.Enabled <- false
 
+        if stepLength state.Channel3.Length then
+            state.Channel3.Enabled <- false
+
         if stepLength state.Channel4.Length then
             state.Channel4.Enabled <- false
 
@@ -367,9 +428,10 @@ module private SoundProcessing =
 
         output
 
-    let simpleMix ch1 ch2 ch4 =
+    let simpleMix io ch1 ch2 ch3 ch4 =
         (PulseChannel.output ch1.Pulse
          + PulseChannel.output ch2
+         + WaveChannel.output ch3 io
          + NoiseChannel.output ch4)
         / 4f
 
@@ -383,6 +445,9 @@ let stepApu (state: Apu) (io: IoController) =
     if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
         PulseChannel.trigger state.Channel2 io
 
+    if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
+        WaveChannel.trigger state.Channel3 io
+
     if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
         NoiseChannel.trigger state.Channel4 io
 
@@ -391,6 +456,7 @@ let stepApu (state: Apu) (io: IoController) =
 
     SweepChannel.step state.Channel1
     PulseChannel.step state.Channel2
+    WaveChannel.step state.Channel3
     NoiseChannel.step state.Channel4
 
     state.Timer <- state.Timer + 1
@@ -399,7 +465,9 @@ let stepApu (state: Apu) (io: IoController) =
     if state.Counter >= tCyclesPerSample then
         state.Counter <- 0
 
-        let rawSample = simpleMix state.Channel1 state.Channel2 state.Channel4
+        let rawSample =
+            simpleMix io state.Channel1 state.Channel2 state.Channel3 state.Channel4
+
         let filteredSample = stepFilter state.Filter rawSample
 
         let i = state.WriteHead &&& ringBufferModulo
@@ -418,9 +486,8 @@ let readResampledBuffer (state: Apu) (destination: float32 array) (outputSampleR
     let adjustmentRatio = calculateAdjustmentRatio (state.WriteHead - state.ReadHead)
     let samplingRatio = float nativeSampleRate / float outputSampleRate
     let numApuSamples = int (adjustmentRatio * samplingRatio * float destination.Length)
-
-    // Clamp to available samples, leaving one extra for interpolation lookahead
     let available = state.WriteHead - state.ReadHead
+    // Clamp to available samples, leaving one extra for interpolation lookahead
     let samplesToConsume = max 0 (min numApuSamples (available - 1))
 
     if samplesToConsume > 0 && destination.Length > 0 then
