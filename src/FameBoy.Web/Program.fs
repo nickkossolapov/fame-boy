@@ -18,6 +18,7 @@ initOnScreenButtons ()
 
 let fileUploadButton = document.getElementById "rom-file"
 let screenCanvas = document.getElementById "screen" :?> HTMLCanvasElement
+let startOverlay = document.getElementById "start-overlay"
 
 screenCanvas.width <- Screen.width
 screenCanvas.height <- Screen.height
@@ -57,12 +58,6 @@ module private Audio =
     [<Emit("new AudioContext({sampleRate: $0})")>]
     let private createAudioContext (_: int) : obj = jsNative
 
-    [<Emit("$0.resume()")>]
-    let private resumeContext (ctx: obj) : JS.Promise<unit> = jsNative
-
-    [<Emit("$0.state")>]
-    let private contextState (ctx: obj) : string = jsNative
-
     [<Emit("$0.createBuffer($1, $2, $3)")>]
     let private createBuffer (ctx: obj) (channels: int) (length: int) (sampleRate: int) : obj = jsNative
 
@@ -93,14 +88,7 @@ module private Audio =
     let mutable nextPlayTime = 0.0
 
     let initAudio () =
-        let ctx = createAudioContext audioSamplingRate
-
-        audioCtx <- Some ctx
-
-    let tryResumeAudio () =
-        match audioCtx with
-        | Some ctx when contextState ctx = "suspended" -> resumeContext ctx |> ignore
-        | _ -> ()
+        audioCtx <- Some(createAudioContext audioSamplingRate)
 
     let tryQueueAudio (apu: Apu) =
         match audioCtx with
@@ -192,8 +180,19 @@ for i in 0 .. int scaleSelector.length - 1 do
 
     input.addEventListener ("change", fun _ -> document.documentElement?style?setProperty ("--s", input.value))
 
-document.addEventListener ("click", fun _ -> tryResumeAudio ())
-document.addEventListener ("keydown", fun _ -> tryResumeAudio ())
+// Pre-fetch the default ROM, then wait for user interaction to start
+let mutable private defaultRomBytes: byte array option = None
+let mutable private defaultRomStarted = false
+
+let private onFirstInteraction (_: Event) =
+    startOverlay?classList?add "hidden"
+
+    if not defaultRomStarted then
+        defaultRomStarted <- true
+
+        match defaultRomBytes with
+        | Some bytes -> startEmulator bytes
+        | None -> ()
 
 let loadDefaultRom () =
     async {
@@ -202,7 +201,10 @@ let loadDefaultRom () =
         let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
         let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
 
-        startEmulator bytes
+        defaultRomBytes <- Some bytes
+
+        document.addEventListener ("click", onFirstInteraction)
+        document.addEventListener ("keydown", onFirstInteraction)
     }
     |> Async.StartImmediate
 

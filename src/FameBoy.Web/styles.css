@@ -1,4 +1,10 @@
-﻿:root {
+﻿@font-face {
+    font-family: 'Press Start 2P';
+    src: url('/PressStart2P-Regular.ttf') format('truetype');
+    font-display: swap;
+}
+
+:root {
     --s: 1;
 
     --color-text: #21262d;
@@ -14,6 +20,9 @@
     --color-border: #d1d5db;
     --color-border-hover: #9ca3af;
     --color-focus: #0e8ff8;
+
+    --color-screen-bg: #bada55;
+    --color-screen-text: #0f380f;
 
     --color-shell: #c8c4bf;
     --color-bezel: #4e4a57;
@@ -296,7 +305,29 @@ body {
     aspect-ratio: 10/9;
     border: 5px solid var(--color-d-pad);
     border-radius: 5px;
-    background: var(--color-d-pad);
+    background: var(--color-screen-bg);
+}
+
+.screen-wrapper {
+    position: relative;
+}
+
+.start-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    line-height: 2.2;
+    color: var(--color-screen-text);
+    text-align: center;
+}
+
+.start-overlay.hidden {
+    display: none;
 }
 
 .buttons {

@@ -459,7 +459,6 @@ module private Apu =
 
         state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
-
     let step (state: Apu) (io: IoController) =
         if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
             SweepChannel.trigger state.Channel1 io
