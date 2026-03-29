@@ -459,16 +459,19 @@ module private Apu =
 
         state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
-    let checkTrigger io reg triggerFunc =
-        if io.Registers[reg] &&& 0b1000_0000uy <> 0uy then
-            triggerFunc io
 
     let step (state: Apu) (io: IoController) =
-        // TODO Don't just set ch.Enabled <- true on trigge, check if the DAC is on
-        checkTrigger io Io.Nr14 (SweepChannel.trigger state.Channel1)
-        checkTrigger io Io.Nr24 (PulseChannel.trigger state.Channel2)
-        checkTrigger io Io.Nr34 (WaveChannel.trigger state.Channel3)
-        checkTrigger io Io.Nr44 (NoiseChannel.trigger state.Channel4)
+        if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
+            SweepChannel.trigger state.Channel1 io
+
+        if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
+            PulseChannel.trigger state.Channel2 io
+
+        if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
+            WaveChannel.trigger state.Channel3 io
+
+        if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
+            NoiseChannel.trigger state.Channel4 io
 
         state.Channel1.Pulse.Frequency <- int io.Registers[Io.Nr13] ||| ((int io.Registers[Io.Nr14] &&& 0b0111) <<< 8)
         state.Channel2.Frequency <- int io.Registers[Io.Nr23] ||| ((int io.Registers[Io.Nr24] &&& 0b0111) <<< 8)
