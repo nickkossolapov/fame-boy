@@ -97,9 +97,17 @@ module private Audio =
     let mutable private audioCtx: obj option = None
     let mutable private gainNode: obj option = None
     let mutable audioInitialized = false
-    let mutable private muted = false
+    let mutable private userMuted = false
+    let mutable private suppressed = false
     let private audioBuffer = Array.zeroCreate<float32> audioBufferSize
     let mutable nextPlayTime = 0.0
+
+    let private applyGain () =
+        match gainNode with
+        | Some gain ->
+            let shouldMute = userMuted || suppressed
+            setGainValue gain (if shouldMute then 0.0 else defaultVolume)
+        | None -> ()
 
     let initAudio () =
         let ctx = createAudioContext audioSamplingRate
@@ -110,12 +118,33 @@ module private Audio =
         gainNode <- Some gain
 
     let toggleMute () =
-        match gainNode with
-        | Some gain ->
-            muted <- not muted
-            setGainValue gain (if muted then 0.0 else defaultVolume)
-            muted
-        | None -> false
+        userMuted <- not userMuted
+        applyGain ()
+        userMuted
+
+    let private frameWindowSize = 20
+    let private frameHistory = Array.create frameWindowSize false
+    let mutable private frameIndex = 0
+    let mutable private badCount = 0
+
+    // Sliding window mute. If browser is out of focus, audio slows down and isn't great
+    let reportFrameTime (dt: float) =
+        let isBad = dt > 25.0
+        let wasBad = frameHistory[frameIndex]
+
+        frameHistory[frameIndex] <- isBad
+        frameIndex <- (frameIndex + 1) % frameWindowSize
+
+        if isBad && not wasBad then
+            badCount <- badCount + 1
+        elif not isBad && wasBad then
+            badCount <- badCount - 1
+
+        let shouldSuppress = badCount >= 4
+
+        if shouldSuppress <> suppressed then
+            suppressed <- shouldSuppress
+            applyGain ()
 
     let tryQueueAudio (apu: Apu) =
         match audioCtx, gainNode with
@@ -172,6 +201,7 @@ let startEmulator bytes =
             let mCycles = float (stepEmulator ())
             accumulator <- accumulator - mCycles
 
+        reportFrameTime dt
         tryQueueAudio apu
 
         draw ()
