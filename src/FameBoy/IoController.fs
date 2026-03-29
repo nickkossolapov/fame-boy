@@ -16,7 +16,8 @@ type IoController =
       mutable InterruptEnable: uint8
       mutable JoypadState: JoypadState
       mutable DmaRequest: uint8 voption
-      mutable GetApuChannelStates: unit -> uint8 }
+      mutable GetApuChannelStates: unit -> uint8
+      mutable OnApuTrigger: int -> unit }
 
     member this.CpuWrite fullAddress value =
         let offset = fullAddress - Io.IoMemoryOffset
@@ -35,7 +36,12 @@ type IoController =
         | Io.Nr52 ->
             // Only bit 7 (power) is writable - lower bits are read-only channel status
             this.Registers[offset] <- (value &&& 0x80uy) ||| (this.Registers[offset] &&& 0x7Fuy)
-        | _ -> this.Registers[offset] <- value
+        | _ ->
+            this.Registers[offset] <- value
+
+            if value &&& 0b1000_0000uy <> 0uy
+               && (offset = Io.Nr14 || offset = Io.Nr24 || offset = Io.Nr34 || offset = Io.Nr44) then
+                this.OnApuTrigger offset
 
     member this.CpuRead fullAddress =
         let offset = fullAddress - Io.IoMemoryOffset
@@ -70,4 +76,5 @@ let createIoController () =
           Start = false
           Select = false }
       DmaRequest = ValueNone
-      GetApuChannelStates = fun () -> 0uy }
+      GetApuChannelStates = fun () -> 0uy
+      OnApuTrigger = ignore }

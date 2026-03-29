@@ -463,18 +463,6 @@ module private Apu =
         state.SequencerStep <- (state.SequencerStep + 1) &&& 7
 
     let step (state: Apu) (io: IoController) =
-        if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
-            SweepChannel.trigger state.Channel1 io
-
-        if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
-            PulseChannel.trigger state.Channel2 io
-
-        if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
-            WaveChannel.trigger state.Channel3 io
-
-        if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
-            NoiseChannel.trigger state.Channel4 io
-
         if state.Timer &&& 8191 = 0 then
             stepSequencer state io
 
@@ -501,6 +489,14 @@ module private Apu =
 let stepApu (state: Apu) (io: IoController) =
     if io.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
         Apu.step state io
+
+let triggerChannel (state: Apu) (io: IoController) (register: int) =
+    match register with
+    | Io.Nr14 -> SweepChannel.trigger state.Channel1 io
+    | Io.Nr24 -> PulseChannel.trigger state.Channel2 io
+    | Io.Nr34 -> WaveChannel.trigger state.Channel3 io
+    | Io.Nr44 -> NoiseChannel.trigger state.Channel4 io
+    | _ -> ()
 
 let getMasterControl (state: Apu) =
     let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
