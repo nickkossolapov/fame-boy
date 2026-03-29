@@ -3,6 +3,7 @@ open Browser
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
+open FameBoy.Apu
 open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Web.Joypad
@@ -46,12 +47,101 @@ let targetCyclesPerMs = float cpuFrequency / 1000.0
 let maxCyclesPerFrame = float cpuFrequency / 60.0 // So if the emulator can't reach 60 FPS it won't drown itself in instructions
 let mutable currentAnimationFrame = None
 
+module private Audio =
+    [<Literal>]
+    let audioSamplingRate = 48000
+
+    [<Literal>]
+    let audioBufferSize = 2048
+
+    [<Emit("new AudioContext({sampleRate: $0})")>]
+    let private createAudioContext (_: int) : obj = jsNative
+
+    [<Emit("$0.resume()")>]
+    let private resumeContext (ctx: obj) : JS.Promise<unit> = jsNative
+
+    [<Emit("$0.state")>]
+    let private contextState (ctx: obj) : string = jsNative
+
+    [<Emit("$0.createBuffer($1, $2, $3)")>]
+    let private createBuffer (ctx: obj) (channels: int) (length: int) (sampleRate: int) : obj = jsNative
+
+    [<Emit("$0.getChannelData($1)")>]
+    let private getChannelData (buffer: obj) (channel: int) : float32 array = jsNative
+
+    [<Emit("$0.duration")>]
+    let private bufferDuration (buffer: obj) : float = jsNative
+
+    [<Emit("$0.createBufferSource()")>]
+    let private createBufferSource (ctx: obj) : obj = jsNative
+
+    [<Emit("$0.buffer = $1")>]
+    let private setBuffer (source: obj) (buffer: obj) : unit = jsNative
+
+    [<Emit("$0.connect($1.destination)")>]
+    let private connectToDestination (source: obj) (ctx: obj) : unit = jsNative
+
+    [<Emit("$0.start($1)")>]
+    let private startSource (source: obj) (time: float) : unit = jsNative
+
+    [<Emit("$0.currentTime")>]
+    let private currentTime (ctx: obj) : float = jsNative
+
+    let mutable private audioCtx: obj option = None
+    let mutable audioInitialized = false
+    let private audioBuffer = Array.zeroCreate<float32> audioBufferSize
+    let mutable nextPlayTime = 0.0
+
+    let initAudio () =
+        let ctx = createAudioContext audioSamplingRate
+
+        audioCtx <- Some ctx
+
+    let tryResumeAudio () =
+        match audioCtx with
+        | Some ctx when contextState ctx = "suspended" -> resumeContext ctx |> ignore
+        | _ -> ()
+
+    let tryQueueAudio (apu: Apu) =
+        match audioCtx with
+        | Some ctx ->
+            let now = currentTime ctx
+
+            if nextPlayTime < now then
+                nextPlayTime <- now
+
+            // Queue buffers to stay ahead of playback by ~50ms
+            while nextPlayTime - now < 0.05 do
+                readResampledBuffer apu audioBuffer audioSamplingRate
+
+                let buffer = createBuffer ctx 1 audioBufferSize audioSamplingRate
+                let channelData = getChannelData buffer 0
+
+                for i = 0 to audioBufferSize - 1 do
+                    channelData[i] <- audioBuffer[i]
+
+                let source = createBufferSource ctx
+                setBuffer source buffer
+                connectToDestination source ctx
+                startSource source nextPlayTime
+                nextPlayTime <- nextPlayTime + bufferDuration buffer
+        | None -> ()
+
+open Audio
 
 let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
-    let ppu, apu, stepEmulator, applyJoypadState = createEmulator bytes getJoypadState
+    let ppu, apu, stepEmulator, applyJoypadState =
+        createEmulator bytes 8192 getJoypadState
+
     let mutable accumulator = 0.0
+
+    if not audioInitialized then
+        audioInitialized <- true
+        initAudio ()
+
+    nextPlayTime <- 0.0
 
     let draw () =
         loadImageData ppu.Framebuffer
@@ -67,6 +157,8 @@ let startEmulator bytes =
         while accumulator > 0 do
             let mCycles = float (stepEmulator ())
             accumulator <- accumulator - mCycles
+
+        tryQueueAudio apu
 
         draw ()
         currentAnimationFrame <- window.requestAnimationFrame (runEmulator timestamp) |> Some
@@ -99,6 +191,9 @@ for i in 0 .. int scaleSelector.length - 1 do
     let input = scaleSelector.[i] :?> HTMLInputElement
 
     input.addEventListener ("change", fun _ -> document.documentElement?style?setProperty ("--s", input.value))
+
+document.addEventListener ("click", fun _ -> tryResumeAudio ())
+document.addEventListener ("keydown", fun _ -> tryResumeAudio ())
 
 let loadDefaultRom () =
     async {

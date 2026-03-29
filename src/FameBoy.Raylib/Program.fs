@@ -65,7 +65,7 @@ let mutable joypadState: JoypadState =
       Select = false }
 
 let ppu, apu, stepEmulator, applyJoypadState =
-    createEmulator bytes (fun () -> joypadState)
+    createEmulator bytes 4096 (fun () -> joypadState)
 
 Raylib.PlayAudioStream audioStream
 

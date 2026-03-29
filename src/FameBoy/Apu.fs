@@ -14,13 +14,6 @@ module private Constants =
     let nativeSampleRate = 32768 // From above
 
     [<Literal>]
-    // let ringBufferSize = 2048 // TODO experiment with buffer size once I get real audio working
-    let ringBufferSize = 4096
-
-    [<Literal>]
-    let ringBufferModulo = ringBufferSize - 1
-
-    [<Literal>]
     let drcGain = 0.02
 
 open Constants
@@ -81,6 +74,7 @@ type HighPassFilter =
 
 type Apu =
     { RingBuffer: float32 array
+      RingBufferMask: int
       Channel1: SweepChannel
       Channel2: PulseChannel
       Channel3: WaveChannel
@@ -92,7 +86,7 @@ type Apu =
       mutable Counter: int
       mutable SequencerStep: int }
 
-let createApu () =
+let createApu bufferSize =
     let createLength () = { Counter = 0; Enabled = false }
 
     let createEnvelope () =
@@ -121,7 +115,8 @@ let createApu () =
           LastOut = 0.0f
           Alpha = 0.996f }
 
-    { RingBuffer = Array.zeroCreate ringBufferSize
+    { RingBuffer = Array.zeroCreate bufferSize
+      RingBufferMask = bufferSize - 1
       Channel1 =
         { Pulse = createPulse ()
           Sweep = createSweep () }
@@ -142,7 +137,7 @@ let createApu () =
           Length = createLength ()
           Envelope = createEnvelope () }
       Filter = createFilter ()
-      WriteHead = ringBufferSize / 2
+      WriteHead = bufferSize / 2
       ReadHead = 0
       Timer = 0
       Counter = 0
@@ -479,7 +474,7 @@ module private Apu =
             let rawSample = getMixedSample state io
             let filteredSample = stepFilter state.Filter rawSample
 
-            let i = state.WriteHead &&& ringBufferModulo
+            let i = state.WriteHead &&& state.RingBufferMask
             state.RingBuffer[i] <- filteredSample
             state.WriteHead <- state.WriteHead + 1
 
@@ -498,20 +493,20 @@ let stepApu (state: Apu) (io: IoController) =
         io.Registers[Io.Nr52] <- 0b1000_0000uy ||| Apu.getMasterControl state
 
 // Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
-let private calculateAdjustmentRatio (currentFill: int) : float =
+let private calculateAdjustmentRatio (ringBufferSize: int) (currentFill: int) : float =
     let fillRatio = (float (2 * currentFill - ringBufferSize) / float ringBufferSize)
 
     1.0 + fillRatio * drcGain
 
-// TODO Experiment once I have working audio
+
 // This will always resample the entire buffer range, meaning there can be a pitch drop beyond the DRC limit, but it reduces popping
+// I should play around
 let readResampledBuffer (state: Apu) (destination: float32 array) (outputSampleRate: int) =
-    let adjustmentRatio = calculateAdjustmentRatio (state.WriteHead - state.ReadHead)
+    let available = state.WriteHead - state.ReadHead
+    let adjustmentRatio = calculateAdjustmentRatio state.RingBuffer.Length available
     let samplingRatio = float nativeSampleRate / float outputSampleRate
     let numApuSamples = int (adjustmentRatio * samplingRatio * float destination.Length)
-    let available = state.WriteHead - state.ReadHead
-    // Clamp to available samples, leaving one extra for interpolation lookahead
-    let samplesToConsume = max 0 (min numApuSamples (available - 1))
+    let samplesToConsume = max 0 (min numApuSamples (available - 1)) // Clamp to available samples, leaving one extra for interpolation lookahead
 
     if samplesToConsume > 0 && destination.Length > 0 then
         let step = float samplesToConsume / float destination.Length
@@ -521,8 +516,8 @@ let readResampledBuffer (state: Apu) (destination: float32 array) (outputSampleR
             let index = int pos
             let frac = float32 (pos - float index)
 
-            let s0 = state.RingBuffer[(state.ReadHead + index) &&& ringBufferModulo]
-            let s1 = state.RingBuffer[(state.ReadHead + index + 1) &&& ringBufferModulo]
+            let s0 = state.RingBuffer[(state.ReadHead + index) &&& state.RingBufferMask]
+            let s1 = state.RingBuffer[(state.ReadHead + index + 1) &&& state.RingBufferMask]
 
             destination[i] <- s0 + frac * (s1 - s0)
 
