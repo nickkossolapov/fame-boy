@@ -53,7 +53,7 @@ There are still a few gaps with the real hardware that I may or may not get to (
 
 #### Desktop
 
-``` bash
+``` sh
 dotnet run --project src/FameBoy.Raylib -- <rom-file-path> [scale]
 ```
 
@@ -61,7 +61,7 @@ dotnet run --project src/FameBoy.Raylib -- <rom-file-path> [scale]
 
 #### Web
 
-``` bash
+``` sh
 cd src/FameBoy.Web
 npm install
 npm run dev
@@ -77,7 +77,7 @@ test ROMs, then compare the PPU's framebuffer with a known correct framebuffer.
 
 To run the tests:
 
-```bash
+``` sh
 dotnet test
 ```
 
@@ -87,13 +87,13 @@ dotnet test
 
 The benchmark includes a few ROMs to run the emulator with in headless mode with [BenchmarkDotNet](https://benchmarkdotnet.org/).
 
-``` powershell
+``` sh
 ./benchmark.ps1
 ```
 
 Or directly:
 
-``` bash
+``` sh
 cd src/FameBoy.Benchmark
 dotnet run -c release
 ```
@@ -102,13 +102,13 @@ dotnet run -c release
 
 There is also a basic Node benchmarking project using the same test ROMs as the native benchmarking, allowing comparisons.
 
-``` powershell
+``` sh
 ./benchmark-web.ps1
 ```
 
 Or directly:
 
-``` bash
+``` sh
 cd src/FameBoy.Benchmark.Web
 npm run bench
 ```
@@ -117,14 +117,14 @@ npm run bench
 
 #### Desktop
 
-``` bash
+``` sh
 cd src/FameBoy.Raylib
 dotnet build -c release 
 ```
 
 #### Web
 
-``` bash
+``` sh
 cd src/FameBoy.Web
 npm run build
 ```
