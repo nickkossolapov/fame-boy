@@ -301,6 +301,22 @@ let private disablePpu (ppu: Ppu) =
             ppu.Framebuffer[i] <- Shade.White
             ppu.Backbuffer[i] <- Shade.White
 
+let private updateStatAndInterrupt (ppu: Ppu) =
+    let stat = getUpdatedStatRegister ppu
+
+    let newLine =
+        (stat &&& 0b0000_1000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.HBlank)
+        || (stat &&& 0b0001_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.VBlank)
+        || (stat &&& 0b0010_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.OamScan)
+        || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.IoController.Registers[Io.Lyc])
+
+    // Only trigger interrupt on the rising edge of the interrupt signal, needed for STAT blocking
+    if newLine && not ppu.StatSignal then
+        ppu.IoController.TriggerInterrupt InterruptType.LcdStat
+
+    ppu.StatSignal <- newLine
+    ppu.IoController.Registers[Io.Stat] <- stat
+
 let stepPpu (ppu: Ppu) =
     if not (Lcdc.isEnabled Lcdc.PpuEnable ppu.IoController) then
         disablePpu ppu
@@ -325,6 +341,8 @@ let stepPpu (ppu: Ppu) =
                     ppu.WindowLine <- 0
 
                     ppu.IoController.TriggerInterrupt InterruptType.VBlank
+
+                updateStatAndInterrupt ppu
         | PpuMode.VBlank ->
             if ppu.Dot >= lineEnd then
                 ppu.Ly <- (ppu.Ly + 1uy) &&& 0xFFuy
@@ -335,9 +353,12 @@ let stepPpu (ppu: Ppu) =
                     ppu.IoController.PpuMode <- PpuMode.OamScan
 
                     Array.blit ppu.Backbuffer 0 ppu.Framebuffer 0 ppu.Framebuffer.Length
+
+                updateStatAndInterrupt ppu
         | PpuMode.OamScan ->
             if ppu.Dot >= oamScanEnd then
                 ppu.IoController.PpuMode <- PpuMode.Drawing
+                updateStatAndInterrupt ppu
 
         | PpuMode.Drawing ->
             if ppu.Dot = oamScanEnd + 1 then
@@ -345,19 +366,5 @@ let stepPpu (ppu: Ppu) =
 
             if ppu.Dot >= 253 then // Since it's scanline rendering, have the shortest drawing phase: 80+172 dots
                 ppu.IoController.PpuMode <- PpuMode.HBlank
+                updateStatAndInterrupt ppu
         | _ -> ArgumentOutOfRangeException(nameof PpuMode) |> raise
-
-        let stat = getUpdatedStatRegister ppu
-
-        let newLine =
-            (stat &&& 0b0000_1000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.HBlank)
-            || (stat &&& 0b0001_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.VBlank)
-            || (stat &&& 0b0010_0000uy <> 0uy && ppu.IoController.PpuMode = PpuMode.OamScan)
-            || (stat &&& 0b0100_0000uy <> 0uy && ppu.Ly = ppu.IoController.Registers[Io.Lyc])
-
-        // Only trigger interrupt on the rising edge of the interrupt signal, needed for STAT blocking
-        if newLine && not ppu.StatSignal then
-            ppu.IoController.TriggerInterrupt InterruptType.LcdStat
-
-        ppu.StatSignal <- newLine
-        ppu.IoController.Registers[Io.Stat] <- stat
