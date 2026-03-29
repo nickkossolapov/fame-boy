@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{6B2313EE-9
 		.gitignore = .gitignore
 		dotnet-tools.json = dotnet-tools.json
 		benchmark.ps1 = benchmark.ps1
+		benchmark-web.ps1 = benchmark-web.ps1
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Test", "src\FameBoy.Test\FameBoy.Test.fsproj", "{BBB139AD-12DF-4FE1-86DA-5271403F0A48}"
@@ -17,6 +18,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Web", "src\FameBoy.Web\FameBoy.Web.fsproj", "{DD9707E0-2B01-4EBF-9A69-CEFB41781F32}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Benchmark", "src\FameBoy.Benchmark\FameBoy.Benchmark.fsproj", "{7263CF75-E823-4D2A-88D1-34233C5CFCA4}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FameBoy.Benchmark.Web", "src\FameBoy.Benchmark.Web\FameBoy.Benchmark.Web.fsproj", "{66310DEB-9F95-4B3E-AE1D-8FD7DBA5DC2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,5 +47,9 @@ Global
 		{7263CF75-E823-4D2A-88D1-34233C5CFCA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7263CF75-E823-4D2A-88D1-34233C5CFCA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7263CF75-E823-4D2A-88D1-34233C5CFCA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66310DEB-9F95-4B3E-AE1D-8FD7DBA5DC2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66310DEB-9F95-4B3E-AE1D-8FD7DBA5DC2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66310DEB-9F95-4B3E-AE1D-8FD7DBA5DC2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66310DEB-9F95-4B3E-AE1D-8FD7DBA5DC2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

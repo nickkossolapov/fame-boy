@@ -1,0 +1,8 @@
+{
+  "name": "fameboy.benchmark.web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "bench": "dotnet fable --noCache && node Program.fs.js"
+  }
+}
