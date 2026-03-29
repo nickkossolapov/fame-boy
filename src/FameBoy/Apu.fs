@@ -263,12 +263,6 @@ module private SweepChannel =
         | Increasing -> ch.Pulse.Frequency + delta
         | Decreasing -> ch.Pulse.Frequency - delta
 
-    let private overflowCheck ch =
-        let newFreq = calcNewFreq ch
-
-        if newFreq > 2047 then
-            ch.Pulse.Enabled <- false
-
     let stepSweep (ch: SweepChannel) (registers: uint8 array) =
         let sweep = ch.Sweep
 
@@ -438,13 +432,13 @@ module private SoundProcessing =
 open SoundProcessing
 
 module private Apu =
-    let private getMasterControl (state: Apu) =
+    let private updateNr52 (state: Apu) =
         let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
         let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
         let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
         let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
 
-        ch1 ||| ch2 ||| ch3 ||| ch4
+        state.Registers[Io.Nr52] <- (state.Registers[Io.Nr52] &&& 0x80uy) ||| ch1 ||| ch2 ||| ch3 ||| ch4
 
     let stepSequencer (state: Apu) =
         match state.SequencerStep with
@@ -462,6 +456,8 @@ module private Apu =
             if state.SequencerStep = 2 || state.SequencerStep = 6 then
                 SweepChannel.stepSweep state.Channel1 state.Registers
 
+            updateNr52 state
+
         | 7 ->
             // Envelope clocks at 64 Hz
             stepEnvelope state.Channel1.Pulse.Envelope
@@ -476,15 +472,19 @@ module private Apu =
 
         if registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
             SweepChannel.trigger state.Channel1 registers
+            updateNr52 state
 
         if registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
             PulseChannel.trigger state.Channel2 registers
+            updateNr52 state
 
         if registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
             WaveChannel.trigger state.Channel3 registers
+            updateNr52 state
 
         if registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
             NoiseChannel.trigger state.Channel4 registers
+            updateNr52 state
 
         if state.Timer &&& 8191 = 0 then
             stepSequencer state
@@ -508,8 +508,6 @@ module private Apu =
             let i = state.WriteHead &&& state.RingBufferMask
             state.RingBuffer[i] <- filteredSample
             state.WriteHead <- state.WriteHead + 1
-
-        registers[Io.Nr52] <- (registers[Io.Nr52] &&& 0x80uy) ||| getMasterControl state
 
 let stepApu (state: Apu) =
     if state.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
