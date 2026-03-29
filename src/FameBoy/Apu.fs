@@ -395,12 +395,33 @@ module private SoundProcessing =
 
         output
 
-    let simpleMix io ch1 ch2 ch3 ch4 =
-        (PulseChannel.output ch1.Pulse
-         + PulseChannel.output ch2
-         + WaveChannel.output ch3 io
-         + NoiseChannel.output ch4)
-        / 4f
+    let getMixedSample (state: Apu) (io: IoController) =
+        let s1 = SweepChannel.output state.Channel1
+        let s2 = PulseChannel.output state.Channel2
+        let s3 = WaveChannel.output state.Channel3 io
+        let s4 = NoiseChannel.output state.Channel4
+
+        let nr50 = int io.Registers[Io.Nr50]
+        let nr51 = int io.Registers[Io.Nr51]
+
+        let leftVol = float32 ((nr50 >>> 4) &&& 0b0111) / 7f
+        let rightVol = float32 (nr50 &&& 0b0111) / 7f
+
+        let left =
+            (if nr51 &&& 0b0001_0000 <> 0 then s1 else 0f)
+            + (if nr51 &&& 0b0010_0000 <> 0 then s2 else 0f)
+            + (if nr51 &&& 0b0100_0000 <> 0 then s3 else 0f)
+            + (if nr51 &&& 0b1000_0000 <> 0 then s4 else 0f)
+
+        let right =
+            (if nr51 &&& 0b0000_0001 <> 0 then s1 else 0f)
+            + (if nr51 &&& 0b0000_0010 <> 0 then s2 else 0f)
+            + (if nr51 &&& 0b0000_0100 <> 0 then s3 else 0f)
+            + (if nr51 &&& 0b0000_1000 <> 0 then s4 else 0f)
+
+        // Merge to mono - I'm not going to implement stereo for now, as it doesn't work will with headphones
+        // I might revisit later and blend L+R, but for now I'm keeping the implementation simple
+        (left * leftVol + right * rightVol) / 8f
 
 open SoundProcessing
 
@@ -465,9 +486,7 @@ module private Apu =
         if state.Counter >= tCyclesPerSample then
             state.Counter <- 0
 
-            let rawSample =
-                simpleMix io state.Channel1 state.Channel2 state.Channel3 state.Channel4
-
+            let rawSample = getMixedSample state io
             let filteredSample = stepFilter state.Filter rawSample
 
             let i = state.WriteHead &&& ringBufferModulo
