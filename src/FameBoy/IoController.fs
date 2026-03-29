@@ -35,8 +35,7 @@ type IoController =
         | Io.Nr52 ->
             // Only bit 7 (power) is writable - lower bits are read-only channel status
             this.ApuRegisters[offset] <- (value &&& 0x80uy) ||| (this.ApuRegisters[offset] &&& 0x7Fuy)
-        | offset when offset >= Io.Nr10 && offset <= 0x3F ->
-            this.ApuRegisters[offset] <- value
+        | offset when offset >= Io.Nr10 && offset <= 0x3F -> this.ApuRegisters[offset] <- value
         | _ -> this.Registers[offset] <- value
 
     member this.CpuRead fullAddress =

@@ -11,12 +11,16 @@ type InterruptType =
 
 [<Literal>]
 let private VBlankVector = 0x0040us
+
 [<Literal>]
 let private LcdStatVector = 0x0048us
+
 [<Literal>]
 let private TimerVector = 0x0050us
+
 [<Literal>]
 let private SerialVector = 0x0058us
+
 [<Literal>]
 let private JoypadVector = 0x0060us
 

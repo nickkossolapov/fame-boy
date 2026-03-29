@@ -252,7 +252,8 @@ module private SweepChannel =
 
         registers[Io.Nr14] <- registers[Io.Nr14] &&& 0b0111_1111uy
 
-    let step (ch: SweepChannel) (registers: uint8 array) = PulseChannel.step ch.Pulse registers Io.Nr13 Io.Nr14
+    let step (ch: SweepChannel) (registers: uint8 array) =
+        PulseChannel.step ch.Pulse registers Io.Nr13 Io.Nr14
 
     let output (ch: SweepChannel) = PulseChannel.output ch.Pulse
 

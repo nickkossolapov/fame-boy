@@ -21,15 +21,15 @@ scope while still complex enough to learn about a real system, and chock-full of
 Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware
 accuracy or maximum performance.
 
-I did use AI to generate a lot of the test cases and help review parts of the code, but most of the code was
-(unfortunately?) meticulously crafted by me.
+I did use AI for a lot of the test cases, some review, a particularly unhinged late-game performance optimization session, and
+occasionally to help me understand bits of the hardware (looking at you, APU). But most of the code was
+still (unfortunately?) meticulously crafted by me.
 
 ### Limitations
 
 There are still a few gaps with the real hardware that I may or may not get to (but would like to).
 
 - No Game Boy Color support.
-- Somewhat poor performance in web after adding sound (still investigating)
 - Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
 - Missing battery saves (SRAM) and save states.
 - Hardware inaccuracies (e.g. scanline-based rendering instead of pixel FIFOs, instant DMA transfer, and missing a few hardware bugs).
@@ -54,7 +54,7 @@ There are still a few gaps with the real hardware that I may or may not get to (
 #### Desktop
 
 ``` bash
-dotnet run --project src/FameBoy.Raylib -- <rom-file> [scale]
+dotnet run --project src/FameBoy.Raylib -- <rom-file-path> [scale]
 ```
 
 `scale` is an optional positive integer that controls the window size multiplier (default: 4).
@@ -83,6 +83,8 @@ dotnet test
 
 ### Benchmarks
 
+#### Native
+
 The benchmark includes a few ROMs to run the emulator with in headless mode with [BenchmarkDotNet](https://benchmarkdotnet.org/).
 
 ``` powershell
@@ -92,7 +94,23 @@ The benchmark includes a few ROMs to run the emulator with in headless mode with
 Or directly:
 
 ``` bash
-dotnet run --project src/FameBoy.Benchmark -c Release
+cd src/FameBoy.Benchmark
+dotnet run -c release
+```
+
+#### Web
+
+There is also a basic Node benchmarking project using the same test ROMs as the native benchmarking, allowing comparisons.
+
+``` powershell
+./benchmark-web.ps1
+```
+
+Or directly:
+
+``` bash
+cd src/FameBoy.Benchmark.Web
+npm run bench
 ```
 
 ### Release builds
@@ -100,7 +118,8 @@ dotnet run --project src/FameBoy.Benchmark -c Release
 #### Desktop
 
 ``` bash
-dotnet build src/FameBoy.Raylib/FameBoy.Raylib.fsproj -c release 
+cd src/FameBoy.Raylib
+dotnet build -c release 
 ```
 
 #### Web

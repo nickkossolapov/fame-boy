@@ -17,4 +17,8 @@
         <ProjectReference Include="..\FameBoy\FameBoy.fsproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Remove="C:\Users\nickk\.nuget\packages\fable.core\5.0.0-rc.1\contentFiles\any\netstandard2.0\CHANGELOG.md" />
+    </ItemGroup>
+
 </Project>

@@ -64,7 +64,7 @@ let handleCartWrite (state: State) address value =
             if value = 0x01 && state.LatchReady then
                 let now = System.DateTime.Now
                 let dayOfYear = now.DayOfYear - 1
-                
+
                 state.Rtc.Seconds <- byte now.Second
                 state.Rtc.Minutes <- byte now.Minute
                 state.Rtc.Hours <- byte now.Hour

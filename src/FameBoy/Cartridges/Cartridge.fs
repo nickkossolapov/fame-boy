@@ -93,8 +93,7 @@ let handleCartridgeWrite (cart: Cartridge) address (value: uint8) =
         if address < 0x2000 then
             cart.RamEnabled <- (value &&& 0xF) = 0xA
         else
-            let struct (romOffset, ramOffset) =
-                Mbc3Cart.handleCartWrite state address value
+            let struct (romOffset, ramOffset) = Mbc3Cart.handleCartWrite state address value
 
             cart.RomOffset <- romOffset
             cart.RamOffset <- ramOffset
@@ -103,8 +102,7 @@ let handleCartridgeWrite (cart: Cartridge) address (value: uint8) =
             if cart.RamCount > 0 then
                 cart.RamEnabled <- (value &&& 0xF) = 0xA
         else
-            let struct (romOffset, ramOffset) =
-                Mbc5Cart.handleCartWrite state address value
+            let struct (romOffset, ramOffset) = Mbc5Cart.handleCartWrite state address value
 
             cart.RomOffset <- romOffset
             cart.RamOffset <- ramOffset
@@ -114,15 +112,11 @@ let readCartRam (cart: Cartridge) address =
         0xFFuy
     else
         match cart.Mbc with
-        | Mbc3 state when Mbc3Cart.isRtcSelected state ->
-            Mbc3Cart.readRtcRegister state
-        | _ ->
-            cart.Ram[cart.RamOffset + address - 0xA000]
+        | Mbc3 state when Mbc3Cart.isRtcSelected state -> Mbc3Cart.readRtcRegister state
+        | _ -> cart.Ram[cart.RamOffset + address - 0xA000]
 
 let writeCartRam (cart: Cartridge) address (value: uint8) =
     if cart.RamEnabled then
         match cart.Mbc with
-        | Mbc3 state when Mbc3Cart.isRtcSelected state ->
-            Mbc3Cart.writeRtcRegister state value
-        | _ ->
-            cart.Ram[cart.RamOffset + address - 0xA000] <- value
+        | Mbc3 state when Mbc3Cart.isRtcSelected state -> Mbc3Cart.writeRtcRegister state value
+        | _ -> cart.Ram[cart.RamOffset + address - 0xA000] <- value

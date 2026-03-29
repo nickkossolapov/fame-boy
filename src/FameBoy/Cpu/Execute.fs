@@ -78,8 +78,8 @@ let execute (cpu: Cpu) (io: IoController) (instr: DecodedInstruction) =
         match checkForInterrupt cpu io with
         | ValueSome i -> serviceInterrupt cpu io i
         | ValueNone -> 0
-            
-    let instructionCycles = 
+
+    let instructionCycles =
         match instr.MCycles with
         | Fixed c -> c
         | Conditional cc -> if condTaken then cc.Met else cc.NotMet
