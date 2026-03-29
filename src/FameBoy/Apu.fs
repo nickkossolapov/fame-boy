@@ -79,7 +79,6 @@ type HighPassFilter =
       mutable LastOut: float32
       Alpha: float32 }
 
-// TODO Master Power switch - if NR52[7] is 0, the APU is off, and all registers (except NR52) are inaccessible
 type Apu =
     { RingBuffer: float32 array
       Channel1: SweepChannel
@@ -388,38 +387,6 @@ module private NoiseChannel =
 
             dac digital
 
-let stepSequencer (state: Apu) =
-    match state.SequencerStep with
-    | 0
-    | 2
-    | 4
-    | 6 ->
-        // Length clocks at 256 Hz
-        if stepLength state.Channel1.Pulse.Length then
-            state.Channel1.Pulse.Enabled <- false
-
-        if stepLength state.Channel2.Length then
-            state.Channel2.Enabled <- false
-
-        if stepLength state.Channel3.Length then
-            state.Channel3.Enabled <- false
-
-        if stepLength state.Channel4.Length then
-            state.Channel4.Enabled <- false
-
-        // Sweep clocks at 128 Hz (only on 2 and 6)
-        if state.SequencerStep = 2 || state.SequencerStep = 6 then
-            SweepChannel.stepSweep state.Channel1
-
-    | 7 ->
-        // Envelope clocks at 64 Hz
-        stepEnvelope state.Channel1.Pulse.Envelope
-        stepEnvelope state.Channel2.Envelope
-        stepEnvelope state.Channel4.Envelope
-    | _ -> ()
-
-    state.SequencerStep <- (state.SequencerStep + 1) &&& 7
-
 module private SoundProcessing =
     let stepFilter (f: HighPassFilter) (input: float32) =
         let output = f.Alpha * (f.LastOut + input - f.LastIn)
@@ -437,42 +404,89 @@ module private SoundProcessing =
 
 open SoundProcessing
 
+module private Apu =
+    let stepSequencer (state: Apu) =
+        match state.SequencerStep with
+        | 0
+        | 2
+        | 4
+        | 6 ->
+            // Length clocks at 256 Hz
+            if stepLength state.Channel1.Pulse.Length then
+                state.Channel1.Pulse.Enabled <- false
+
+            if stepLength state.Channel2.Length then
+                state.Channel2.Enabled <- false
+
+            if stepLength state.Channel3.Length then
+                state.Channel3.Enabled <- false
+
+            if stepLength state.Channel4.Length then
+                state.Channel4.Enabled <- false
+
+            // Sweep clocks at 128 Hz (only on 2 and 6)
+            if state.SequencerStep = 2 || state.SequencerStep = 6 then
+                SweepChannel.stepSweep state.Channel1
+
+        | 7 ->
+            // Envelope clocks at 64 Hz
+            stepEnvelope state.Channel1.Pulse.Envelope
+            stepEnvelope state.Channel2.Envelope
+            stepEnvelope state.Channel4.Envelope
+        | _ -> ()
+
+        state.SequencerStep <- (state.SequencerStep + 1) &&& 7
+
+    let step (state: Apu) (io: IoController) =
+        // TODO Don't just set ch.Enabled <- true on trigge, check if the DAC is on
+        if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
+            SweepChannel.trigger state.Channel1 io
+
+        if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
+            PulseChannel.trigger state.Channel2 io
+
+        if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
+            WaveChannel.trigger state.Channel3 io
+
+        if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
+            NoiseChannel.trigger state.Channel4 io
+
+        if state.Timer &&& 8191 = 0 then
+            stepSequencer state
+
+        SweepChannel.step state.Channel1
+        PulseChannel.step state.Channel2
+        WaveChannel.step state.Channel3
+        NoiseChannel.step state.Channel4
+
+        state.Timer <- state.Timer + 1
+        state.Counter <- state.Counter + 1
+
+        if state.Counter >= tCyclesPerSample then
+            state.Counter <- 0
+
+            let rawSample =
+                simpleMix io state.Channel1 state.Channel2 state.Channel3 state.Channel4
+
+            let filteredSample = stepFilter state.Filter rawSample
+
+            let i = state.WriteHead &&& ringBufferModulo
+            state.RingBuffer[i] <- filteredSample
+            state.WriteHead <- state.WriteHead + 1
+
+    let getMasterControl state =
+        let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
+        let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
+        let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
+        let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
+
+        ch1 ||| ch2 ||| ch3 ||| ch4
+
 let stepApu (state: Apu) (io: IoController) =
-    // TODO Don't just set ch.Enabled <- true on trigge, check if the DAC is on
-    if io.Registers[Io.Nr14] &&& 0b1000_0000uy <> 0uy then
-        SweepChannel.trigger state.Channel1 io
+    if io.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
+        Apu.step state io
 
-    if io.Registers[Io.Nr24] &&& 0b1000_0000uy <> 0uy then
-        PulseChannel.trigger state.Channel2 io
-
-    if io.Registers[Io.Nr34] &&& 0b1000_0000uy <> 0uy then
-        WaveChannel.trigger state.Channel3 io
-
-    if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
-        NoiseChannel.trigger state.Channel4 io
-
-    if state.Timer &&& 8191 = 0 then
-        stepSequencer state
-
-    SweepChannel.step state.Channel1
-    PulseChannel.step state.Channel2
-    WaveChannel.step state.Channel3
-    NoiseChannel.step state.Channel4
-
-    state.Timer <- state.Timer + 1
-    state.Counter <- state.Counter + 1
-
-    if state.Counter >= tCyclesPerSample then
-        state.Counter <- 0
-
-        let rawSample =
-            simpleMix io state.Channel1 state.Channel2 state.Channel3 state.Channel4
-
-        let filteredSample = stepFilter state.Filter rawSample
-
-        let i = state.WriteHead &&& ringBufferModulo
-        state.RingBuffer[i] <- filteredSample
-        state.WriteHead <- state.WriteHead + 1
+        io.Registers[Io.Nr52] <- 0b1000_0000uy ||| Apu.getMasterControl state
 
 // Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
 let private calculateAdjustmentRatio (currentFill: int) : float =
