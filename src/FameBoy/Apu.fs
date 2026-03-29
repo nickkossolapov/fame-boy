@@ -204,11 +204,12 @@ module private PulseChannel =
 
         io.Registers[Io.Nr24] <- io.Registers[Io.Nr24] &&& 0b0111_1111uy
 
-    let step (ch: PulseChannel) =
+    let step (ch: PulseChannel) (io: IoController) (freqLo: int) (freqHi: int) =
         if ch.Enabled then
             ch.Timer <- ch.Timer - 1
 
             if ch.Timer <= 0 then
+                ch.Frequency <- int io.Registers[freqLo] ||| ((int io.Registers[freqHi] &&& 0b0111) <<< 8)
                 ch.Timer <- (2048 - ch.Frequency) * 4
                 ch.DutyStep <- (ch.DutyStep + 1) &&& 7
 
@@ -249,7 +250,7 @@ module private SweepChannel =
 
         io.Registers[Io.Nr14] <- io.Registers[Io.Nr14] &&& 0b0111_1111uy
 
-    let step (ch: SweepChannel) = PulseChannel.step ch.Pulse
+    let step (ch: SweepChannel) (io: IoController) = PulseChannel.step ch.Pulse io Io.Nr13 Io.Nr14
 
     let output (ch: SweepChannel) = PulseChannel.output ch.Pulse
 
@@ -471,14 +472,11 @@ module private Apu =
         if io.Registers[Io.Nr44] &&& 0b1000_0000uy <> 0uy then
             NoiseChannel.trigger state.Channel4 io
 
-        state.Channel1.Pulse.Frequency <- int io.Registers[Io.Nr13] ||| ((int io.Registers[Io.Nr14] &&& 0b0111) <<< 8)
-        state.Channel2.Frequency <- int io.Registers[Io.Nr23] ||| ((int io.Registers[Io.Nr24] &&& 0b0111) <<< 8)
-
         if state.Timer &&& 8191 = 0 then
             stepSequencer state io
 
-        SweepChannel.step state.Channel1
-        PulseChannel.step state.Channel2
+        SweepChannel.step state.Channel1 io
+        PulseChannel.step state.Channel2 io Io.Nr23 Io.Nr24
         WaveChannel.step state.Channel3
         NoiseChannel.step state.Channel4
 
