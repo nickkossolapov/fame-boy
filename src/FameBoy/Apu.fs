@@ -497,19 +497,17 @@ module private Apu =
             state.RingBuffer[i] <- filteredSample
             state.WriteHead <- state.WriteHead + 1
 
-    let getMasterControl state =
-        let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
-        let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
-        let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
-        let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
-
-        ch1 ||| ch2 ||| ch3 ||| ch4
-
 let stepApu (state: Apu) (io: IoController) =
     if io.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
         Apu.step state io
 
-        io.Registers[Io.Nr52] <- 0b1000_0000uy ||| Apu.getMasterControl state
+let getMasterControl (state: Apu) =
+    let ch1 = if state.Channel1.Pulse.Enabled then 0b0001uy else 0uy
+    let ch2 = if state.Channel2.Enabled then 0b0010uy else 0uy
+    let ch3 = if state.Channel3.Enabled then 0b0100uy else 0uy
+    let ch4 = if state.Channel4.Enabled then 0b1000uy else 0uy
+
+    ch1 ||| ch2 ||| ch3 ||| ch4
 
 // Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
 let private calculateAdjustmentRatio (ringBufferSize: int) (currentFill: int) : float =

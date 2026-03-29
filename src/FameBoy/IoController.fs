@@ -15,7 +15,8 @@ type IoController =
       mutable PpuMode: PpuMode
       mutable InterruptEnable: uint8
       mutable JoypadState: JoypadState
-      mutable DmaRequest: uint8 voption }
+      mutable DmaRequest: uint8 voption
+      mutable GetApuChannelStates: unit -> uint8 }
 
     member this.CpuWrite fullAddress value =
         let offset = fullAddress - Io.IoMemoryOffset
@@ -42,6 +43,9 @@ type IoController =
         if offset = Io.Joyp then
             this.Registers[Io.Joyp] <- applyJoypadState this.JoypadState this.Registers[Io.Joyp] this.TriggerInterrupt
 
+        if offset = Io.Nr52 then
+            this.Registers[Io.Nr52] <- (this.Registers[Io.Nr52] &&& 0x80uy) ||| this.GetApuChannelStates()
+
         this.Registers[offset]
 
     member this.TriggerInterrupt(t: InterruptType) =
@@ -65,4 +69,5 @@ let createIoController () =
           B = false
           Start = false
           Select = false }
-      DmaRequest = ValueNone }
+      DmaRequest = ValueNone
+      GetApuChannelStates = fun () -> 0uy }

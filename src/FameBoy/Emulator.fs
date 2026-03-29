@@ -20,6 +20,8 @@ let createEmulator bytes ringBufferSize getJoypadState =
     let apu = createApu ringBufferSize
     let serial = createSerial ()
 
+    io.GetApuChannelStates <- fun () -> getMasterControl apu
+
     let applyJoypadState (state: JoypadState) = io.JoypadState <- state
 
     let stepper () =
