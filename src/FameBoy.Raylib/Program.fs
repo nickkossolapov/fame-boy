@@ -32,7 +32,7 @@ if not (File.Exists romPath) then
 let audioSamplingRate = 48000
 
 [<Literal>]
-let bufferSize = audioSamplingRate / 60
+let bufferSize = 1024
 
 Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
 let icon = Raylib.LoadImage("icon.png")
