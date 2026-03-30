@@ -19,6 +19,9 @@ let joypadState =
 [<Import("readFileSync", "node:fs")>]
 let readFileSync (path: string) : JS.Uint8Array = jsNative
 
+[<Import("fileURLToPath", "node:url")>]
+let fileURLToPath (url: string) : string = jsNative
+
 [<Emit("performance.now()")>]
 let performanceNow () : float = jsNative
 
@@ -63,7 +66,7 @@ let benchmarks =
 [<EntryPoint>]
 let main _ =
     let resourceDir: string =
-        emitJsExpr () "new URL('../FameBoy.Benchmark/Resources/', import.meta.url).pathname.slice(1)"
+        fileURLToPath (emitJsExpr () "new URL('../FameBoy.Benchmark/Resources/', import.meta.url).href")
 
     printfn "Warmup..."
     let warmupBytes = readRom $"{resourceDir}flag.gb"

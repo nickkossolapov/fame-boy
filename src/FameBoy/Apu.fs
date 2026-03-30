@@ -12,9 +12,6 @@ module private Constants =
     [<Literal>]
     let nativeSampleRate = 32768 // From above
 
-    [<Literal>]
-    let drcGain = 0.02
-
 open Constants
 
 [<Struct>]
@@ -87,6 +84,7 @@ type Apu =
       LowPass: LowPassFilter
       mutable WriteHead: int
       mutable ReadHead: int
+      mutable ResamplePhase: float
       mutable Timer: int
       mutable Counter: int
       mutable SequencerStep: int }
@@ -146,8 +144,9 @@ let createApu bufferSize =
           Envelope = createEnvelope () }
       HighPass = createHighPass ()
       LowPass = createLowPass ()
-      WriteHead = bufferSize / 2
+      WriteHead = 0
       ReadHead = 0
+      ResamplePhase = 0.0
       Timer = 0
       Counter = 0
       SequencerStep = 0 }
@@ -514,33 +513,31 @@ let stepApu (state: Apu) =
     if state.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
         Apu.step state
 
-// Based on Dynamic Rate Control for Retro Game Emulators by Hans-Kristian Arntzen - https://github.com/libretro/docs/blob/master/archive/ratecontrol.pdf
-let private calculateAdjustmentRatio (ringBufferSize: int) (currentFill: int) : float =
-    let fillRatio = (float (2 * currentFill - ringBufferSize) / float ringBufferSize)
+let samplesAvailable (state: Apu) = state.WriteHead - state.ReadHead
 
-    1.0 + fillRatio * drcGain
+let nativeSamplesNeeded (state: Apu) (outputSize: int) (outputSampleRate: int) =
+    let step = float nativeSampleRate / float outputSampleRate
+    int (state.ResamplePhase + float outputSize * step) + 2
 
-
-// This will always resample the entire buffer range, meaning there can be a pitch drop beyond the DRC limit, but it reduces popping
-// I should play around
+// Audio-as-master-clock: frontends run the emulator until samplesAvailable >= nativeSamplesNeeded,
+// then call this to resample the exact number of native samples into the output buffer.
+// Uses a phase accumulator for sample-accurate fixed-ratio resampling with linear interpolation.
 let readResampledBuffer (state: Apu) (destination: float32 array) (outputSampleRate: int) =
-    let available = state.WriteHead - state.ReadHead
-    let adjustmentRatio = calculateAdjustmentRatio state.RingBuffer.Length available
-    let samplingRatio = float nativeSampleRate / float outputSampleRate
-    let numApuSamples = int (adjustmentRatio * samplingRatio * float destination.Length)
-    let samplesToConsume = max 0 (min numApuSamples (available - 1)) // Clamp to available samples, leaving one extra for interpolation lookahead
+    let step = float nativeSampleRate / float outputSampleRate
+    let mutable phase = state.ResamplePhase
 
-    if samplesToConsume > 0 && destination.Length > 0 then
-        let step = float samplesToConsume / float destination.Length
+    for i = 0 to destination.Length - 1 do
+        let intPhase = int phase
+        let frac = float32 (phase - float intPhase)
+        let sampleIndex = state.ReadHead + intPhase
 
-        for i = 0 to destination.Length - 1 do
-            let pos = float i * step
-            let index = int pos
-            let frac = float32 (pos - float index)
+        let s0 = state.RingBuffer[sampleIndex &&& state.RingBufferMask]
+        let s1 = state.RingBuffer[(sampleIndex + 1) &&& state.RingBufferMask]
 
-            let s0 = state.RingBuffer[(state.ReadHead + index) &&& state.RingBufferMask]
-            let s1 = state.RingBuffer[(state.ReadHead + index + 1) &&& state.RingBufferMask]
+        destination[i] <- s0 + frac * (s1 - s0)
+        phase <- phase + step
 
-            destination[i] <- s0 + frac * (s1 - s0)
+    let consumed = int phase
 
-        state.ReadHead <- state.ReadHead + samplesToConsume
+    state.ReadHead <- state.ReadHead + consumed
+    state.ResamplePhase <- phase - float consumed

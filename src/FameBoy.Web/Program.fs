@@ -1,5 +1,4 @@
-﻿open System
-open Browser
+﻿open Browser
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
@@ -7,6 +6,7 @@ open FameBoy.Apu
 open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Web.Joypad
+open FameBoy.Web.JsBindings
 
 type private IResponse =
     abstract arrayBuffer: unit -> JS.Promise<JS.ArrayBuffer>
@@ -45,8 +45,6 @@ let loadImageData emulatorFramebuffer =
         imageData.data[j + 2] <- b
         imageData.data[j + 3] <- 255uy
 
-let targetCyclesPerMs = float cpuFrequency / 1000.0
-let maxCyclesPerFrame = float cpuFrequency / 60.0
 let mutable currentAnimationFrame = None
 
 module private Audio =
@@ -54,53 +52,15 @@ module private Audio =
     let audioSamplingRate = 48000
 
     [<Literal>]
-    let audioBufferSize = 2048
-
-    [<Literal>]
     let defaultVolume = 0.6
-
-    [<Emit("new AudioContext({sampleRate: $0})")>]
-    let private createAudioContext (_: int) : obj = jsNative
-
-    [<Emit("$0.createGain()")>]
-    let private createGain (ctx: obj) : obj = jsNative
-
-    [<Emit("$0.gain.value = $1")>]
-    let private setGainValue (gain: obj) (value: float) : unit = jsNative
-
-    [<Emit("$0.connect($1)")>]
-    let private connectNode (source: obj) (dest: obj) : unit = jsNative
-
-    [<Emit("$0.destination")>]
-    let private destination (ctx: obj) : obj = jsNative
-
-    [<Emit("$0.createBuffer($1, $2, $3)")>]
-    let private createBuffer (ctx: obj) (channels: int) (length: int) (sampleRate: int) : obj = jsNative
-
-    [<Emit("$0.getChannelData($1)")>]
-    let private getChannelData (buffer: obj) (channel: int) : float32 array = jsNative
-
-    [<Emit("$0.duration")>]
-    let private bufferDuration (buffer: obj) : float = jsNative
-
-    [<Emit("$0.createBufferSource()")>]
-    let private createBufferSource (ctx: obj) : obj = jsNative
-
-    [<Emit("$0.buffer = $1")>]
-    let private setBuffer (source: obj) (buffer: obj) : unit = jsNative
-
-    [<Emit("$0.start($1)")>]
-    let private startSource (source: obj) (time: float) : unit = jsNative
-
-    [<Emit("$0.currentTime")>]
-    let private currentTime (ctx: obj) : float = jsNative
 
     let mutable private audioCtx: obj option = None
     let mutable private gainNode: obj option = None
     let mutable audioInitialized = false
     let mutable private userMuted = false
     let mutable private suppressed = false
-    let private audioBuffer = Array.zeroCreate<float32> audioBufferSize
+    let private audioBufferSize = audioSamplingRate / 120
+    let private audioBuffer = Array.zeroCreate<float32> (audioSamplingRate / 120)
     let mutable nextPlayTime = 0.0
 
     let private applyGain () =
@@ -147,7 +107,7 @@ module private Audio =
             suppressed <- shouldSuppress
             applyGain ()
 
-    let tryQueueAudio (apu: Apu) =
+    let tryQueueAudio (apu: Apu) stepEmulator =
         match audioCtx, gainNode with
         | Some ctx, Some gain ->
             let now = currentTime ctx
@@ -155,7 +115,10 @@ module private Audio =
             if nextPlayTime < now then
                 nextPlayTime <- now
 
-            while nextPlayTime - now < 0.05 do
+            while nextPlayTime - now < 0.035 do
+                while samplesAvailable apu < nativeSamplesNeeded apu audioBufferSize audioSamplingRate do
+                    stepEmulator () |> ignore
+
                 readResampledBuffer apu audioBuffer audioSamplingRate
 
                 let buffer = createBuffer ctx 1 audioBufferSize audioSamplingRate
@@ -177,9 +140,7 @@ let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
     let ppu, apu, stepEmulator, applyJoypadState =
-        createEmulator bytes 8192 getJoypadState
-
-    let mutable accumulator = 0.0
+        createEmulator bytes 4096 getJoypadState
 
     if not audioInitialized then
         audioInitialized <- true
@@ -199,17 +160,12 @@ let startEmulator bytes =
 
     let rec runEmulator (last: float) (timestamp: float) =
         let dt = timestamp - last
-        let cycles = Math.Min(targetCyclesPerMs * dt, maxCyclesPerFrame)
-        accumulator <- accumulator + cycles
 
         getJoypadState () |> applyJoypadState
 
-        while accumulator > 0 do
-            let mCycles = float (stepEmulator ())
-            accumulator <- accumulator - mCycles
+        tryQueueAudio apu stepEmulator
 
         reportFrameTime dt
-        tryQueueAudio apu
 
         fpsHistory[fpsIndex] <- dt
         fpsIndex <- (fpsIndex + 1) % fpsWindowSize

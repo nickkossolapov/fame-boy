@@ -2,7 +2,6 @@
 open System.IO
 open FameBoy.Apu
 open FameBoy.Emulator
-open FameBoy.Hardware
 open FameBoy.Joypad
 open FameBoy.Raylib
 open FameBoy.Raylib.Graphics.GraphicsPipeline
@@ -33,22 +32,25 @@ if not (File.Exists romPath) then
 let audioSamplingRate = 48000
 
 [<Literal>]
-let bufferSize = 1024
+let bufferSize = audioSamplingRate / 60
 
 Raylib.InitWindow(Config.width * Config.scale, Config.height * Config.scale, "Fame Boy")
 let icon = Raylib.LoadImage("icon.png")
 
 Raylib.SetWindowIcon(icon)
 Raylib.UnloadImage(icon)
-Raylib.SetTargetFPS 60
+Raylib.SetTargetFPS 120
 Raylib.InitAudioDevice()
 Raylib.SetAudioStreamBufferSizeDefault(bufferSize)
 
 let audioBuffer = Array.zeroCreate<float32> bufferSize
 let audioStream = Raylib.LoadAudioStream(uint32 audioSamplingRate, 32u, 1u)
 
-let tryQueueAudio (apu: Apu) =
+let tryQueueAudio (apu: Apu) stepEmulator =
     while isAudioStreamProcessed audioStream do
+        while samplesAvailable apu < nativeSamplesNeeded apu bufferSize audioSamplingRate do
+            stepEmulator () |> ignore
+
         readResampledBuffer apu audioBuffer audioSamplingRate
         updateAudioStream audioStream audioBuffer
 
@@ -69,22 +71,11 @@ let ppu, apu, stepEmulator, applyJoypadState =
 
 Raylib.PlayAudioStream audioStream
 
-let targetCyclesPerMs = float32 cpuFrequency
-let maxCyclesPerFrame = float32 cpuFrequency / 60f // So if the emulator can't reach 60 FPS it won't drown itself in instructions
-let mutable accumulator = 0f
-
 while (not (windowShouldClose ())) do
-    let cycles = Math.Min(targetCyclesPerMs * Raylib.GetFrameTime(), maxCyclesPerFrame)
-    accumulator <- accumulator + cycles
-
     let joypadState = getJoypadState ()
     joypadState |> applyJoypadState
 
-    while (accumulator > 0f) do
-        let cpuCycles = stepEmulator () |> float32
-        accumulator <- accumulator - cpuCycles
-
-    tryQueueAudio apu
+    tryQueueAudio apu stepEmulator
 
     beginDrawing ()
     loadPpuFramebuffer ppu.Framebuffer
