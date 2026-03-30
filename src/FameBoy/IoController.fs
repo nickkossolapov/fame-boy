@@ -16,7 +16,8 @@ type IoController =
       mutable InterruptEnable: uint8
       mutable JoypadState: JoypadState
       mutable DmaRequest: uint8 voption
-      mutable ApuRegisters: uint8 array }
+      mutable ApuRegisters: uint8 array
+      mutable StatDirty: bool }
 
     member this.CpuWrite fullAddress value =
         let offset = fullAddress - Io.IoMemoryOffset
@@ -28,7 +29,11 @@ type IoController =
         | Io.Stat ->
             // LYC == LY and PPU mode are read only
             this.Registers[offset] <- (value &&& 0b1111_1000uy) ||| (this.Registers[offset] &&& 0b0000_0111uy)
+            this.StatDirty <- true
         | Io.Ly -> () // Read only, set directly in PPU
+        | Io.Lyc ->
+            this.Registers[offset] <- value
+            this.StatDirty <- true
         | Io.Dma ->
             this.Registers[offset] <- value
             this.DmaRequest <- ValueSome value
@@ -71,4 +76,5 @@ let createIoController () =
           Start = false
           Select = false }
       DmaRequest = ValueNone
-      ApuRegisters = Array.zeroCreate 0x80 }
+      ApuRegisters = Array.zeroCreate 0x80
+      StatDirty = false }

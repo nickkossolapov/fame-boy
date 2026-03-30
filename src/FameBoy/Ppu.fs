@@ -329,6 +329,10 @@ let stepPpu (ppu: Ppu) =
     else
         ppu.Dot <- ppu.Dot + 1
 
+        if ppu.IoController.StatDirty then
+            ppu.IoController.StatDirty <- false
+            updateStatAndInterrupt ppu
+
         match ppu.IoController.PpuMode with
         | PpuMode.HBlank ->
             if ppu.Dot >= lineEnd then
