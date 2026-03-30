@@ -522,7 +522,7 @@ button:focus-visible {
 
 @media (max-width: 700px) {
     .shell {
-        zoom: min(1, calc((100vw - 40px) / 360));
+        zoom: min(1, calc((100vw - 40px) / 360px));
     }
 
     #root {
