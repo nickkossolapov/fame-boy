@@ -341,6 +341,7 @@ body {
 }
 
 .start-overlay {
+    padding: 5px;
     position: absolute;
     inset: 0;
     display: flex;

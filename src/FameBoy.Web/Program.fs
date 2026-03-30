@@ -2,24 +2,24 @@
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
-open FameBoy.Apu
 open FameBoy.Emulator
 open FameBoy.Hardware
+open FameBoy.Web.Audio
 open FameBoy.Web.Joypad
 open FameBoy.Web.JsBindings
 
-type private IResponse =
-    abstract arrayBuffer: unit -> JS.Promise<JS.ArrayBuffer>
 
-[<Global>]
-let private fetch (url: string) : JS.Promise<IResponse> = jsNative
+let private getElement id =
+    match document.getElementById id with
+    | null -> failwith $"Element '{id}' not found"
+    | el -> el
 
-initOnScreenButtons ()
+let getJoypadState = initJoypad ()
 
-let fileUploadButton = document.getElementById "rom-file"
-let screenCanvas = document.getElementById "screen" :?> HTMLCanvasElement
-let startOverlay = document.getElementById "start-overlay"
-let fpsCounter = document.getElementById "fps-counter"
+let screenCanvas = getElement "screen" :?> HTMLCanvasElement
+let startOverlay = getElement "start-overlay"
+let fpsCounter = getElement "fps-counter"
+let fileUploadButton = getElement "rom-file"
 
 screenCanvas.width <- Screen.width
 screenCanvas.height <- Screen.height
@@ -47,106 +47,24 @@ let loadImageData emulatorFramebuffer =
 
 let mutable currentAnimationFrame = None
 
-module private Audio =
-    [<Literal>]
-    let audioSamplingRate = 48000
-
-    [<Literal>]
-    let defaultVolume = 0.6
-
-    let mutable private audioCtx: obj option = None
-    let mutable private gainNode: obj option = None
-    let mutable audioInitialized = false
-    let mutable private userMuted = false
-    let mutable private suppressed = false
-    let private audioBufferSize = audioSamplingRate / 120
-    let private audioBuffer = Array.zeroCreate<float32> (audioSamplingRate / 120)
-    let mutable nextPlayTime = 0.0
-
-    let private applyGain () =
-        match gainNode with
-        | Some gain ->
-            let shouldMute = userMuted || suppressed
-            setGainValue gain (if shouldMute then 0.0 else defaultVolume)
-        | None -> ()
-
-    let initAudio () =
-        let ctx = createAudioContext audioSamplingRate
-        let gain = createGain ctx
-        setGainValue gain defaultVolume
-        connectNode gain (destination ctx)
-        audioCtx <- Some ctx
-        gainNode <- Some gain
-
-    let toggleMute () =
-        userMuted <- not userMuted
-        applyGain ()
-        userMuted
-
-    let private frameWindowSize = 20
-    let private frameHistory = Array.create frameWindowSize false
-    let mutable private frameIndex = 0
-    let mutable private badCount = 0
-
-    // Sliding window mute. If browser is out of focus, audio slows down and isn't great
-    let reportFrameTime (dt: float) =
-        let isBad = dt > 25.0
-        let wasBad = frameHistory[frameIndex]
-
-        frameHistory[frameIndex] <- isBad
-        frameIndex <- (frameIndex + 1) % frameWindowSize
-
-        if isBad && not wasBad then
-            badCount <- badCount + 1
-        elif not isBad && wasBad then
-            badCount <- badCount - 1
-
-        let shouldSuppress = badCount >= 4
-
-        if shouldSuppress <> suppressed then
-            suppressed <- shouldSuppress
-            applyGain ()
-
-    let tryQueueAudio (apu: Apu) stepEmulator =
-        match audioCtx, gainNode with
-        | Some ctx, Some gain ->
-            let now = currentTime ctx
-
-            if nextPlayTime < now then
-                nextPlayTime <- now
-
-            while nextPlayTime - now < 0.035 do
-                while samplesAvailable apu < nativeSamplesNeeded apu audioBufferSize audioSamplingRate do
-                    stepEmulator () |> ignore
-
-                readResampledBuffer apu audioBuffer audioSamplingRate
-
-                let buffer = createBuffer ctx 1 audioBufferSize audioSamplingRate
-                let channelData = getChannelData buffer 0
-
-                for i = 0 to audioBufferSize - 1 do
-                    channelData[i] <- audioBuffer[i]
-
-                let source = createBufferSource ctx
-                setBuffer source buffer
-                connectNode source gain
-                startSource source nextPlayTime
-                nextPlayTime <- nextPlayTime + bufferDuration buffer
-        | _ -> ()
-
-open Audio
+let private showOverlayError (message: string) =
+    startOverlay?innerHTML <- message
+    startOverlay?classList?remove "hidden"
 
 let startEmulator bytes =
     currentAnimationFrame |> Option.iter window.cancelAnimationFrame
 
+    startOverlay?classList?add "hidden"
+
     let ppu, apu, stepEmulator, applyJoypadState =
-        createEmulator bytes 4096 getJoypadState
+        try
+            createEmulator bytes 4096 getJoypadState
+        with ex ->
+            showOverlayError "Error!<br>Invalid ROM"
+            raise ex
 
-    if not audioInitialized then
-        audioInitialized <- true
-        initAudio ()
-
-    nextPlayTime <- 0.0
+    ensureInitialized ()
+    resetPlayback ()
 
     let draw () =
         loadImageData ppu.Framebuffer
@@ -201,7 +119,10 @@ let onFileLoaded (ev: Event) =
                 let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
                 let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
 
-                startEmulator bytes
+                try
+                    startEmulator bytes
+                with _ ->
+                    ()
 
         reader.readAsArrayBuffer file
 
@@ -214,9 +135,9 @@ for i in 0 .. int scaleSelector.length - 1 do
 
     input.addEventListener ("change", fun _ -> document.documentElement?style?setProperty ("--s", input.value))
 
-let muteButton = document.getElementById "mute-button"
-let muteIconOn = document.getElementById "mute-icon-on"
-let muteIconOff = document.getElementById "mute-icon-off"
+let muteButton = getElement "mute-button"
+let muteIconOn = getElement "mute-icon-on"
+let muteIconOff = getElement "mute-icon-off"
 
 muteButton.addEventListener (
     "click",
@@ -227,12 +148,11 @@ muteButton.addEventListener (
 )
 
 // Pre-fetch the default ROM, then wait for user interaction to start
+// User interaction on the page is needed to start Web Audio
 let mutable private defaultRomBytes: byte array option = None
 let mutable private defaultRomStarted = false
 
 let private onFirstInteraction (_: Event) =
-    startOverlay?classList?add "hidden"
-
     if not defaultRomStarted then
         defaultRomStarted <- true
 
@@ -242,15 +162,18 @@ let private onFirstInteraction (_: Event) =
 
 let loadDefaultRom () =
     async {
-        let! response = fetch "tobudx.gb" |> Async.AwaitPromise
-        let! arrayBuffer = response.arrayBuffer () |> Async.AwaitPromise
-        let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
-        let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
+        try
+            let! response = fetch "tobudx.gb" |> Async.AwaitPromise
+            let! arrayBuffer = response.arrayBuffer () |> Async.AwaitPromise
+            let uint8Array = JS.Constructors.Uint8Array.Create(arrayBuffer)
+            let bytes: byte array = Array.init (int uint8Array.length) (fun i -> uint8Array[i])
 
-        defaultRomBytes <- Some bytes
+            defaultRomBytes <- Some bytes
 
-        document.addEventListener ("click", onFirstInteraction)
-        document.addEventListener ("keydown", onFirstInteraction)
+            document.addEventListener ("click", onFirstInteraction)
+            document.addEventListener ("keydown", onFirstInteraction)
+        with _ ->
+            showOverlayError "Error!<br>Couldn't load demo ROM"
     }
     |> Async.StartImmediate
 

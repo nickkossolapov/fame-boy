@@ -2,39 +2,46 @@ module FameBoy.Web.JsBindings
 
 open Fable.Core
 
+type IResponse =
+    abstract arrayBuffer: unit -> JS.Promise<JS.ArrayBuffer>
+
+[<Global>]
+let fetch (url: string) : JS.Promise<IResponse> = jsNative
+
+type IAudioContext =
+    abstract currentTime: float
+    abstract destination: obj
+
+type IGainNode = interface end
+type IAudioBuffer = abstract duration: float
+type IBufferSource = interface end
 
 [<Emit("new AudioContext({sampleRate: $0})")>]
-let createAudioContext (_: int) : obj = jsNative
+let createAudioContext (sampleRate: int) : IAudioContext = jsNative
 
 [<Emit("$0.createGain()")>]
-let createGain (ctx: obj) : obj = jsNative
+let createGain (ctx: IAudioContext) : IGainNode = jsNative
 
 [<Emit("$0.gain.value = $1")>]
-let setGainValue (gain: obj) (value: float) : unit = jsNative
+let setGainValue (gain: IGainNode) (value: float) : unit = jsNative
 
 [<Emit("$0.connect($1)")>]
-let connectNode (source: obj) (dest: obj) : unit = jsNative
+let connectGainTo (gain: IGainNode) (dest: obj) : unit = jsNative
 
-[<Emit("$0.destination")>]
-let destination (ctx: obj) : obj = jsNative
+[<Emit("$0.connect($1)")>]
+let connectSourceTo (source: IBufferSource) (gain: IGainNode) : unit = jsNative
 
 [<Emit("$0.createBuffer($1, $2, $3)")>]
-let createBuffer (ctx: obj) (channels: int) (length: int) (sampleRate: int) : obj = jsNative
+let createBuffer (ctx: IAudioContext) (channels: int) (length: int) (sampleRate: int) : IAudioBuffer = jsNative
 
 [<Emit("$0.getChannelData($1)")>]
-let getChannelData (buffer: obj) (channel: int) : float32 array = jsNative
-
-[<Emit("$0.duration")>]
-let bufferDuration (buffer: obj) : float = jsNative
+let getChannelData (buffer: IAudioBuffer) (channel: int) : float32 array = jsNative
 
 [<Emit("$0.createBufferSource()")>]
-let createBufferSource (ctx: obj) : obj = jsNative
+let createBufferSource (ctx: IAudioContext) : IBufferSource = jsNative
 
 [<Emit("$0.buffer = $1")>]
-let setBuffer (source: obj) (buffer: obj) : unit = jsNative
+let setBuffer (source: IBufferSource) (buffer: IAudioBuffer) : unit = jsNative
 
 [<Emit("$0.start($1)")>]
-let startSource (source: obj) (time: float) : unit = jsNative
-
-[<Emit("$0.currentTime")>]
-let currentTime (ctx: obj) : float = jsNative
+let startSource (source: IBufferSource) (time: float) : unit = jsNative

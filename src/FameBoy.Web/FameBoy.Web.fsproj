@@ -10,11 +10,12 @@
         <Content Include="styles.css" />
         <TypeScriptCompile Include="vite.config.ts" />
         <None Include="package.json" />
-        <Compile Include="Joypad.fs" />
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="Joypad.fs" />
         <Compile Include="JsBindings.fs" />
+        <Compile Include="Audio.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

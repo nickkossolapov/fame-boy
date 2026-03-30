@@ -37,11 +37,11 @@ module private Helpers =
               "KeyN", Start
               "KeyB", Select ]
 
-    let mutable pressed: Set<JoypadButton> = Set.empty
-
 open Helpers
 
-let initOnScreenButtons () =
+let initJoypad () =
+    let mutable pressed: Set<JoypadButton> = Set.empty
+
     // Fallback: if pointer/touch ends outside buttons, clear pressed state.
     window.addEventListener ("pointerup", fun _ -> pressed <- Set.empty)
     window.addEventListener ("pointercancel", fun _ -> pressed <- Set.empty)
@@ -78,13 +78,12 @@ let initOnScreenButtons () =
                 pressed <- pressed.Add button
         ))
 
-
-let getJoypadState () : JoypadState =
-    { Up = pressed.Contains Up
-      Down = pressed.Contains Down
-      Left = pressed.Contains Left
-      Right = pressed.Contains Right
-      A = pressed.Contains A
-      B = pressed.Contains B
-      Start = pressed.Contains Start
-      Select = pressed.Contains Select }
+    fun () ->
+        { Up = pressed.Contains Up
+          Down = pressed.Contains Down
+          Left = pressed.Contains Left
+          Right = pressed.Contains Right
+          A = pressed.Contains A
+          B = pressed.Contains B
+          Start = pressed.Contains Start
+          Select = pressed.Contains Select }
