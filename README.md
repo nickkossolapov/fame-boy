@@ -21,9 +21,9 @@ scope while still complex enough to learn about a real system, and chock-full of
 Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware
 accuracy or maximum performance.
 
-I did use AI for a lot of the test cases, some review, a particularly unhinged late-game performance optimization session, and
-occasionally to help me understand bits of the hardware (looking at you, APU). But most of the code was
-still (unfortunately?) meticulously crafted by me.
+I did use AI for a lot of the test cases, some code review, occasional helping me understand bits of the hardware (looking at you, APU), 
+and a particularly unhinged performance optimization session at the end. But most of the code was still (unfortunately?) meticulously 
+crafted by me.
 
 ### Limitations
 
