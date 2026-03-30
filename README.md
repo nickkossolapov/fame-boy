@@ -40,16 +40,16 @@ There are still a few gaps with the real hardware that I may or may not get to (
 - `FameBoy.Raylib` - Native desktop frontend using Raylib
 - `FameBoy.Web` - Browser frontend using Fable and Vite
 - `FameBoy.Test` - Unit and integration tests
-- `FameBoy.Benchmark` - Performance benchmarking project
+- `FameBoy.Benchmark`, `FameBoy.Benchmark.Web` - Performance benchmarking projects
 
 ## Getting Started
 
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
-- [Node.js](https://nodejs.org/) (for the web project only)
+- [Node.js](https://nodejs.org/) (for the web projects only)
 
-### Local Dev
+### Running it locally
 
 #### Desktop
 
@@ -69,7 +69,7 @@ npm run dev
 
 This starts both Fable and Vite in watch mode.
 
-### Tests
+### Testing
 
 The unit tests cover most of the core emulator, and the [integration tests](./src/FameBoy.Test/IntegrationTests.fs) run the
 emulator with the [dmg-acid2](https://github.com/mattcurrie/dmg-acid2) and [Blargg cpu_instrs](https://github.com/retrio/gb-test-roms)
@@ -100,7 +100,8 @@ dotnet run -c release
 
 #### Web
 
-There is also a basic Node benchmarking project using the same test ROMs as the native benchmarking, allowing comparisons.
+There is also a basic Node.js benchmarking project using the same test ROMs and structure as the native benchmarking ﻿to better estimate 
+browser performance.
 
 ``` sh
 ./benchmark-web.ps1
@@ -111,22 +112,6 @@ Or directly:
 ``` sh
 cd src/FameBoy.Benchmark.Web
 npm run bench
-```
-
-### Release builds
-
-#### Desktop
-
-``` sh
-cd src/FameBoy.Raylib
-dotnet build -c release 
-```
-
-#### Web
-
-``` sh
-cd src/FameBoy.Web
-npm run build
 ```
 
 ### Controls
