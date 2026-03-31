@@ -31,20 +31,20 @@ let turnAToBcd (cpu: Cpu) =
 
 let executeLogic (cpu: Cpu) (instr: LogicInstr) =
     match instr with
-    | And s ->
-        let value = s.GetFrom cpu
+    | And source ->
+        let value = source.GetFrom cpu
         let result = (cpu.Registers.A &&& value)
 
         cpu.Registers.A <- result
         cpu.Flags <- cpu.Flags |> setZ (result = 0uy) |> setN false |> setH true |> setC false
-    | Or s ->
-        let value = s.GetFrom cpu
+    | Or source ->
+        let value = source.GetFrom cpu
         let result = (cpu.Registers.A ||| value)
 
         cpu.Registers.A <- result
         cpu.Flags <- cpu.Flags |> setZ (result = 0uy) |> setN false |> setH false |> setC false
-    | Xor s ->
-        let value = s.GetFrom cpu
+    | Xor source ->
+        let value = source.GetFrom cpu
         let result = (cpu.Registers.A ^^^ value)
 
         cpu.Registers.A <- result

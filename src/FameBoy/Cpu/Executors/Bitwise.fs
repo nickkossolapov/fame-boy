@@ -1,7 +1,7 @@
 ﻿module FameBoy.Cpu.Executors.Bitwise
 
 open FameBoy.Cpu.Instructions
-open FameBoy.Cpu.Instructions.ByteSource
+open FameBoy.Cpu.Instructions.Operand
 open FameBoy.Cpu.State
 open FameBoy.Cpu.State.Flags
 
@@ -29,10 +29,10 @@ let private shiftA (cpu: Cpu) moveFunc =
     cpu.Registers.A <- shifted
     cpu.Flags <- cpu.Flags |> setZ false |> setN false |> setH false |> setC c
 
-let private shiftBytes (write: Write) (cpu: Cpu) moveFunc =
-    let shifted, c = moveFunc (write.GetFrom cpu)
+let private shiftBytes (target: Target) (cpu: Cpu) moveFunc =
+    let shifted, c = moveFunc (target.GetFrom cpu)
 
-    write.SetTo cpu shifted
+    target.SetTo cpu shifted
     cpu.Flags <- cpu.Flags |> setZ (shifted = 0uy) |> setN false |> setH false |> setC c
 
 let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
@@ -41,34 +41,34 @@ let executeBitwise (cpu: Cpu) (instr: BitwiseInstr) =
     | Rrca -> shiftA cpu rotateRightCircular
     | Rla -> shiftA cpu (shiftLeft (isCarry cpu.Flags))
     | Rra -> shiftA cpu (shiftRight (isCarry cpu.Flags))
-    | Rlc s -> shiftBytes s cpu rotateLeftCircular
-    | Rrc s -> shiftBytes s cpu rotateRightCircular
-    | Rl s -> shiftBytes s cpu (shiftLeft (isCarry cpu.Flags))
-    | Rr s -> shiftBytes s cpu (shiftRight (isCarry cpu.Flags))
-    | Sla s -> shiftBytes s cpu (shiftLeft false)
-    | Sra s ->
-        let msb = ((s.GetFrom cpu &&& 0x80uy) <> 0uy)
+    | Rlc target -> shiftBytes target cpu rotateLeftCircular
+    | Rrc target -> shiftBytes target cpu rotateRightCircular
+    | Rl target -> shiftBytes target cpu (shiftLeft (isCarry cpu.Flags))
+    | Rr target -> shiftBytes target cpu (shiftRight (isCarry cpu.Flags))
+    | Sla target -> shiftBytes target cpu (shiftLeft false)
+    | Sra target ->
+        let msb = ((target.GetFrom cpu &&& 0x80uy) <> 0uy)
 
-        shiftBytes s cpu (shiftRight msb)
-    | Srl s -> shiftBytes s cpu (shiftRight false)
-    | Bit(u3, s) ->
-        let value = s.GetFrom cpu
+        shiftBytes target cpu (shiftRight msb)
+    | Srl target -> shiftBytes target cpu (shiftRight false)
+    | Bit(u3, target) ->
+        let value = target.GetFrom cpu
         let bitIsZero = ((value >>> (int u3)) &&& 1uy) = 0uy
 
         cpu.Flags <- cpu.Flags |> setZ bitIsZero |> setN false |> setH true
-    | Swap s ->
-        let value = s.GetFrom cpu
+    | Swap target ->
+        let value = target.GetFrom cpu
         let swapped = (((value <<< 4) &&& 0xF0uy) + (value >>> 4)) &&& 0xFFuy
 
-        s.SetTo cpu swapped
+        target.SetTo cpu swapped
         cpu.Flags <- cpu.Flags |> setZ (swapped = 0uy) |> setN false |> setH false |> setC false
-    | Res(u3, s) ->
+    | Res(u3, target) ->
         let mask = ~~~(1uy <<< (int u3)) &&& 0xFFuy
-        let res = (s.GetFrom cpu) &&& mask
+        let res = (target.GetFrom cpu) &&& mask
 
-        s.SetTo cpu res
-    | Set(u3, s) ->
+        target.SetTo cpu res
+    | Set(u3, target) ->
         let mask = (1uy <<< (int u3)) &&& 0xFFuy
-        let res = (s.GetFrom cpu) ||| mask
+        let res = (target.GetFrom cpu) ||| mask
 
-        s.SetTo cpu res
+        target.SetTo cpu res

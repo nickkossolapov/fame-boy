@@ -10,7 +10,7 @@ let executeLoad (cpu: Cpu) (instr: LoadInstr) =
     let getFullAddress (byte: uint8) = 0xFF00us + uint16 byte
 
     match instr with
-    | Ld8(w, r) -> r.GetFrom cpu |> w.SetTo cpu
+    | Ld8(target, r) -> r.GetFrom cpu |> target.SetTo cpu
     | LdA(d, s) ->
         match d, s with
         | From, AtBC -> cpu.Registers.A <- cpu.Memory[cpu.Registers.BC]

@@ -82,9 +82,9 @@ module LoadTypes =
 
 open LoadTypes
 
-module ByteSource =
+module Operand =
     [<RequireQualifiedAccess>]
-    type Read =
+    type Source =
         | Immediate of uint8
         | RegDirect of Reg8
         | HLIndirect
@@ -96,7 +96,7 @@ module ByteSource =
             | HLIndirect -> cpu.Memory[cpu.Registers.HL]
 
     [<RequireQualifiedAccess>]
-    type Write =
+    type Target =
         | RegDirect of Reg8
         | HLIndirect
 
@@ -110,16 +110,17 @@ module ByteSource =
             | RegDirect reg -> reg.GetFrom cpu
             | HLIndirect -> cpu.Memory[cpu.Registers.HL]
 
-open ByteSource
+
+open Operand
 
 type ArithmeticInstr =
-    | Add of Read
-    | Adc of Read
-    | Sub of Read
-    | Sbc of Read
-    | Cp of Read
-    | Inc of Write
-    | Dec of Write
+    | Add of Source
+    | Adc of Source
+    | Sub of Source
+    | Sbc of Source
+    | Cp of Source
+    | Inc of Target
+    | Dec of Target
     | IncReg16 of Reg16
     | DecReg16 of Reg16
     | AddHL of Reg16
@@ -130,17 +131,17 @@ type BitwiseInstr =
     | Rrca
     | Rra
     | Rla
-    | Rlc of Write
-    | Rrc of Write
-    | Rl of Write
-    | Rr of Write
-    | Sla of Write
-    | Sra of Write
-    | Srl of Write
-    | Swap of Write
-    | Bit of uint8 * Write
-    | Res of uint8 * Write
-    | Set of uint8 * Write
+    | Rlc of Target
+    | Rrc of Target
+    | Rl of Target
+    | Rr of Target
+    | Sla of Target
+    | Sra of Target
+    | Srl of Target
+    | Swap of Target
+    | Bit of uint8 * Target
+    | Res of uint8 * Target
+    | Set of uint8 * Target
 
 type ControlInstr =
     | Jp of uint16
@@ -156,7 +157,7 @@ type ControlInstr =
     | Rst of uint8
 
 type LoadInstr =
-    | Ld8 of Write * Read
+    | Ld8 of Target * Source
     | LdA of LoadA * ASource
     | Ldh of LoadA * AHighSource
     | Ld16FromWord of Reg16 * uint16
@@ -167,9 +168,9 @@ type LoadInstr =
     | LdHLFromSPe of int8
 
 type LogicInstr =
-    | And of Read
-    | Or of Read
-    | Xor of Read
+    | And of Source
+    | Or of Source
+    | Xor of Source
     | Ccf // Complementing carry flag
     | Scf // Set carry flag
     | Daa // Decimal adjust accumulator
@@ -203,9 +204,9 @@ type DecodedInstruction =
 module private LengthsAndCycles =
     let forReadByte =
         function
-        | Read.Immediate _ -> 2, Fixed 2
-        | Read.HLIndirect -> 1, Fixed 2
-        | Read.RegDirect _ -> 1, Fixed 1
+        | Source.Immediate _ -> 2, Fixed 2
+        | Source.HLIndirect -> 1, Fixed 2
+        | Source.RegDirect _ -> 1, Fixed 1
 
     let forArithmetic =
         function
@@ -217,18 +218,18 @@ module private LengthsAndCycles =
         | Inc wb
         | Dec wb ->
             match wb with
-            | Write.HLIndirect -> 1, Fixed 3
-            | Write.RegDirect _ -> 1, Fixed 1
+            | Target.HLIndirect -> 1, Fixed 3
+            | Target.RegDirect _ -> 1, Fixed 1
         | IncReg16 _ -> 1, Fixed 2
         | DecReg16 _ -> 1, Fixed 2
         | AddHL _ -> 1, Fixed 2
         | AddSPe _ -> 2, Fixed 4
 
     let forBitwise =
-        let forWriteByte =
+        let forTargetByte =
             function
-            | Write.RegDirect _ -> 2, Fixed 2
-            | Write.HLIndirect -> 2, Fixed 4
+            | Target.RegDirect _ -> 2, Fixed 2
+            | Target.HLIndirect -> 2, Fixed 4
 
         function
         | Rlca
@@ -236,19 +237,19 @@ module private LengthsAndCycles =
         | Rra
         | Rla -> 1, Fixed 1
         | Rlc w
-        | Rrc w -> forWriteByte w
+        | Rrc w -> forTargetByte w
         | Rl w
-        | Rr w -> forWriteByte w
+        | Rr w -> forTargetByte w
         | Sla w
-        | Sra w -> forWriteByte w
+        | Sra w -> forTargetByte w
         | Srl w
-        | Swap w -> forWriteByte w
+        | Swap w -> forTargetByte w
         | Bit(_, w) ->
             match w with
-            | Write.RegDirect _ -> 2, Fixed 2
-            | Write.HLIndirect -> 2, Fixed 3
-        | Res(_, w) -> forWriteByte w
-        | Set(_, w) -> forWriteByte w
+            | Target.RegDirect _ -> 2, Fixed 2
+            | Target.HLIndirect -> 2, Fixed 3
+        | Res(_, w) -> forTargetByte w
+        | Set(_, w) -> forTargetByte w
 
     let forControl =
         function
@@ -268,12 +269,12 @@ module private LengthsAndCycles =
         function
         | Ld8(w, s) ->
             match w with
-            | Write.RegDirect _ -> forReadByte s
-            | Write.HLIndirect ->
+            | Target.RegDirect _ -> forReadByte s
+            | Target.HLIndirect ->
                 match s with
-                | Read.Immediate _ -> 2, Fixed 3
-                | Read.RegDirect _ -> 1, Fixed 2
-                | Read.HLIndirect -> 1, Fixed 1 // ld [hl],[hl] is actually decoded as HALT
+                | Source.Immediate _ -> 2, Fixed 3
+                | Source.RegDirect _ -> 1, Fixed 2
+                | Source.HLIndirect -> 1, Fixed 1 // ld [hl],[hl] is actually decoded as HALT
         | LdA(_, s) ->
             match s with
             | AtBC -> 1, Fixed 2
