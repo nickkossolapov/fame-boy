@@ -130,5 +130,5 @@ The web version also supports mouse/touch.
 
 The Fame Boy source code is licensed under the [MIT License](./LICENSE).
 
-This project redistributes an unmodified copy of [Tobu Tobu Girl DX](https://github.com/SimonLarsen/tobutobugirl) by Simon Larsen,
+This project redistributes an unmodified copy of [Tobu Tobu Girl DX](https://github.com/SimonLarsen/tobutobugirl-dx) by Simon Larsen,
 included under its original MIT/CC-BY licensing terms and is not covered by the above license.
