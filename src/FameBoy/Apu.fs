@@ -315,7 +315,9 @@ module private WaveChannel =
                 ch.RamIndex <- (ch.RamIndex + steps) &&& 0x1F
 
     let output (ch: WaveChannel) (registers: uint8 array) =
-        if not ch.Enabled || ch.OutputLevel = 0 then
+        let dacEnable = registers[Io.Nr30] &&& 0b1000_0000uy = 0uy
+
+        if not ch.Enabled || ch.OutputLevel = 0 || dacEnable then
             0
         else
             let byte = int registers[Io.WaveRam + ch.RamIndex / 2]
@@ -501,7 +503,6 @@ module private Apu =
             state.Counter <- 0
 
             let rawSample = getMixedSample state
-
             let filteredSample =
                 rawSample |> stepHighPass state.HighPass |> stepLowPass state.LowPass
 
@@ -512,6 +513,15 @@ module private Apu =
 let stepApu (state: Apu) =
     if state.Registers[Io.Nr52] &&& 0b1000_0000uy <> 0uy then
         Apu.step state
+    else
+        state.Counter <- state.Counter + 4
+
+        if state.Counter >= tCyclesPerSample then
+            state.Counter <- 0
+
+            let i = state.WriteHead &&& state.RingBufferMask
+            state.RingBuffer[i] <- 0f
+            state.WriteHead <- state.WriteHead + 1
 
 let samplesAvailable (state: Apu) = state.WriteHead - state.ReadHead
 

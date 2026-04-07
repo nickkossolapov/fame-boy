@@ -3,6 +3,7 @@ open Browser
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
+open FameBoy.Apu
 open FameBoy.Emulator
 open FameBoy.Hardware
 open FameBoy.Web.Audio
