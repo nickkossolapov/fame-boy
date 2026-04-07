@@ -1,4 +1,5 @@
-﻿open Browser
+﻿open System
+open Browser
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
@@ -15,6 +16,12 @@ let private getElement id =
     | el -> el
 
 let getJoypadState = initJoypad ()
+
+let frameDrivenParam =
+    match URLSearchParams.Create(window.location.search).get("frame-driven") with
+     | Some "false" -> false
+     | Some _ -> true
+     | _ -> false
 
 let screenCanvas = getElement "screen" :?> HTMLCanvasElement
 let startOverlay = getElement "start-overlay"
@@ -69,6 +76,10 @@ let startEmulator bytes =
     let draw () =
         loadImageData ppu.Framebuffer
         ctx.putImageData (imageData, 0, 0)
+    
+    let targetCyclesPerMs = float cpuFrequency / 1000.0
+    let maxCyclesPerFrame = float cpuFrequency / 60.0
+    let mutable accumulator = 0.0
 
     let fpsWindowSize = 30
     let fpsHistory = Array.zeroCreate<float> fpsWindowSize
@@ -80,8 +91,18 @@ let startEmulator bytes =
         let dt = timestamp - last
 
         getJoypadState () |> applyJoypadState
+        
+        let frameDriven = frameDrivenParam || isUserMuted ()
 
-        tryQueueAudio apu stepEmulator
+        if frameDriven then
+            let cycles = Math.Min(targetCyclesPerMs * dt, maxCyclesPerFrame)
+            accumulator <- accumulator + cycles
+            
+            while accumulator > 0 do
+                let mCycles = float (stepEmulator ())
+                accumulator <- accumulator - mCycles
+ 
+        tryQueueAudio apu stepEmulator frameDriven
 
         reportFrameTime dt
 

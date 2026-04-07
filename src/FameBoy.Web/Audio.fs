@@ -7,7 +7,7 @@ open FameBoy.Web.JsBindings
 let private samplingRate = 48000
 
 [<Literal>]
-let private defaultVolume = 0.6
+let private defaultVolume = 0.5
 
 // How far ahead to schedule audio buffers, in seconds
 [<Literal>]
@@ -49,6 +49,8 @@ let private applyGain () =
         setGainValue gain (if shouldMute then 0.0 else defaultVolume)
     | None -> ()
 
+let isUserMuted () = state.UserMuted
+
 let ensureInitialized () =
     if not state.Initialized then
         state.Initialized <- true
@@ -87,7 +89,7 @@ let reportFrameTime (dt: float) =
         state.Suppressed <- shouldSuppress
         applyGain ()
 
-let tryQueueAudio (apu: Apu) stepEmulator =
+let tryQueueAudio (apu: Apu) stepEmulator fpsDriven =
     match state.Ctx, state.Gain with
     | Some ctx, Some gain ->
         let now = ctx.currentTime
@@ -95,21 +97,27 @@ let tryQueueAudio (apu: Apu) stepEmulator =
         if state.NextPlayTime < now then
             state.NextPlayTime <- now
 
-        while state.NextPlayTime - now < audioLeadTime do
-            while samplesAvailable apu < nativeSamplesNeeded apu bufferSize samplingRate do
-                stepEmulator () |> ignore
+        let mutable keepScheduling = true
 
-            readResampledBuffer apu resampleBuffer samplingRate
+        while keepScheduling && state.NextPlayTime - now < audioLeadTime do
+            if not fpsDriven then
+                while samplesAvailable apu < nativeSamplesNeeded apu bufferSize samplingRate do
+                    stepEmulator () |> ignore
+            elif samplesAvailable apu < nativeSamplesNeeded apu bufferSize samplingRate then
+                keepScheduling <- false
 
-            let buffer = createBuffer ctx 1 bufferSize samplingRate
-            let channelData = getChannelData buffer 0
+            if keepScheduling then
+                readResampledBuffer apu resampleBuffer samplingRate
 
-            for i = 0 to bufferSize - 1 do
-                channelData[i] <- resampleBuffer[i]
+                let buffer = createBuffer ctx 1 bufferSize samplingRate
+                let channelData = getChannelData buffer 0
 
-            let source = createBufferSource ctx
-            setBuffer source buffer
-            connectSourceTo source gain
-            startSource source state.NextPlayTime
-            state.NextPlayTime <- state.NextPlayTime + buffer.duration
+                for i = 0 to bufferSize - 1 do
+                    channelData[i] <- resampleBuffer[i]
+
+                let source = createBufferSource ctx
+                setBuffer source buffer
+                connectSourceTo source gain
+                startSource source state.NextPlayTime
+                state.NextPlayTime <- state.NextPlayTime + buffer.duration
     | _ -> ()
