@@ -7,7 +7,7 @@ open FameBoy.Web.JsBindings
 let private samplingRate = 48000
 
 [<Literal>]
-let private defaultVolume = 0.5
+let private defaultVolume = 0.4
 
 // How far ahead to schedule audio buffers, in seconds
 [<Literal>]
