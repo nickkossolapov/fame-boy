@@ -21,7 +21,7 @@ scope while still complex enough to learn about a real system, and chock-full of
 Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware
 accuracy or maximum performance.
 
-I did use AI for a lot of the test cases, some code review, occasional helping me understand bits of the hardware (looking at you, APU), 
+I did use AI for a lot of the test cases, some code review, occasionally helping me understand bits of the hardware (looking at you, APU), 
 and a particularly unhinged performance optimization session at the end. But most of the code was still (unfortunately?) meticulously 
 crafted by me.
 
@@ -32,7 +32,7 @@ There are still a few gaps with the real hardware that I may or may not get to (
 - No Game Boy Color support.
 - Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
 - Missing battery saves (SRAM) and save states.
-- Hardware inaccuracies (e.g. scanline-based rendering instead of pixel FIFOs, instant DMA transfer, and missing a few hardware bugs).
+- Hardware inaccuracies (e.g. CPU instruction-level rather than M-cycle-level timing, scanline-based rendering rather than pixel FIFOs, and missing a few hardware features/bugs).
 
 ### Repo structure
 
@@ -100,7 +100,7 @@ dotnet run -c release
 
 #### Web
 
-There is also a basic Node.js benchmarking project using the same test ROMs and structure as the native benchmarking ﻿to better estimate 
+There is also a basic Node.js benchmarking project using the same test ROMs and structure as the native benchmarking ﻿to better estimate
 browser performance.
 
 ``` sh
