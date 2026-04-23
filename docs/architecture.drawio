@@ -1,0 +1,166 @@
+<mxfile host="app.diagrams.net" agent="draw.io">
+  <diagram id="fame-boy-architecture" name="Architecture Overview">
+    <mxGraphModel dx="894" dy="732" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="83" pageHeight="197" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="native-group" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=5;arcSize=10;" value="Desktop — Raylib" vertex="1">
+          <mxGeometry height="40" width="160" x="20" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-22" edge="1" parent="1" source="web-group" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;startArrow=classic;startFill=1;curved=0;" target="interface-group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="web-group" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=5;arcSize=10;" value="Web — Fable" vertex="1">
+          <mxGeometry height="40" width="160" x="250" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="bench-web" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
+          <mxGeometry height="40" width="160" x="480" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="bench-desktop" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 13px;&quot;&gt;Benchmarks&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="157.5" x="470" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="interface-group" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=5;arcSize=8;" value="Interface — createEmulator()" vertex="1">
+          <mxGeometry height="90" width="620" x="20" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="api-framebuffer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Framebuffer" vertex="1">
+          <mxGeometry height="35" width="130" x="35" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="api-audiobuffer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Audio Buffer&#xa;(w/ write head)" vertex="1">
+          <mxGeometry height="35" width="130" x="190" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="api-joypad" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="getJoypadState()" vertex="1">
+          <mxGeometry height="35" width="130" x="500" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="api-stepper" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="stepEmulator()" vertex="1">
+          <mxGeometry height="35" width="130" x="345" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="core-group" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=5;arcSize=6;" value="Core — FameBoy" vertex="1">
+          <mxGeometry height="350" width="620" x="20" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="core-cpu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;verticalAlign=top;spacingTop=5;" value="CPU" vertex="1">
+          <mxGeometry height="68" width="490" x="80" y="486" as="geometry" />
+        </mxCell>
+        <mxCell id="cpu-step" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" value="Registers" vertex="1">
+          <mxGeometry height="24" width="110" x="125" y="516" as="geometry" />
+        </mxCell>
+        <mxCell id="core-io" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;fontStyle=1;" value="IoController" vertex="1">
+          <mxGeometry height="60" width="180" x="235" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="core-ppu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" value="PPU" vertex="1">
+          <mxGeometry height="70" width="130" x="70" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="core-memory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" value="Memory (Bus)" vertex="1">
+          <mxGeometry height="40" width="210" x="220" y="412.5" as="geometry" />
+        </mxCell>
+        <mxCell id="core-apu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" value="APU" vertex="1">
+          <mxGeometry height="70" width="130" x="70" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="core-cartridge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="Cartridge" vertex="1">
+          <mxGeometry height="40" width="125" x="470" y="412.5" as="geometry" />
+        </mxCell>
+        <mxCell id="core-timer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#333333;" value="Timer" vertex="1">
+          <mxGeometry height="28" width="65" x="475" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="core-serial" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#333333;" value="Serial" vertex="1">
+          <mxGeometry height="28" width="65" x="475" y="337" as="geometry" />
+        </mxCell>
+        <mxCell id="core-joypad" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#333333;" value="Joypad" vertex="1">
+          <mxGeometry height="28" width="65" x="545" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="core-interrupts" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#333333;" value="Interrupts" vertex="1">
+          <mxGeometry height="28" width="65" x="545" y="337" as="geometry" />
+        </mxCell>
+        <mxCell id="misc-label" parent="1" style="text;html=1;fontSize=11;fontStyle=3;fontColor=#666666;align=center;" value="Misc" vertex="1">
+          <mxGeometry height="20" width="70" x="500" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-cpu-mem" edge="1" parent="1" source="core-cpu" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;strokeColor=#b85450;strokeWidth=1.5;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="core-memory" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="390" y="679" as="sourcePoint" />
+            <mxPoint x="372.1100000000001" y="463" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-io-ppu" edge="1" parent="1" source="core-io" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.25;exitY=1;entryX=1;entryY=0.5;strokeColor=#d79b00;strokeWidth=1.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="core-ppu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-io-apu" edge="1" parent="1" source="core-io" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.25;exitY=0;entryX=1;entryY=0.5;strokeColor=#d79b00;strokeWidth=1.5;entryDx=0;entryDy=0;exitDx=0;exitDy=0;startArrow=classic;startFill=1;" target="core-apu" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-mem-cart" edge="1" parent="1" source="core-memory" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;strokeColor=#b85450;strokeWidth=1.5;exitDx=0;exitDy=0;startArrow=classic;startFill=1;" target="core-cartridge" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-mem-io" edge="1" parent="1" source="core-memory" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeColor=#d79b00;strokeWidth=1.5;dashed=1;exitDx=0;exitDy=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="core-io" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="325" y="395" />
+              <mxPoint x="325" y="395" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-io-timer" edge="1" parent="1" source="core-io" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#666666;strokeWidth=1;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" target="core-timer" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-io-serial" edge="1" parent="1" source="core-io" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#666666;strokeWidth=1;entryDx=0;entryDy=0;exitDx=0;exitDy=0;startArrow=classic;startFill=1;" target="core-serial" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="445" y="335" />
+              <mxPoint x="445" y="351" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-fb-ppu" edge="1" parent="1" source="api-framebuffer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeColor=#9673a6;strokeWidth=2;endArrow=none;endFill=0;startArrow=classic;startFill=1;entryDx=0;entryDy=0;" target="core-ppu" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="230" />
+              <mxPoint x="50" y="230" />
+              <mxPoint x="50" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-audio-apu" edge="1" parent="1" source="api-audiobuffer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#9673a6;strokeWidth=2;endArrow=none;endFill=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="core-apu" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="255" y="230" />
+              <mxPoint x="135" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" value="Opcodes (Decode)" vertex="1">
+          <mxGeometry height="24" width="110" x="270" y="516" as="geometry" />
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" value="Execute" vertex="1">
+          <mxGeometry height="24" width="110" x="415" y="516" as="geometry" />
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-5" edge="1" parent="1" source="api-joypad" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;strokeColor=#9673a6;strokeWidth=2;endArrow=classic;endFill=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="core-io" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="565" y="270" />
+              <mxPoint x="370" y="270" />
+            </Array>
+            <mxPoint x="395" y="150" as="sourcePoint" />
+            <mxPoint x="465" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-7" edge="1" parent="1" source="api-stepper" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;strokeColor=#9673a6;strokeWidth=2;endArrow=classic;endFill=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="core-group" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="200" />
+              <mxPoint x="330" y="200" />
+            </Array>
+            <mxPoint x="675" y="270" as="sourcePoint" />
+            <mxPoint x="500" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;dashed=1;" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;VRAM/&lt;/font&gt;&lt;span style=&quot;font-size: 10px; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;OAM&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10px; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(shared)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="75" x="170" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-19" edge="1" parent="1" source="native-group" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.129;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;strokeWidth=2;curved=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" target="interface-group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bYRpQY8-fAVKC2KxShnD-23" edge="1" parent="1" source="bench-web" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.871;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;curved=0;strokeWidth=2;fillColor=#f5f5f5;strokeColor=#666666;startArrow=classic;startFill=1;" target="interface-group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
