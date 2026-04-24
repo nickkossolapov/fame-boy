@@ -20,3 +20,5 @@ dist/
 /src/FameBoy.Web/FameBoy.Web.fable-temp.csproj
 
 BenchmarkDotNet.Artifacts/
+
+.obsidian/
