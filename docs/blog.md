@@ -186,7 +186,7 @@ Overall I was happy with how the PPU turned out, but it has possibly the biggest
 
 ### Sound is hard
 
-After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But while playing around with the web version, it felt a bit empty without the sound, and so I went ahead to try and add it (first mistake). I read a few blogs, and found that many emulators use the audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that instead with the framerate driving the emulator (second mistake).
+After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But I played around with the web version and thought it felt a bit empty without the sound. And so I went ahead to try and add it (first mistake). I read a few blogs, and found that many emulators use the audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that instead with the framerate driving the emulator (second mistake).
 
 TODO
 - Windows had really weird issue with 800 buffer size not working (even though it worked when doing framerate driven clock).
@@ -195,7 +195,7 @@ TODO
 
 ### Driving the emulator
 
-To explain the difference between the audio-driven and frame-driven, it's more about understanding human perception. Have you ever watched a video or listened to something and there's a pop in the audio? What happens is there is a pause or drop in the audio signal, so the speaker output falls to zero instead of something close to the next signal. The next audio signal comes along, moving the speaker more than expected and causing a pop. Kind of like being pushed when you're standing still versus while you're already walking. 
+To explain the difference between audio-driven and frame-driven, it's more about understanding human perception. Have you ever watched a video or listened to something and there's a pop in the audio? What happens is there is a pause or drop in the audio signal, so the speaker output falls to zero instead of something close to the next signal. The next audio signal comes along, moving the speaker more than expected and causing a pop. Kind of like being pushed when you're standing still versus while you're already walking. 
 
 Now if you're watching a YouTube video or playing a game, and suddenly it feels like it stutters for a split-second? Same thing, there wasn't enough data to maintain the FPS and a frame or two is skipped. Only now it's not pushing something physical, so it's less offensive to our senses. 
 
