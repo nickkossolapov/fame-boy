@@ -240,7 +240,7 @@ However, the frontend's audio buffer only cares about filling itself, so it some
 
 You can actually try out the frame-driven version of the web frontend by adding [?frame-driven](https://nickkossolapov.github.io/fame-boy/?frame-driven) as a query parameter in the URL. It should be visually smoother, but there will be the occasional audio pop. Also, even on the audio-driven web frontend it switches to being frame-driven when the mute button is pressed, as those pops won't be audible anyway.
 
-My implementation of this is far from perfect though. Ultimately, I found the audio pops to leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make that the default in the web frontend. It's one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
+My implementation of this is far from perfect though. Ultimately, I found the audio pops to leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make audio-driven the default in the web frontend. It's one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
 
 ### Joypad
 
