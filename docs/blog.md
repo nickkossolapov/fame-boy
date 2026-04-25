@@ -58,7 +58,7 @@ let stepper () =
 
 While the real hardware components all run in parallel based on a central master oscillator, my emulator is single threaded and so the components have to run in sequence. The stepper function centralises the execution and ensures that all the components are synchronised.
 
-Lastly, for the emulator to be playable it needs to run at the correct number of cycles per second, around 17500 CPU-cycles per 60 FPS frame. The frontends use the audio sampling rate to drive the emulator when the sound is on, and the frame rate to drive the emulator when it's muted. More on this later in the chapter about sound.
+Lastly, for the emulator to be playable it needs to run at the correct number of cycles per second, around 17500 CPU-cycles per 60 FPS frame. The frontends use the audio sampling rate to drive the emulator when the sound is on, and the frame rate to drive the emulator when it's muted. More on that later.
 
 ## Emulating the CPU, and F\#
 
@@ -73,13 +73,13 @@ As an example why I think the CPU modelling works well in F#, I was following [G
 ```fsharp
 type LoadInstr =  
     | Load8Immediate of uint8
-    | Load8Direct of Reg8
+    | Load8Direct of Register
     | Load8Indirect
     // ... other load instructions
 
 type ArithmeticInstr =  
     | IncrementDirect of uint8
-    | IncrementIndirect of Reg8
+    | IncrementIndirect of Register
     // ... other arithmetic instructions
 ```
 
@@ -88,32 +88,32 @@ And it wasn't just the load instructions. A lot of the other instructions shared
 - read/write a CPU register (`direct`), 
 - read/write a memory location specified by the HL CPU register (`indirect`). 
 
-Even though this is a small domain and most Game Boy devs know the opcodes/instructions basically as is, I just felt like it could be cleaner. The code below shows the extraction of the location concept. The code uses different names from the source code to make the load instruction more readable for anyone not familiar F#'s DU.
+Even though this is a small domain and most Game Boy devs know the opcodes/instructions basically as is, I felt like it could be neatened up. The code below shows the extraction of the location concept. The code uses different names from the source code to make the load instruction more readable for anyone not familiar F#'s DU.
 
 ```fsharp
 type To =  
 	| Immediate of uint8  
-	| Register of Register // direct
-	| HL // indirect
+	| Direct of Register
+	| Indirect
 
 type From =  
-	| Register of Reg8  // direct
-	| HL // indirect
+	| Direct of Register
+	| Indirect
 
 type LoadInstr =  
     | Load of From * To // These form a tuple, like Load<From, To> in C#
     // ... other instructions
 ```
 
-This helped reduce the CPU instructions down from 512 opcodes to just 58 instructions. Generalising a domain like this risks allowing invalid states, but using a good type system can avoid those. 
+This helped reduce the CPU instructions down from 512 opcodes to just 58 instructions. Generalising a domain like this risks allowing invalid states, but using a good type system can avoid them. 
 
-For example, if I had used a location type, `Loc`, instead of the `From` and  `To` types, this instruction would compile without complaining: `Load(Loc.Register D, Loc.Direct)` (storing a register to the immediate value). The Game Boy's hardware (its domain) doesn't support this, so the domain would contain an illegal state.
+For example, if I had used a location type, `Loc`, instead of the `From` and  `To` types, this instruction would compile without any complaints: `Load(Loc.Direct D, Loc.Immediate)` (storing a register to the immediate value). The Game Boy's hardware (its domain) doesn't support this, so the domain would contain an illegal state.
 
 Using the F# type system to model the domain correctly, you get a guarantee that illegal states can't be expressed in your system. You don't necessarily need unit tests, it just won't compile. So with simplified types Fame Boy still captures exactly what the Game Boy's CPU supports and nothing more (with one cheeky exception).
 
 Now the eagle-eyed Game Boy emulator devs would say to me "hey Nick, but what about the opcode 0x76?", and I would reply "A monad is a monoid in the category of endofunctors" to show that I'm using a functional programming language and therefore smarter than them.
 
-Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8 bit value from the memory at location HL to the memory at location HL, which the emulator's typing allows. Logically, it's a NOP and not dangerous, and the opcode reader will actually decode that opcode to `HALT` as it does in the Game Boy. But it's a notable blemish in what I think is otherwise a decent domain model.
+Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8 bit value from the memory at location HL to the memory at location HL, which my emulator's typing allows. Logically, it's a NOP and not dangerous, and the opcode reader will actually decode that opcode to `HALT` as it does in the Game Boy. But it's a notable blemish in what I think is otherwise a decent domain model.
 
 Now you can do something similar in most languages, but if you've worked with a functional language it's hard to properly describe how smooth it feels working with these types. After using a `match` statement or Options in F#, going back to a `switch` statement feels clunky and prone to mistakes. For anyone who hasn't worked with a functional programming language I'd recommend you go out and try one.
 
@@ -172,17 +172,17 @@ I did regularly review and improve the tests, but overall I feel it didn't detra
 
 ### PPU
 
-The Game Boy doesn't have a GPU, it has a PPU, picture processing unit. Although in my mind it actually stands for pixel processing unit, because I spent more time focused on the individual pixels than any sort of picture.
+The Game Boy doesn't have a GPU, it has a PPU, picture processing unit. Although in my mind it actually stands for pixel processing unit. I spent more time focused on the individual pixels than any sort of picture.
 
-This is the part that surprised me when it came to blogs from other people who made Game Boy emulators. Many blogs focused on the CPU, with only a few paragraphs for the PPU. Maybe it's because I was fresh off of From Nand to Tetris and the CHIP-8 emulator, the CPU felt straight forward, while the PPU took a lot longer to understand.
+This is the part that surprised me when it came to blogs from other people who made Game Boy emulators. Many blogs focused on the CPU, with only a few paragraphs for the PPU. Maybe it's because I was fresh off of From Nand to Tetris and the CHIP-8 emulator, the CPU felt natural, while the PPU took a lot longer to understand. But now that I've implemented it, I can see why. It's less that you're actually designing your own system, and more of just following the steps needed to get the pixels on the screen, mechanical work rather than creative.
 
-At the start of implementing the PPU, I was a bit lost on where to get started. So rather than trying to grok the pixel FIFOs and full PPU pipeline, I just decided to read the tiles and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). At the time it was great because I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
+At the start of implementing the PPU, I was a bit lost on where to get started. So rather than trying to grok the pixel FIFOs and full PPU pipeline, I just decided to read the tile and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). At the time it was great because I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
 
 ![Fame Boy debug view|400](./images/debug_view.png)
 
 And for the PPU, starting with the tile and background view was a great place to start in retrospect. It helped me at pretty much every point in the process, from implementing the actual screen to debugging the annoying little details with the sprite data. 
 
-Overall I was happy with how the PPU turned out, but it has possibly the biggest hardware inaccuracy in my emulator. The Game Boy uses a FIFO queue to put pixels on the screen one at a time like a CRT monitor, but my emulator renders the entire scanline at the start of the draw period for that line. It's faster and kept the code simpler. There are games where the engineers took the Game Boy hardware to its limits and exploited the pixel queue timings, and those don't fully work with Fame Boy. But most games aren't that adventurous with the hardware, and should mostly work.
+Overall I was happy with how the PPU turned out, but it has possibly the biggest hardware inaccuracy in my emulator. The Game Boy uses a FIFO queue to put pixels on the screen one at a time like a CRT monitor, but my emulator renders the entire scanline at the start of the draw period for that line. It's faster and kept the code simpler, plus the games I wanted to play all work, so I haven't felt the need to move the the pixel queues. There are games where the devs took the Game Boy hardware to its limits and exploited the pixel queue timings, and those don't really work with Fame Boy. But most games aren't that adventurous with the hardware, and should mostly work.
 
 ### Sound is hard
 
@@ -193,7 +193,17 @@ TODO
 - matching sampling rates, and syncing sampling rate to CPU means I can batch APU steps. Game Boy. The game boy's audio worked means any sampling rate could be chosen.
 - Audio is definitely the leakiest part of the emulator-frontend interface, but that's because audio does need to be precisely synced for performance. I could increase the ring size buffer and allow reading and writing to be independent, but that would introduce a lot of lag
 
-### Driving the emulator
+### Joypad
+
+The last emulator component I want to talk about is the joypad. The initial implementation was a breeze, it was straight forward and easy to write tests for.
+
+But after pretty much any major refactor it would always end up breaking. The joypad hardware register is one where both the CPU and game both read to and write from it, so they interact with each other in ~~frustrating~~ interesting ways.
+
+An example: in the early stages of the emulator I made the CPU write the joypad state to the register every cycle. But that's inefficient, humans don't change buttons a million times every second, so I changed it to only update once a frame. Then the d-pad stopped working. Some reading later, and even though I knew that the Game Boy's hardware only allows half the buttons to be read at a time, I discovered that games almost always do at least two joypad register reads in short succession, relying on the register changing between the reads. Games do this so they can read the state of all the buttons. But now the register is cached and doesn't change and half the buttons don't work. Oh joy.
+
+In the end I made the IoController update the joypad register only when it's read by the CPU, but I probably should have spent some time and come up with an integration test for it. More on [the joypad in Pandocs](https://gbdev.io/pandocs/Joypad_Input.html) for those interested.
+
+## Driving the emulator
 
 To explain the difference between audio-driven and frame-driven, it's more about understanding human perception. Have you ever watched a video or listened to something and there's a pop in the audio? What happens is there is a pause or drop in the audio signal, so the speaker output falls to zero instead of something close to the next signal. The next audio signal comes along, moving the speaker more than expected and causing a pop. Kind of like being pushed when you're standing still versus while you're already walking. 
 
@@ -242,19 +252,31 @@ You can actually try out the frame-driven version of the web frontend by adding 
 
 My implementation of this is far from perfect though. Ultimately, I found the audio pops to leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make audio-driven the default in the web frontend. It's one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
 
-### Joypad
-
-The last emulator component I want to talk about is the joypad. The initial implementation was a breeze, it was straight forward and easy to write tests for.
-
-But after pretty much any major refactor it would always end up breaking. The joypad hardware register is one where both the CPU and game both read to and write from it, so they interact with each other in ~~frustrating~~ interesting ways.
-
-An example: in the early stages of the emulator I made the CPU write the joypad state to the register every cycle. But that's inefficient, humans don't change buttons a million times every second, so I changed it to only update once a frame. Then the d-pad stopped working. Some reading later, and even though I knew that the Game Boy's hardware only allows half the buttons to be read at a time, I discovered that games almost always do at least two joypad register reads in short succession, relying on the register changing between the reads. Games do this so they can read the state of all the buttons. But now the register is cached and doesn't change and half the buttons don't work. Oh joy.
-
-In the end I made the IoController update the joypad register only when it's read by the CPU, but I probably should have spent some time and come up with an integration test for it. More on [the joypad in Pandocs](https://gbdev.io/pandocs/Joypad_Input.html) for those interested.
-
 ## Taking it to the web with Fable
 
-TODO WebAssembly Register uint8 clamping, and simplicity
+After I had gotten the PPU somewhat working and could see some things happening on the screen in Raylib, I was excited to try moving Fame Boy to the web. I hopped onto the Fable docs, installed a package or two, set up the main loop, adding some styling, and within an hour or two I was ready to try and run it. I hit enter, and then:
+
+![Tetris, allegedly|340](./images/tetris_allegedly.png)
+
+Maybe this is the version of Tetris set in winter in Siberia. I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
+
+But there was a problem, it was nigh unplayable, getting maybe 8 FPS. I'm still not sure what the issue is. I don't think it was Blazor itself, the .NET team did publish performance guides that I tried to follow, but they didn't help in the end. Debugging was also a pain, so I reluctantly went back to Fable to look into what could be going wrong with the transpilation in JavaScript. 
+
+To my surprise, Fable puts the transpiled JS files right next to the source code, and it's actually quite readable.
+
+![Fame Boy's transpiled code](./images/transpiled_fs.png)
+
+This made understanding the new source code, and also debugging in the browser dev tools, quite straightforward. And when looking at the dev tools I noticed something was a bit wrong.
+
+![The CPU in the browser's dev tools|350](./images/web_cpu.png)
+
+The CPU registers in the Fame Boy (and the Game Boy too) are 8 bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is in that range. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
+
+> (non-standard) Bitwise operations for 16 bit and 8 bit integers use the underlying JavaScript 32 bit bitwise semantics. Results are not truncated as expected, and shift operands are not masked to fit the data type.
+
+That would explain the rampant B register. Hunting through the code to find all the places where 8-bit values needed to be truncated, I managed to [find all the offenders](https://github.com/nickkossolapov/fame-boy/commit/05ec0cfa55ce3f31f9006068ed6327d9db5fd81b), and voilà, the frontend  worked perfectly. And since it's pure JS, the web bundle is only around 100 kB. 
+
+Outside of the weird uint8 issue (which most people shouldn't have), I had a fairly pleasant experience with Fable. It was rather smooth, and it meant that my entire source code stays in F#. 
 
 ## Trying to improve performance
 
