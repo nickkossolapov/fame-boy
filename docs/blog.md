@@ -6,7 +6,7 @@ I spent hundreds of hours as a kid catching Pokémon, so the Game Boy was the pe
 
 Instead of jumping straight into it, I first did [From NAND to Tetris](https://www.nand2tetris.org/). It was a great course, and it made me really understand the fundamentals of computers, like registers, memory, and the ALU. Then to get used to building an emulator, I built a CHIP-8 emulator in F#: [Fip-8](https://github.com/nickkossolapov/fip-8).
 
-A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and working on desktop and web.. 
+A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and running on desktop and web.. 
 
 **[Play it in the browser](https://nickkossolapov.github.io/fame-boy/)** | **[View on GitHub](https://github.com/nickkossolapov/fame-boy)**
 
@@ -17,7 +17,7 @@ A few months later, and after many nights of going to bed at 2 AM even though I 
 I wanted to have the emulator work on both desktop and web, so I focused on having a simple interface between the emulator core and whatever frontend is running it.
 
 The interface between the frontends and core is essentially just two arrays and two functions:
-- `framebuffer` - 160x144 array of shades (white, light, dark, black).
+- `framebuffer` - a 160x144 array of shades (white, light, dark, black).
 - `audiobuffer` - a ring audio buffer at sample rate of 32768 Hz with read and write heads.
 - `stepEmulator()` - a function that executes one CPU instruction and returns the number of cycles taken.
 - `getJoypadState(state)` - a callback for the frontend to give the emulator the joypad state, usually once a frame.
@@ -46,9 +46,9 @@ let stepper () =
 	    // The APU technically runs at 4x CPU-cycles, but can be batched
 	    stepApu apu  
 	  
-	// The PPU operates at 4x CPU-cycles, but can't be batched
 	let tCycles = mCycles * 4  
-	  
+	
+	// The PPU operates at 4x CPU-cycles. The APU should be here too
 	for _ in 1..tCycles do  
 	    stepPpu ppu  
 	
@@ -88,15 +88,15 @@ And it wasn't just the load instructions. A lot of the other instructions shared
 - read/write a CPU register (`direct`), 
 - read/write a memory location specified by the HL CPU register (`indirect`). 
 
-Even though this is a small domain and most Game Boy devs know the opcodes/instructions basically as is, I felt like it could be neatened up. The code below shows the extraction of the location concept. The code uses different names from the source code to make the load instruction more readable for anyone not familiar with F#'s DU.
+Even though this is a small domain and most Game Boy devs know the opcodes/instructions basically as is, I felt like it could be neatened up. The code below shows the extraction of the location concept. The code uses different names and order from the source code to make the load instruction more readable for anyone not familiar with F#'s DU.
 
 ```fsharp
 type To =  
-	| Immediate of uint8  
 	| Direct of Register
 	| Indirect
 
-type From =  
+type From =
+	| Immediate of uint8  
 	| Direct of Register
 	| Indirect
 
@@ -107,7 +107,7 @@ type LoadInstr =
 
 This helped reduce the CPU instructions down from 512 opcodes to just 58 instructions. Generalising a domain like this risks allowing invalid states, but using a good type system can avoid them. 
 
-For example, if I had used a location type, `Loc`, instead of the `From` and  `To` types, this instruction would compile without any complaints: `Load(Loc.Direct D, Loc.Immediate)` (storing a register to the immediate value). The Game Boy's hardware (its domain) doesn't support this, so the domain would contain an illegal state.
+For example, if I had used a location type, `Loc`, instead of the `From` and  `To` types, this instruction would compile without any complaints: `Load(Loc.Direct D, Loc.Immediate)` (storing a register to the immediate value). The Game Boy's hardware (its domain) doesn't support writing to the immediate value, so the domain would contain an illegal state.
 
 By using the F# type system to model the domain correctly, you get a guarantee that illegal states can't be expressed in your system. You don't necessarily need unit tests, it just won't compile. So with simplified types Fame Boy still captures exactly what the Game Boy's CPU supports and nothing more (with one cheeky exception).
 
@@ -129,7 +129,7 @@ set_flags ~h:false ~z:(!a = zero) ();
 
 I really liked that you could pass in however many flags you wanted, in any order.
 
-But I couldn't find something exactly like it because F# avoids method overloading and default parameters due to its type system supporting partial application. Instead I settled on something like this:
+But I couldn't create something exactly like it because F# avoids method overloading and default parameters due to its type system supporting partial application. Instead I settled on something like this:
 
 ```fsharp
 cpu.setFlags [ Half, false; Zero, a = 0uy ]
@@ -170,7 +170,7 @@ This is where AI really came in handy. To improve my learning I wanted to write 
 
 I did regularly review and improve the tests, but overall I feel it didn't detract from my learning at all, and helped me spend my energy on the things that were actually interesting to me.
 
-## The other components
+## Beyond the CPU
 
 ### PPU
 
@@ -178,7 +178,7 @@ The Game Boy doesn't have a GPU, it has a PPU, picture processing unit. Although
 
 This is the part that surprised me when it came to blogs from other people who made Game Boy emulators. Many blogs focused on the CPU, with only a few paragraphs for the PPU. Maybe it's because I was fresh off of From Nand to Tetris and the CHIP-8 emulator, the CPU felt natural, while the PPU took a lot longer to understand. But now that I've implemented it, I can see why. It's less about designing your own system, and more about just following the steps needed to get the pixels on the screen, mechanical work rather than creative.
 
-At the start of implementing the PPU, I was a bit lost on where to get started. So rather than trying to grok the pixel FIFOs and full PPU pipeline, I just decided to read the tile and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). At the time it was great because I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
+At the start of implementing the PPU, I was a bit lost on what to do. So rather than trying to grok the pixel FIFOs and full PPU pipeline all at once, I just decided to read the tile and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
 
 ![Fame Boy debug view|400](./images/debug_view.png)
 
@@ -198,15 +198,15 @@ In the end I made the IoController update the joypad register only when it's rea
 
 ### Sound is hard
 
-After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But I was play around with the web version and thought it felt a bit empty without the sound. And so I went ahead to try and add the APU, audio processing unit (first mistake). I read a few blogs, and found that many emulators use the audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that instead with the framerate driving the emulator (second mistake).
+After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But I was playing around with the web version and thought it felt a bit empty without the sound. And so I went ahead to try and add the APU, audio processing unit (first mistake). I read a few blogs, and found that many emulators use the frontend audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that with the framerate driving the emulator instead (second mistake).
 
-Sound was the most challenging component for me conceptually. It took me a while to understand how the different sound registers and channels work. This is where AI as a teacher really shone. I had a lot of back and forth before trying to start coding. But much like the PPU, it was really satisfying as I completed each channel. And by doing one channel at a time, it helped me understand how music is actually formed. Hearing the Tetris song for the first time actually brought a smile to my face.
+Sound was the most challenging component for me conceptually. It took me a while to understand how the different sound registers and channels work. This is where AI as a teacher really shone. I had a lot of back and forth before trying to start coding. But much like the PPU, it was really satisfying as I completed each channel. And by doing one channel at a time, it helped me understand how music is actually formed. Hearing the Tetris song slowly come together and build up richness actually brought a smile to my face.
 
-It wasn't all sunshine and rainbows though. The CPU and PPU are basically just "once per frame, do exactly X number of things,", and you can calculate X easily. The APU on the other hand has so many things to tune. 
+It wasn't all sunshine and rainbows though. The CPU and PPU are basically just "once per frame, do exactly X number of things,", and you can calculate X easily. And instead of just calculations, the APU on the other hand has so many things to choose and tune. 
 
-The only easy thing to determine was the APU's sampling rate. The actual Game Boy's APU was flexible, so emulators can choose whatever sampling rate they want. I went with 32768 Hz, because that comes to 1 sample every 128 CPU cycles (1 048 576 Hz, and 1 048 576 / 32 768 = 128). So my APU state can use integers and still stay perfectly in sync. 128 is also divisible by 4, so I could batch the APU steps 4 at a time and never miss alignment with a CPU instruction.
+The only easy thing to choose was the APU's sampling rate. The actual Game Boy's APU was flexible, so emulators can use whatever sampling rate they want. I went with 32768 Hz, because that comes to 1 sample every 128 CPU cycles (1 048 576 Hz, and 1 048 576 / 32 768 = 128). So my APU state can use integers and still stay perfectly in sync. 128 is also divisible by 4, so I could batch the APU steps 4 at a time and never miss alignment with a CPU instruction.
 
-All the other things though, much more wonky. I'm not a sound engineer, so I was just changing values hoping for the best. And worst of all, not only did each frontend have it quirks, but each platform did too. I got the sound working well on PC, but when I tried it out on a MacBook it sounded like a waterfall. I fixed the MacBook, and suddenly Raylib on PC doesn't even run because of a race condition.
+All the other things though, much more wonky. I'm not a sound engineer, so I was just changing values hoping for the best. And worst of all, not only did each frontend have its own quirks, but each platform did too. I got the sound working well on PC, but when I tried it out on a MacBook it sounded like a waterfall. I fixed the MacBook, and suddenly the desktop version on PC doesn't even run because of a race condition.
 
 After hours of tweaking settings and failing, I abandoned trying to be clever with the dynamic sampling rates, and moved to having audio drive the emulator. That made audio much more reliable between all the devices.
 
@@ -265,23 +265,23 @@ My implementation of this is far from perfect, though. Ultimately, I found the a
 
 ## Taking it to the web with Fable
 
-After I had gotten the PPU somewhat working and could see some things happening on the screen on the desktop, I was excited to try move Fame Boy to the web. I hopped onto the Fable docs, installed a package, set up the main loop, added some styling, and within an hour or two I was ready to try and run it. I hit enter, and then:
+After I had gotten the PPU somewhat working and could see some things happening on the screen on the desktop, I was excited to try to move Fame Boy to the web. I hopped onto the [Fable](https://fable.io/) docs, installed a package, set up the main loop, added some styling, and within an hour or two I was ready to try and run it. I hit enter, and then:
 
 ![Tetris, allegedly|340](./images/tetris_allegedly.png)
 
-Maybe this is the version of Tetris set in winter in Siberia. I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
+Maybe this version of Tetris set in winter in Siberia. I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
 
-But there was a problem, it was nigh unplayable, getting maybe 8 FPS. I'm still not sure what the issue is. I don't think it was Blazor itself, the .NET team did publish performance guides that I tried to follow, but they didn't help in the end. Debugging was also a pain, so I reluctantly went back to Fable to look into what could be going wrong with the transpilation in JavaScript. 
+But there was a problem, it was nigh unplayable, getting maybe 8 FPS. I'm still not sure what the issue is. I don't think it was Blazor itself, the .NET team did publish performance guides that I tried to follow, but they didn't help in the end. Debugging was also a pain, so I reluctantly went back to Fable to look into what could be going wrong with the transpilation into JavaScript. 
 
 To my surprise, Fable puts the transpiled JS files right next to the source code, and it's actually quite readable.
 
 ![Fame Boy's transpiled code](./images/transpiled_fs.png)
 
-This made understanding the new source code, and also debugging in the browser dev tools, quite straightforward. And when looking at the dev tools I noticed something was a bit wrong.
+This made understanding the new code, and also debugging in the browser dev tools, quite straightforward. And when looking at the dev tools I noticed something was a bit wrong.
 
-![The CPU in the browser's dev tools|350](./images/web_cpu.png)
+![The CPU state in the browser's dev tools|350](./images/web_cpu.png)
 
-The CPU registers in the Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is in that range. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
+The CPU registers in the Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is an 8-bit number. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
 
 > (non-standard) Bitwise operations for 16 bit and 8 bit integers use the underlying JavaScript 32 bit bitwise semantics. Results are not truncated as expected, and shift operands are not masked to fit the data type.
 
@@ -291,9 +291,9 @@ Outside of the weird uint8 issue (which most people shouldn't have), I had a fai
 
 ## Trying to improve performance
 
-Once I had gotten things showing on the screen, I was curious what performance was like. I added a simple FPS console log. At that point it was around 55-60 FPS in debug mode. Not great, not terrible. I think that was due to Raylib trying to maintain v-sync though, as turning it off the emulator jumped to around 70 FPS, but was jittery. I can always optimise things later, and so I decided to power on with the PPU. 
+Once I had gotten things showing on the screen, I was curious what performance was like. I added a simple FPS console log. At that point it was around 55-60 FPS in debug mode. Not great, not terrible. I think that was due to Raylib trying to maintain v-sync though, as turning it off the emulator jumped to around 70 FPS, but was jittery. I can always optimise later, and so I decided to power on with the PPU. 
 
-As I added more features, performance slowly dropped, eventually reaching 45 FPS, and turning off v-sync didn't help. Later had come, so it was time to optimise. I fired up the profiler in JetBrains Rider, and immediately saw this:
+As I added more features, performance slowly dropped, eventually reaching 45 FPS, and turning off v-sync didn't help. Later had arrived, so it was time to optimise. I fired up the profiler in JetBrains Rider, and saw this:
 
 ![Spot the big number in the profiler](./images/profiling.png)
 
@@ -313,7 +313,7 @@ type DmgMemory(arr: uint8 array) =
 	// Arrays for romBase etc
 
 	member this.read address =  
-	    match mapAddress address with // 
+	    match mapAddress address with
 	    | RomBase i -> romBase[i]  
 	    // ... others 
   
@@ -331,14 +331,14 @@ I slowly improved performance by spending time regularly looking at the profiler
 
 ## Benchmarks
 
-Just looking at FPS numbers in the console didn't seem like a great way to measure performance. So partway through the project I added a [BenchmarkDotNet project](../src/FameBoy.Benchmark/Program.fs) to measure desktop performance, and later made a simple [web benchmarker](../src/FameBoy.Benchmark.Web/Program.fs) (using Node.js) to perform similar benchmarks for web performance.
+Just looking at FPS numbers in the console didn't seem like a great way to measure performance. So partway through the project I added a [BenchmarkDotNet project](../src/FameBoy.Benchmark/Program.fs) to measure desktop performance, and later made a simple [web benchmarker](../src/FameBoy.Benchmark.Web/Program.fs) using Node.js to perform similar benchmarks to estimate web browser performance.
 
 The benchmarks all used the following demo ROMs, used to test realistic scenarios:
 - [Flag](https://hh.gbdev.io/game/flag-demo) - a short loop with no sound
 - [Roboto](https://hh.gbdev.io/game/roboto-demo) -  a long-running (>1 min) demo that uses many visual effects and has sound.
 - [Merken](https://hh.gbdev.io/game/merken) - similar to Roboto, but uses a memory banked ROM to test the memory.
 
-The desktop FPS performance on both a Ryzen 9 7900 Windows PC and a M4 MacBook Air.
+Here is desktop FPS performance on both a Ryzen 9 7900 Windows PC and a M4 MacBook Air.
 
 | CPU          | Flag | Roboto | Merken |
 | ------------ | ---- | ------ | ------ |
@@ -360,9 +360,9 @@ Surprisingly, the APU (sound) had more of an impact on emulator performance than
 
 No code is free from the influence of AI these days, even learning projects. In general I strive to be transparent about my AI usage, and so I wanted to comment on how I used it and my experience with it in a purely learning project.
 
-Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the use of AI-written code though. I wanted to make something that I can show to people and be proud of. Code for humans, by a human. If I wanted nothing more than an emulator I could just have shared the prompt. 
+Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the use of AI-written code though. I wanted to make something that I can show to people and be proud of. Code, for humans, by a human. If I wanted nothing more than an emulator I could've just shared the prompt. 
 
-There were two noteworthy cases with AI in my project. One was at the end where I decided to just burn some tokens, and unleashed the CLI on my repo to try to find performance improvements. I gave it some ideas, and asked it to try anything else it wanted to. It did really well, improving the performance by over 200% for some of the benchmarks ([PR link with details](https://github.com/nickkossolapov/fame-boy/pull/1)). It did introduce some bugs that I found and had to fix, so I still have a job for now.
+There were two noteworthy cases with AI in my project. One was at the end where I decided to just burn some tokens, and unleashed the CLI on my repo to try to find performance improvements. I gave it some ideas, and asked it to try anything else it wanted to. It did really well, more than doubling the performance for some of the benchmarks ([PR link with details](https://github.com/nickkossolapov/fame-boy/pull/1)). It did introduce some bugs that I found and had to fix though.
 
 The other was a case where AI actually saved this project when I had nearly given up. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the "timer winter".
 
@@ -389,12 +389,13 @@ Writing is not merely about data—it is about the symphony of connection—a vi
 
 *cough*
 
-It was mostly written by me. 
-## Overall experience
+It was mostly written by me.
 
-My main goal was to learn how computers work, and to that end it was a great success. And even more importantly than that, I really enjoyed making it. I would turn on my computer after work thinking "okay, just one feature tonight". And next thing I know it's 2 AM and I keep telling myself I should go to bed after one more bugfix.
+## Did I actually learn anything?
 
-I was thinking about trying out the Game Boy Advance, but looking at the specs it feels like it's 3 times the effort for maybe a 20% increase in my understanding in hardware. I think the Game Boy struck a great balance to help me learn. 
+My main goal was to learn how computers work, and to that end it was a great success. And even more important than that, I really fun time making it. I would turn on my computer after work thinking "okay, just one feature tonight". And next thing I know it's 2 AM and I keep telling myself I should go to bed after one more bugfix.
+
+I was thinking about trying out the Game Boy Advance, but looking at the specs it feels like it's 3 times the effort for maybe a 20% increase in my understanding of hardware. I think the Game Boy struck a great balance to help me learn, and so I might stop here for now.
 
 Did it make me a better software engineer? Probably not. Do I feel better knowing I understand a bit more about the tool I use every day? Certainly.
 
