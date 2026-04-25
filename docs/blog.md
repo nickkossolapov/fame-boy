@@ -281,7 +281,7 @@ This made understanding the new code, and also debugging in the browser dev tool
 
 ![The CPU state in the browser's dev tools|350](./images/web_cpu.png)
 
-The CPU registers in the Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is an 8-bit number. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
+The CPU registers in Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is an 8-bit number. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
 
 > (non-standard) Bitwise operations for 16 bit and 8 bit integers use the underlying JavaScript 32 bit bitwise semantics. Results are not truncated as expected, and shift operands are not masked to fit the data type.
 
