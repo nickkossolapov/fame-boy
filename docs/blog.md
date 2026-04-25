@@ -164,7 +164,7 @@ match opcode with
 
 And then every time it hit that exception I would implement the instruction for that opcode. I quickly hit two issues with this approach: the loop was getting a bit tedious navigating around technical references randomly instead of focusing on group of instructions at a time, and I had no idea if I was actually implementing the instructions correctly. Fixing both of these was simple: unit tests.
 
-This is where AI really came in handy. To improve my learning I wanted to write the emulator code myself, but coming up with test cases would be tedious, and I may have tunnel vision and miss some important test cases. So I had two prompts I used where I just copied the spec from the technical docs, and asked it to write tests for those specs. While it was busy I read the spec myself, and then implemented the logic until the tests passed, true test-driven development. It even helped catch a few bugs in the existing instructions I had already implemented. 
+This is where AI really came in handy. To improve my learning I wanted to write the emulator code myself, but coming up with test cases would be tedious, and I may have tunnel vision and miss some important test cases. So I had two prompts I used where I included the spec from the technical docs, and asked AI to write tests for those specs without looking at the emulator code. While it was busy I read the spec myself, and then implemented the logic until the tests passed, true test-driven development. It even helped catch a few bugs in the existing instructions I had already implemented. 
 
 I did regularly review and improve the tests, but overall I feel it didn't detract from my learning at all, and helped me spend my energy on the things that were actually interesting to me.
 
