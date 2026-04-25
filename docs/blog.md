@@ -10,7 +10,7 @@ A few months later, and after many nights of going to bed at 2 AM even though I 
 
 Check out the source code on [GitHub](https://github.com/nickkossolapov/fame-boy), or try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
 
-![Fame Boy playing Pokémon Blue](./assets/pokemon.gif)
+![Fame Boy playing Pokémon Blue](./images/pokemon.gif)
 
 ## How it works
 
@@ -22,7 +22,7 @@ The interface between the frontends and core is essentially just two arrays and 
 - `stepEmulator()` - a function that executes one CPU instruction and returns the number of cycles taken.
 - `getJoypadState(state)` - a callback for the frontend to give the emulator the joypad state, usually once a frame.
 
-![Fame Boy architecture diagram](./assets/architecture.svg)
+![Fame Boy architecture diagram](./images/architecture.svg)
 
 I tried to model Fame Boy in a similar way to the actual hardware of the Game Boy.
 
@@ -178,7 +178,7 @@ This is the part that surprised me when it came to blogs from other people who m
 
 At the start of implementing the PPU, I was a bit lost on where to get started. So rather than trying to grok the pixel FIFOs and full PPU pipeline, I just decided to read the tiles and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). At the time it was great because I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
 
-![Fame Boy debug view|400](./assets/debug_view.png)
+![Fame Boy debug view|400](./images/debug_view.png)
 
 And for the PPU, starting with the tile and background view was a great place to start in retrospect. It helped me at pretty much every point in the process, from implementing the actual screen to debugging the annoying little details with the sprite data. 
 
@@ -271,7 +271,7 @@ Throughout the process I tried to mostly use AI as an aid. I regularly asked it 
 
 There was a case where AI actually saved this project when I had nearly given up though. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the "timer winter".
 
-![The timer winter|350](./assets/timer_winter.png)
+![The timer winter|350](./images/timer_winter.png)
 
 It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could never get passed the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator I tried Claude Opus, and it found the issue in just a few minutes. The fix?
 
