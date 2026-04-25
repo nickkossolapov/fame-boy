@@ -60,7 +60,7 @@ While the real hardware components all run in parallel based on a central master
 
 Lastly, for the emulator to be playable it needs to run at the correct number of cycles per second, around 17500 CPU-cycles per 60 FPS frame. The frontends use the audio sampling rate to drive the emulator when the sound is on, and the frame rate to drive the emulator when it's muted. More on this later in the chapter about sound.
 
-## Emulating the CPU and F\#
+## Emulating the CPU, and F\#
 
 First of all, I'd like to apologise to the functional programming purists. While [my CHIP-8 emulator](https://github.com/nickkossolapov/fip-8) is completely pure (no `mutable` members and all arrays are copied for none of that side-effect nonsense), Fame Boy uses mutability liberally. The Game Boy runs *a lot* faster than the CHIP-8, and copying 16+ kB of memory a million times every second didn't seem like the smart thing to do.
 
@@ -84,7 +84,7 @@ type ArithmeticInstr =
 ```
 
 And it wasn't just the load instructions. A lot of the other instructions shared similar concepts, like location of the instruction's operand: 
-- read 8 bit right immediately after the instruction (`immediate`),
+- read the byte value immediately after the instruction in memory (`immediate`),
 - read/write a CPU register (`direct`), 
 - read/write a memory location specified by the HL CPU register (`indirect`). 
 
