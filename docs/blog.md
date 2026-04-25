@@ -8,7 +8,7 @@ Instead of jumping straight into it, I first did [From NAND to Tetris](https://w
 
 A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. 
 
-Check out the source code on [Github](https://github.com/nickkossolapov/fame-boy), or try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
+Check out the source code on [GitHub](https://github.com/nickkossolapov/fame-boy), or try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
 
 ![Fame Boy playing Pokémon Blue](./assets/pokemon.gif)
 
