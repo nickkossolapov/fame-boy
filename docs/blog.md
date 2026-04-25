@@ -19,7 +19,7 @@ I wanted to have the emulator work on both web and desktop, so I focused on havi
 The interface between the frontends and core is essentially just two arrays and two functions:
 - `framebuffer` - 144 \* 160 length array of shades (white, light, dark, black).
 - `audiobuffer` - a ring audio buffer at sample rate of 32768 Hz with read and write heads.
-- `stepEmulator()` - a function that goes executes one CPU instruction and returns the number of cycles taken.
+- `stepEmulator()` - a function that executes one CPU instruction and returns the number of cycles taken.
 - `getJoypadState(state)` - a callback for the frontend to give the emulator the joypad state, usually once a frame.
 
 ![Fame Boy architecture diagram](./assets/architecture.svg)
@@ -64,7 +64,7 @@ Lastly, for the emulator to be playable it needs to run at the correct number of
 
 First of all, I'd like to apologise to the functional programming purists. While [my CHIP-8 emulator](https://github.com/nickkossolapov/fip-8) is completely pure (no `mutable` members and all arrays are copied for none of that side-effect nonsense), Fame Boy uses mutability liberally. The Game Boy runs *a lot* faster than the CHIP-8, and copying 16+ kB of memory a million times every second didn't seem like the smart thing to do.
 
-So, why F# for Fame Boy? Firstly, I think its extensive typing system works really well for modelling CPU instructions. Secondly, and the most significant reason, I just really like F#. I used to work primarily in F# at my previous company, and so I'm always looking for an excuse to keep on using it.
+So, why F# for Fame Boy? Firstly, I think its extensive typing system works really well for modelling CPU instructions. Secondly, and more importantly, I just really like F#. I used to work primarily in F# at my previous company, and so I'm always looking for an excuse to keep on using it.
 
 ### Domain modelling
 
@@ -113,13 +113,13 @@ Using the F# type system to model the domain correctly, you get a guarantee that
 
 Now the eagle-eyed Game Boy emulator devs would say to me "hey Nick, but what about the opcode 0x76?", and I would reply "A monad is a monoid in the category of endofunctors" to show that I'm using a functional programming language and therefore smarter than them.
 
-Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8 bit value from the memory at location HL to the memory at location HL. Logically, it's a NOP and not dangerous, and the opcode reader will actually decode that opcode to `HALT` as it does in the Game Boy. But it's a notable blemish in what I think is otherwise a decent domain model.
+Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8 bit value from the memory at location HL to the memory at location HL, which the emulator's typing allows. Logically, it's a NOP and not dangerous, and the opcode reader will actually decode that opcode to `HALT` as it does in the Game Boy. But it's a notable blemish in what I think is otherwise a decent domain model.
 
 Now you can do something similar in most languages, but if you've worked with a functional language it's hard to properly describe how smooth it feels working with these types. After using a `match` statement or Options in F#, going back to a `switch` statement feels clunky and prone to mistakes. For anyone who hasn't worked with a functional programming language I'd recommend you go out and try one.
 
 ### Keep it simple, stupid
 
-Since this goal of this project was to learn about computer hardware rather than building the best emulator, I almost never looked at other emulators' code in depth. However, while lightly the source code for [CAMLBOY](https://github.com/linoscope/CAMLBOY), I spotted this line:
+Since this goal of this project was to learn about computer hardware rather than building the best emulator, I almost never looked at other emulators' code in depth. However, while casually browsing the source code for [CAMLBOY](https://github.com/linoscope/CAMLBOY), I spotted lines like this:
 
 ```ocaml
 set_flags ~h:false ~z:(!a = zero) ();
@@ -140,7 +140,7 @@ It never sat well with me, but I carried on anyway as I wanted to make progress.
 ```fsharp
 // Cpu/State.fs Flags module
 let inline setZ (v: bool) (f: uint8) =
-	// Game Boy flags are just a certain bits in the F CPU register
+	// Game Boy flags are just certain bits in the F CPU register
     if v then f ||| ZMask else f &&& ~~~ZMask
 
 // Other files
@@ -150,7 +150,7 @@ cpu.Flags <-
 	|> setZ (a = 0uy)
 ```
 
- The functions are the exactly what I wanted. Effortlessly composable and testable, just simple pure functions. *Chef's kiss*. The previous function required hoisting the values into DU types and putting them in an array, and the setFlags function was more verbose as a result. Furthermore, because the functions are inline and don't require any heap allocations, the new functions are actually much more performant, increasing the emulator's performance by about 10%. I think that simple 12 line Flag module is possibly my favourite F# I've ever written.
+ The functions are the exactly what I wanted. Effortlessly composable and testable, just simple pure functions. *Chef's kiss*. The previous function required hoisting the values into DU types and putting them in an array, and the setFlags function was more verbose as a result. Furthermore, because the functions are inline and don't require any heap allocations, the new functions are actually much more performant, increasing the emulator's performance by about 10%. I think that simple 16 line Flag module is possibly my favourite F# I've ever written.
 
 ### Testing
 
@@ -164,7 +164,7 @@ match opcode with
 
 And then every time it hit that exception I would implement the instruction for that opcode. I quickly hit two issues with this approach: the loop was getting a bit tedious navigating around technical references randomly instead of focusing on group of instructions at a time, and I had no idea if I was actually implementing the instructions correctly. Fixing both of these was simple: unit tests.
 
-This is where AI really came in handy. To improve my learning I wanted to write the emulator code myself, but coming up with test cases would be tedious, and I may have tunnel vision and miss some important test cases. So I had two prompts I used where I just copied the spec from the technical docs, and asked it for tests. While it was busy I read the spec myself, and then implemented the logic until the tests passed, true test-driven development. It even helped catch a few bugs in the existing instructions I had already implemented. 
+This is where AI really came in handy. To improve my learning I wanted to write the emulator code myself, but coming up with test cases would be tedious, and I may have tunnel vision and miss some important test cases. So I had two prompts I used where I just copied the spec from the technical docs, and asked it to write tests for those specs. While it was busy I read the spec myself, and then implemented the logic until the tests passed, true test-driven development. It even helped catch a few bugs in the existing instructions I had already implemented. 
 
 I did regularly review and improve the tests, but overall I feel it didn't detract from my learning at all, and helped me spend my energy on the things that were actually interesting to me.
 
@@ -180,38 +180,75 @@ At the start of implementing the PPU, I was a bit lost on where to get started. 
 
 ![Fame Boy debug view|400](./assets/debug_view.png)
 
-And for the PPU, starting with the tile and background view was a great point to start in hindsight. It helped me at pretty much every point in the process, from implementing the actual screen to debugging the annoying little details with the tile data. 
+And for the PPU, starting with the tile and background view was a great place to start in retrospect. It helped me at pretty much every point in the process, from implementing the actual screen to debugging the annoying little details with the sprite data. 
 
-Overall I was happy with how the PPU turned out, but it has possibly the biggest hardware inaccuracy my emulator. The Game Boy uses a FIFO queue to put pixels on the screen one at a time like a CRT monitor, but my emulator renders the entire scanline as the start of the draw period for that line. It's faster and kept the code simpler. So games where the engineers took the Game Boy hardware to its limits and exploited the pixel queue timings. But most games aren't that adventurous with the hardware, and and should mostly work with Fame Boy.
+Overall I was happy with how the PPU turned out, but it has possibly the biggest hardware inaccuracy in my emulator. The Game Boy uses a FIFO queue to put pixels on the screen one at a time like a CRT monitor, but my emulator renders the entire scanline at the start of the draw period for that line. It's faster and kept the code simpler. There are games where the engineers took the Game Boy hardware to its limits and exploited the pixel queue timings, and those don't fully work with Fame Boy. But most games aren't that adventurous with the hardware, and should mostly work.
 
 ### Sound is hard
 
-After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But while playing around with the web version, it felt a bit empty without the sound, and so I went ahead to try and add it (first mistake). I read a few blogs, and found that many emulators use the the audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that instead with the framerate driving the emulator (second mistake).
+After I had finished and had a working emulator, I fleshed out the repo's readme and was preparing to write this. But while playing around with the web version, it felt a bit empty without the sound, and so I went ahead to try and add it (first mistake). I read a few blogs, and found that many emulators use the audio sampling rate to drive the emulator, rather than the framerate. This sounded backwards to me, so I researched dynamic sampling rates and decided to use that instead with the framerate driving the emulator (second mistake).
+
+TODO
+- Windows had really weird issue with 800 buffer size not working (even though it worked when doing framerate driven clock).
+- matching sampling rates, and syncing sampling rate to CPU means I can batch APU steps. Game Boy. The game boy's audio worked means any sampling rate could be chosen.
+- Audio is definitely the leakiest part of the emulator-frontend interface, but that's because audio does need to be precisely synced for performance. I could increase the ring size buffer and allow reading and writing to be independent, but that would introduce a lot of lag
 
 ### Driving the emulator
 
-To explain the difference between the two, it's more about understanding human perception. Have you ever watched a video or listened to something and there's a pop in the audio? What happens is there is a pause in the audio, so the speaker output falls to zero. The next audio signal comes along, thinking that the previous signal was similar and not zero. This moves the speaker more than expected, causing a pop. Kind of like being shoved when you're standing still versus while you're already walking. 
+To explain the difference between the audio-driven and frame-driven, it's more about understanding human perception. Have you ever watched a video or listened to something and there's a pop in the audio? What happens is there is a pause or drop in the audio signal, so the speaker output falls to zero instead of something close to the next signal. The next audio signal comes along, moving the speaker more than expected and causing a pop. Kind of like being pushed when you're standing still versus while you're already walking. 
 
-Now if you're watching a YouTube video or playing a game, and suddenly it feels like it pauses for a split-second? Same thing, there wasn't enough data to maintain the FPS and a frame or two is skipped. Only now it's not pushing something physical, so it's less offensive to our senses. 
+Now if you're watching a YouTube video or playing a game, and suddenly it feels like it stutters for a split-second? Same thing, there wasn't enough data to maintain the FPS and a frame or two is skipped. Only now it's not pushing something physical, so it's less offensive to our senses. 
 
-Now back to driving the emulator. In an emulator, both audio and video are perfectly synched, because that's how we designed it. But the computer running it has independent audio and video, and either may occasionally fall behind. So when the frontend's audio and video are out of sync, it has two options to try and do:
+Now back to driving the emulator. In Fame Boy, both audio and video are perfectly synched, because that's how I designed it. But the computer running it has independent audio and video, and either may occasionally fall behind. So when the frontend's audio and video are out of sync, it has one of two options to try:
 
 1. Keep the frontend audio and emulator audio in sync, and occasionally drop frames
-2. Keep the frontend frames and emulator frames are in sync, and occasionally drop audio 
+2. Keep the frontend video and emulator frames in sync, and occasionally drop audio 
 
-So the one you choose "drives" the emulator, while still trying to keep the other one close.
+So the one you choose "drives" the emulator, while still trying to keep the other one close. Driving with the frame rate is fairly straightforward. Here is the simplified version:
 
-TODO 
-- Windows had really weird issue with 800 buffer size not working (even though it worked when doing framerate driven clock).
-- Audio is definitely the leakiest part of the emulator-frontend interface, but that's because audio does need to be precisely synced for performance. I could increase the ring size buffer and allow reading and writing to be independent, but that would introduce a lot of lag
+```fsharp
+while (runEmulator) do  
+	let mutable cycles = targetCyclesPerMs * lastFrameTime
+	  
+	while cycles > 0 do
+	    let cyclesTaken = stepEmulator () 
+	    cycles <- cycles - cyclesTaken
+	
+	draw ppu.framebuffer
+```
+
+Sound is a bit more tricky, as Raylib and Web Audio handle audio differently. The general flow is:
+
+```fsharp
+let tryQueueAudio apu stepEmulator =
+	if frontend.audioBuffer.hasSpace () then
+		while apu.writeHead - apu.readHead < samplesNeeded do
+			stepEmulator ()
+		
+		frontend.audioBuffer.fill apu.audioBuffer
+
+
+while (runEmulator) do  
+    tryQueueAudio apu stepEmulator
+    
+    draw ppu.framebuffer
+```
+
+The key difference is that stepEmulator is no longer controlled by `lastFrameTime`, it's driven by the frontend's audio buffer's needs. `samplesNeeded` needs to be calculated so that `stepEmulator` is called the right number of times to match the different sampling rates and to produce 60 FPS.
+
+However, the frontend's audio buffer only cares about filling itself, so it sometimes calls `stepEmulator` too many or too few times per frame, which results in the framebuffer not being updated in time.
+
+You can actually try out the frame-driven version of the web frontend by adding [?frame-driven](https://nickkossolapov.github.io/fame-boy/?frame-driven) as a query parameter in the URL. It should be visually smoother, but there will be the occasional audio pop. Also, even on the audio-driven web frontend it switches to being frame-driven when the mute button is pressed, as those pops won't be audible anyway.
+
+My implementation of this is far from perfect though. Ultimately, I found the audio pops to leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make that the default in the web frontend. It's one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
 
 ### Joypad
 
 The last emulator component I want to talk about is the joypad. The initial implementation was a breeze, it was straight forward and easy to write tests for.
 
-But after pretty much any major refactor it would always end up breaking. The joypad hardware register is one where both the CPU and game both read and write from it, so they interact with each other in ~~frustrating~~ interesting ways.
+But after pretty much any major refactor it would always end up breaking. The joypad hardware register is one where both the CPU and game both read to and write from it, so they interact with each other in ~~frustrating~~ interesting ways.
 
-An example: in the early stages of the emulator I made the CPU write the joypad state to the register every cycle. But that's inefficient, humans don't change buttons a million times every second, so I changed it to only update once a frame. Then the d-pad stopped working. Some reading later, and even though I knew that the Game Boy's hardware only allows half the buttons to be read at a time, I discovered that games almost always do at least two joypad register reads in short succession, relying on the register changing between the reads. Game do this so they can read state of all the button. But now the register is cached and doesn't change and half the buttons don't work. Oh joy.
+An example: in the early stages of the emulator I made the CPU write the joypad state to the register every cycle. But that's inefficient, humans don't change buttons a million times every second, so I changed it to only update once a frame. Then the d-pad stopped working. Some reading later, and even though I knew that the Game Boy's hardware only allows half the buttons to be read at a time, I discovered that games almost always do at least two joypad register reads in short succession, relying on the register changing between the reads. Games do this so they can read the state of all the buttons. But now the register is cached and doesn't change and half the buttons don't work. Oh joy.
 
 In the end I made the IoController update the joypad register only when it's read by the CPU, but I probably should have spent some time and come up with an integration test for it. More on [the joypad in Pandocs](https://gbdev.io/pandocs/Joypad_Input.html) for those interested.
 
@@ -221,30 +258,33 @@ TODO WebAssembly Register uint8 clamping, and simplicity
 
 ## Trying to improve performance
 
-TODO
+TODO 
+- Allocating to the heap is actually expensive. First bit of optimising I did, was only hitting around 55 FPS
+- Creating benchmarks and constant refinement.
+- Unleashing AI
 
 ## It's 2026, so a bit on AI
 
-No software is free from the influence of AI these days, even learning projects. In general I strive to be transparent about my AI usage, and so I wanted to comment on how I used it, and my experience with it in a purely learning project.
+No code is free from the influence of AI these days, even learning projects. In general I strive to be transparent about my AI usage, and so I wanted to comment on how I used it, and my experience with it in a purely learning project.
 
-Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the usage of AI-written code though. I wanted to make something that I can show to people with pride. Software for humans, by a human. If I wanted nothing more than an emulator I could just have uploaded the prompt. 
+Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the use of AI-written code though. I wanted to make something that I can show to people and be proud of. Code for humans, by a human. If I wanted nothing more than an emulator I could just have shared the prompt. 
 
-There was a case where AI actually saved this project when I had nearly given up though. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the timer winter.
+There was a case where AI actually saved this project when I had nearly given up though. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the "timer winter".
 
 ![The timer winter|350](./assets/timer_winter.png)
 
-It wasn't that I didn't work on my emulator, I was just stuck on a bug. I could never get passed the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator, I tried Claude Opus, and it found the issue in just a few minutes. The fix?
+It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could never get passed the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator I tried Claude Opus, and it found the issue in just a few minutes. The fix?
 
 ```fsharp
 // Before
-stepTimers timer memory
+stepTimers timer memory // only once per instruction
 
 // After
-for _ in 1..cpuCycles do // cpuCycles can vary between 1 and 12
+for _ in 1..cpuCycles do // cpuCycles can vary between 1 and 6
 	stepTimers timer memory
 ```
 
-This means the timer ran 2-6 times slower than it should, so the copyright just stays up longer. FFS. Apparently I never waited a minute or two to see that it actually would have worked.
+This meant the timer ran on average 2-3 times slower than it should have, so the copyright just stayed up longer. FFS. Apparently I never waited a minute or two to see that it actually would have worked.
 
 Now on to this post itself. 
 
@@ -258,4 +298,4 @@ Writing is not merely about data—it is about the symphony of connection—a vi
 
 TODO
 
-![Screenshot of browser version|300](./assets/screenshot.png)
+
