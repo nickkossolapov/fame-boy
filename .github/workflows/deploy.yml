@@ -38,11 +38,11 @@ jobs:
         run: dotnet fable --run npx vite build
 
       - name: Build blog
-        uses: pandoc/core@2.20
+        uses: docker://pandoc/core:3.8
         with:
           args: >-
             docs/blog.md
-            -o docs/index.html
+            --output=docs/index.html
             --standalone
             --lua-filter=docs/pandoc-filters.lua
             --syntax-highlighting=kate
