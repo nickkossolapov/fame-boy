@@ -273,7 +273,7 @@ However, the frontend's audio buffer only cares about filling itself, so it some
 
 You can actually try out the frame-driven version of the web frontend by adding [?frame-driven](https://nickkossolapov.github.io/fame-boy/?frame-driven) as a query parameter in the URL. It should be visually smoother, but there will be the occasional audio pop. Also, even the audio-driven web frontend switches to being frame-driven when the mute button is pressed, as those pops won't be audible anyway.
 
-My implementation of this is far from perfect, though. Ultimately, I found the audio pops to leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make audio-driven the default in the web frontend. Audio is one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
+My implementation of this is far from perfect, though. Ultimately, I found the audio pops leave a worse impression than frame stutters, and leaving the emulator muted made it feel empty, and so I decided to make audio-driven the default in the web frontend. Audio is one of the few areas of Fame Boy I'm not quite happy with, and would like to revisit someday.
 
 ## Taking it to the web with Fable
 
@@ -283,7 +283,9 @@ After I had gotten the PPU somewhat working and could see some things happening 
   <img alt="Tetris, allegedly" src="./images/tetris_allegedly.png" width="340">
 </div>
 
-Maybe this version of Tetris set in winter in Siberia. I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
+Maybe this version of Tetris is set in winter in Siberia. 
+
+I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
 
 But there was a problem, it was nigh unplayable, getting maybe 8 FPS. I'm still not sure what the issue is. I don't think it was Blazor itself, the .NET team did publish performance guides that I tried to follow, but they didn't help in the end. Debugging was also a pain, so I reluctantly went back to Fable to look into what could be going wrong with the transpilation into JavaScript. 
 
