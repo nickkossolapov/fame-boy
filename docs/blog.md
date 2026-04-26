@@ -392,7 +392,10 @@ There were two noteworthy cases with AI in my project. One was at the end where 
 The other was a case where AI actually saved this project when I had nearly given up. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the "timer winter".
 
 <div style="text-align: center;">
-  <img alt="The timer winter" src="./images/timer_winter.png" width="350">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./images/timer_winter_dark.png">
+    <img alt="The timer winter" src="./images/timer_winter.png" width="350">
+  </picture>
 </div>
 
 It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could never get past the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator I tried Claude Opus, and it found the issue in just a few minutes. The fix?
