@@ -125,9 +125,7 @@ Since the goal of this project was to learn about computer hardware rather than 
 set_flags ~h:false ~z:(!a = zero) ();
 ```
 
-(CAMLBOY is a great repo btw, with a pretty good blog post. You should check it out).
-
-I really liked that you could pass in however many flags you wanted, in any order.
+I really liked that you could pass in however many flags you wanted, in any order. And since they are just named parameters for the method, the performance overhead is minimal.
 
 But I couldn't create something exactly like it because F# avoids method overloading and default parameters due to its type system supporting partial application. Instead I settled on something like this:
 
@@ -135,13 +133,15 @@ But I couldn't create something exactly like it because F# avoids method overloa
 cpu.setFlags [ Half, false; Zero, a = 0uy ]
 ```
 
-It never sat well with me, but I carried on anyway as I wanted to make progress. As I got near the end, I spent a lot of time revisiting my old code and refactoring, and wanted to try and improve the setFlags function. So after a lot of mulling over and trying out other approaches, I ended up with this ([Cpu/State.fs L81](../src/FameBoy/Cpu/State.fs#L81)):
+It never sat well with me, it required an array and a flag type (e.g. `Half`). But I carried on anyway as I wanted to make progress. As I got near the end, I spent a lot of time revisiting my old code and refactoring, and wanted to try and improve the setFlags function. So after a lot of mulling over and trying out other approaches, I ended up with this ([Cpu/State.fs L81](../src/FameBoy/Cpu/State.fs#L81)):
 
 ```fsharp
-// Cpu/State.fs Flags module
-let inline setZ (v: bool) (f: uint8) =
-	// Game Boy flags are just certain bits in the F CPU register
-    if v then f ||| ZMask else f &&& ~~~ZMask
+module Flags =
+	let inline setZ (v: bool) (f: uint8) =
+		if v then f ||| ZMask else f &&& ~~~ZMask
+	 
+	let inline setH (v: bool) (f: uint8) =
+		// ... the other flag functions and definitions
 
 // Other files
 cpu.Flags <- 
@@ -152,7 +152,9 @@ cpu.Flags <-
 
  The functions are exactly what I wanted. Effortlessly composable and testable, just simple pure functions. *Chef's kiss*. 
  
- The previous function required hoisting the values into DU types and putting them in an array, and the setFlags function was more verbose as a result. Furthermore, because the functions are inline and don't require any heap allocations, the new functions are actually much more performant, increasing the emulator's performance by about 10%. I think that simple 16-line Flag module is possibly my favourite F# I've ever written.
+ The previous function required hoisting the values into DU types and putting them in an array, and the setFlags function was more verbose as a result. Furthermore, because the functions are inline and don't require any heap allocations, the new functions are actually much more performant, they increased the emulator's FPS by about 10%. 
+ 
+ I think that simple 16-line Flags module is possibly my favourite F# I've ever written.
 
 ### Testing
 
@@ -176,7 +178,7 @@ I did regularly review and improve the tests, but overall I feel it didn't detra
 
 The Game Boy doesn't have a GPU, it has a PPU, picture processing unit. Although in my mind it actually stands for pixel processing unit. I spent more time focused on the individual pixels than any sort of picture.
 
-This is the part that surprised me when it came to blogs from other people who made Game Boy emulators. Many blogs focused on the CPU, with only a few paragraphs for the PPU. Maybe it's because I was fresh off of From Nand to Tetris and the CHIP-8 emulator, the CPU felt natural, while the PPU took a lot longer to understand. But now that I've implemented it, I can see why. It's less about designing your own system, and more about just following the steps needed to get the pixels on the screen, mechanical work rather than creative.
+This is the part that surprised me when it came to blogs from other people who made Game Boy emulators. Many blogs focused on the CPU, with only a few paragraphs for the PPU. Maybe it's because I was fresh off of From Nand to Tetris and the CHIP-8 emulator, the CPU felt natural while the PPU took a lot longer to understand. But now that I've implemented it, I can see why. It's less about designing your own system, and more about just following the steps needed to get the pixels on the screen, mechanical work rather than creative.
 
 At the start of implementing the PPU, I was a bit lost on what to do. So rather than trying to grok the pixel FIFOs and full PPU pipeline all at once, I just decided to read the tile and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
 
@@ -393,7 +395,7 @@ It was mostly written by me.
 
 ## Did I actually learn anything?
 
-My main goal was to learn how computers work, and to that end it was a great success. And even more important than that, I really fun time making it. I would turn on my computer after work thinking "okay, just one feature tonight". And next thing I know it's 2 AM and I keep telling myself I should go to bed after one more bugfix.
+My main goal was to learn how computers work, and to that end it was a great success. And even more important than that, I had a really fun time. I would turn on my computer after work thinking "okay, just one feature tonight". And next thing I know it's 2 AM and I keep telling myself I should go to bed after one more bugfix.
 
 I was thinking about trying out the Game Boy Advance, but looking at the specs it feels like it's 3 times the effort for maybe a 20% increase in my understanding of hardware. I think the Game Boy struck a great balance to help me learn, and so I might stop here for now.
 
