@@ -368,7 +368,7 @@ The benchmarks all used the following demo ROMs, used to test realistic scenario
 - [Roboto](https://hh.gbdev.io/game/roboto-demo) -  a long-running (>1 min) demo that uses many visual effects and has sound.
 - [Merken](https://hh.gbdev.io/game/merken) - similar to Roboto, but uses a memory banked ROM to test the memory.
 
-Here is desktop FPS performance on both a Ryzen 9 7900 Windows PC and a M4 MacBook Air.
+Here is desktop FPS performance on both a Ryzen 9 7900 Windows PC and an M4 MacBook Air.
 
 | CPU          | Flag | Roboto | Merken |
 | ------------ | ---- | ------ | ------ |
@@ -407,7 +407,7 @@ It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could
 
 ```fsharp
 let stepEmulator () =
-	let cyclesTaken = stepCpu cpu io
+	let cyclesTaken = stepCpu cpu
 	  
 	// Before
 	stepTimers timer memory // only once per instruction
