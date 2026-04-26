@@ -117,7 +117,7 @@ By using the F# type system to model the domain correctly, you get a guarantee t
 
 Now the eagle-eyed Game Boy emulator devs would say to me "hey Nick, but what about the opcode 0x76?", and I would reply "A monad is a monoid in the category of endofunctors" to show that I'm using a functional programming language and therefore smarter than them.
 
-Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8-bit value from the memory at location HL to the memory at location HL, which my emulator's typing allows. Logically, it's a NOP and not dangerous, and the opcode reader will actually decode that opcode to `HALT` as it does in the Game Boy. But it's a notable blemish in what I think is otherwise a decent domain model.
+Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8-bit value from the memory at location HL to the memory at location HL. My emulator's typing allows it, but the instruction doesn't actually exist on the Game Boy. Logically, it's a NOP and not dangerous, and in practice it's unreachable since the opcode reader decodes `0x76` as `HALT`. But it's a notable blemish in what I think is otherwise a decent domain model.
 
 Now you can do something similar in most languages, but if you've worked with a functional language it's hard to properly describe how smooth it feels working with these types. After using a `match` statement or Options in F#, going back to a `switch` statement feels clunky and prone to mistakes. For anyone who hasn't worked with a functional programming language I'd recommend you go out and try one.
 
@@ -305,7 +305,7 @@ The CPU registers in Fame Boy (and the Game Boy too) are 8-bit unsigned integers
 
 > (non-standard) Bitwise operations for 16 bit and 8 bit integers use the underlying JavaScript 32 bit bitwise semantics. Results are not truncated as expected, and shift operands are not masked to fit the data type.
 
-That would explain the rampant B register. Hunting through the code to find all the places where 8-bit values needed to be truncated, I managed to [find all the offenders](https://github.com/nickkossolapov/fame-boy/commit/05ec0cfa55ce3f31f9006068ed6327d9db5fd81b), and voilà, the frontend worked perfectly. And since it's pure JS, the web bundle is only around 100 kB. 
+That would explain the rampant B register. Hunting through the code to find all the places where 8-bit values needed to be truncated, I managed to [find all the offenders](https://github.com/nickkossolapov/fame-boy/commit/05ec0cfa55ce3f31f9006068ed6327d9db5fd81b), and voilà, the frontend worked perfectly. And since it's only JS without the .NET runtime, the web bundle is only around 100 kB. 
 
 Outside of the weird uint8 issue (which most people shouldn't have), I had a fairly pleasant experience with Fable. It was rather smooth, and it meant that all of the source code stays in F#. 
 
@@ -350,7 +350,7 @@ type DmgMemory(arr: uint8 array) =
 
 I was still running high on my domain-driven development rush with the CPU, and tried to extend it to the memory. This meant that every single memory read or write created a `MemoryRegion` object, resulting in tens of millions of object allocations to the heap every second. That poor garbage collector was working overtime. I removed the DU and just accessed the arrays directly, and that [one change](https://github.com/nickkossolapov/fame-boy/commit/bdb8533be647711b9e07d3bc63441b7fad3b362a) doubled my FPS. 
 
-There were more times where I moved to structs (which live on the stack) or go with other not-as-F#-friendly approaches. The PPU was the point where optimization became necessary, and I had to abandon idiomatic F# to an extent.
+There were more times where I moved to structs (which live on the stack) or went with other not-as-F#-friendly approaches. The PPU was the point where optimization became necessary, and I had to abandon idiomatic F# to an extent.
 
 I slowly improved performance by spending time regularly looking at the profiler, eventually getting it up to about 120 FPS. But then I found the biggest improvement in FPS. The fix? Turning off the debug build, taking the emulator to a lightning-fast 1000 FPS. It took me embarrassingly long to realise that debug mode is that much worse than release mode. I continued to regularly monitor performance and tweak things even up until the end.
 
