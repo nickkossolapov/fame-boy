@@ -22,3 +22,5 @@ dist/
 BenchmarkDotNet.Artifacts/
 
 .obsidian/
+
+.DS_Store
