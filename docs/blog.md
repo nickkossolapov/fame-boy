@@ -6,9 +6,11 @@ I spent hundreds of hours as a kid catching Pokémon, so the Game Boy was the pe
 
 Instead of jumping straight into it, I first did [From NAND to Tetris](https://www.nand2tetris.org/). It was a great course, and it made me really understand the fundamentals of computers, like registers, memory, and the ALU. Then to get used to building an emulator, I built a CHIP-8 emulator in F#: [Fip-8](https://github.com/nickkossolapov/fip-8).
 
-A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and running on desktop and web.. 
+A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and running on desktop and web.
 
-**[Play it in the browser](https://nickkossolapov.github.io/fame-boy/)** | **[View on GitHub](https://github.com/nickkossolapov/fame-boy)**
+<div style="text-align: center;">
+  <strong><a href="https://nickkossolapov.github.io/fame-boy/" target="_blank" rel="noopener noreferrer">Play it in the browser</a></strong> | <strong><a href="https://github.com/nickkossolapov/fame-boy" target="_blank" rel="noopener noreferrer">View on GitHub</a></strong>
+</div>
 
 <div style="text-align: center;">
   <img alt="Fame Boy playing Pokémon Blue" src="./images/pokemon.gif">
@@ -19,6 +21,7 @@ A few months later, and after many nights of going to bed at 2 AM even though I 
 I wanted to have the emulator work on both desktop and web, so I focused on having a simple interface between the emulator core and whatever frontend is running it.
 
 The interface between the frontends and core is essentially just two arrays and two functions:
+
 - `framebuffer` - a 160x144 array of shades (white, light, dark, black).
 - `audiobuffer` - a ring audio buffer at sample rate of 32768 Hz with read and write heads.
 - `stepEmulator()` - a function that executes one CPU instruction and returns the number of cycles taken.
@@ -88,6 +91,7 @@ type ArithmeticInstr =
 ```
 
 And it wasn't just the load instructions. A lot of the other instructions shared similar concepts, like the location of the instruction's operand: 
+
 - read the byte value immediately after the instruction in memory (`immediate`),
 - read/write a CPU register (`direct`), 
 - read/write a memory location specified by the HL CPU register (`indirect`). 
@@ -117,7 +121,7 @@ By using the F# type system to model the domain correctly, you get a guarantee t
 
 Now the eagle-eyed Game Boy emulator devs would say to me "hey Nick, but what about the opcode 0x76?", and I would reply "A monad is a monoid in the category of endofunctors" to show that I'm using a functional programming language and therefore smarter than them.
 
-Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.HL, To.HL)`, or load the 8-bit value from the memory at location HL to the memory at location HL. My emulator's typing allows it, but the instruction doesn't actually exist on the Game Boy. Logically, it's a NOP and not dangerous, and in practice it's unreachable since the opcode reader decodes `0x76` as `HALT`. But it's a notable blemish in what I think is otherwise a decent domain model.
+Joking aside though, it's a compromise I decided on because I felt it simplified the CPU domain a lot. If you look at the patterns that the opcodes follow, `0x76` would be `Load(From.Indirect, To.Indirect)`, or load the 8-bit value from the memory at location HL to the memory at location HL. My emulator's typing allows it, but the instruction doesn't actually exist on the Game Boy. Logically, it's a NOP and not dangerous, and in practice it's unreachable since the opcode reader decodes `0x76` as `HALT`. But it's a notable blemish in what I think is otherwise a decent domain model.
 
 Now you can do something similar in most languages, but if you've worked with a functional language it's hard to properly describe how smooth it feels working with these types. After using a `match` statement or Options in F#, going back to a `switch` statement feels clunky and prone to mistakes. For anyone who hasn't worked with a functional programming language I'd recommend you go out and try one.
 
@@ -311,7 +315,7 @@ Outside of the weird uint8 issue (which most people shouldn't have), I had a fai
 
 ## Trying to improve performance
 
-Once I had gotten things showing on the screen, I was curious what performance was like. I added a simple FPS console log. At that point it was around 55-60 FPS in debug mode. Not great, not terrible. I think that was due to Raylib trying to maintain v-sync though, as turning it off the emulator jumped to around 70 FPS, but was jittery. I can always optimise later, and so I decided to power on with the PPU. 
+Once I had gotten things showing on the screen, I was curious what performance was like. I added a simple FPS console log. At that point it was around 55-60 FPS in debug mode. Not great, not terrible. I think that was due to Raylib trying to maintain v-sync though. When I turned v-sync off the emulator jumped to around 70 FPS, but was jittery. I can always optimise later, and so I decided to power on with the PPU. 
 
 As I added more features, performance slowly dropped, eventually reaching 45 FPS, and turning off v-sync didn't help. Later had arrived, so it was time to optimise. I fired up the profiler in JetBrains Rider, and saw this:
 
@@ -359,7 +363,8 @@ I slowly improved performance by spending time regularly looking at the profiler
 Just looking at FPS numbers in the console didn't seem like a great way to measure performance. So partway through the project I added a [BenchmarkDotNet project](../src/FameBoy.Benchmark/Program.fs) to measure desktop performance, and later made a simple [web benchmarker](../src/FameBoy.Benchmark.Web/Program.fs) using Node.js to perform similar benchmarks to estimate web browser performance.
 
 The benchmarks all used the following demo ROMs, used to test realistic scenarios:
-- [Flag](https://hh.gbdev.io/game/flag-demo) - a short loop with no sound
+
+- [Flag](https://hh.gbdev.io/game/flag-demo) - a short loop with no sound.
 - [Roboto](https://hh.gbdev.io/game/roboto-demo) -  a long-running (>1 min) demo that uses many visual effects and has sound.
 - [Merken](https://hh.gbdev.io/game/merken) - similar to Roboto, but uses a memory banked ROM to test the memory.
 
@@ -401,21 +406,23 @@ The other was a case where AI actually saved this project when I had nearly give
 It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could never get past the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator I tried Claude Opus, and it found the issue in just a few minutes. The fix?
 
 ```fsharp
-// Before
-stepTimers timer memory // only once per instruction
+let stepEmulator () =
+	let cyclesTaken = stepCpu cpu io
+	  
+	// Before
+	stepTimers timer memory // only once per instruction
+	
+	// The fix
+	for _ in 1..cyclesTaken do // cpuCycles can vary between 1 and 6
+		stepTimers timer memory
 
-// After
-for _ in 1..cpuCycles do // cpuCycles can vary between 1 and 6
-	stepTimers timer memory
 ```
 
-This meant the timer ran on average two to three times slower than it should have, so the copyright just stayed up longer. FFS. Apparently I never waited a minute or two to see that it actually would have worked.
+This meant the timer ticked only once per instruction, instead of the number of cycles taken. So it ran on average two to three times slower than it should have, and the copyright just stayed up longer. FFS. Apparently I never waited a minute or two to see that it actually would have worked.
 
 Now on to this post itself. 
 
-In the sprawling tapestry of our digital landscape—a world defined by rapid evolution—this post wasn't just written—it was meticulously curated. Every word stands as a testament—a nuanced beacon of intentionality—proving that human connection matters more than ever in today’s shifting paradigm.
-
-Writing is not merely about data—it is about the symphony of connection—a vibrant medium for shared vulnerability. It is about unlocking our potential—leaning into the journey—and showing up authentically to navigate the complex interplay of our collective human experience.
+In the sprawling tapestry of our digital landscape—a world defined by rapid evolution—this post wasn't just written—it was meticulously curated as a profound testament to synergistic intentionality. Every word stands as a nuanced beacon of intentionality—a vibrant medium for shared vulnerability—proving that human connection matters more than ever as we lean into the journey and show up authentically to navigate the complex interplay of our collective human experience.
 
 *cough*
 

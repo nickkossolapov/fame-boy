@@ -21,6 +21,7 @@ dist/
 
 BenchmarkDotNet.Artifacts/
 
+# Blog/OS related things
 .obsidian/
-
 .DS_Store
+docs/index.html

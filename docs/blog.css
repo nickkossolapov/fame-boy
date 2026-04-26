@@ -1,0 +1,331 @@
+/* Fame Boy blog — light & dark mode */
+
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f9fafb;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --link: #2563eb;
+  --link-hover: #1d4ed8;
+  --code-bg: #f3f4f6;
+  --code-border: #e5e7eb;
+  --border: #e5e7eb;
+  --anchor: #9ca3af;
+  --blockquote-border: #d1d5db;
+  --blockquote-text: #4b5563;
+  --table-border: #e5e7eb;
+  --table-header-bg: #f9fafb;
+  --table-stripe: #f9fafb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --bg-secondary: #161b22;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --link: #58a6ff;
+    --link-hover: #79c0ff;
+    --code-bg: #161b22;
+    --code-border: #30363d;
+    --border: #30363d;
+    --anchor: #484f58;
+    --blockquote-border: #30363d;
+    --blockquote-text: #8b949e;
+    --table-border: #30363d;
+    --table-header-bg: #161b22;
+    --table-stripe: #161b22;
+  }
+}
+
+/* ── Base ─────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  background: var(--bg);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  hyphens: none;
+  -webkit-hyphens: none;
+}
+
+/* ── Header / title ───────────────────────────────── */
+
+header {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 3px solid #8b2252;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Section headings with anchor links ───────────── */
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  position: relative;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.6rem;
+}
+h3 {
+  font-size: 1.3rem;
+}
+h4 {
+  font-size: 1.1rem;
+}
+
+a.header-anchor,
+a.header-anchor:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.header-anchor:hover {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a.header-anchor::after {
+  content: " #";
+  color: var(--anchor);
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+h2:hover a.header-anchor::after,
+h3:hover a.header-anchor::after,
+h4:hover a.header-anchor::after,
+h5:hover a.header-anchor::after,
+h6:hover a.header-anchor::after {
+  opacity: 1;
+}
+
+/* ── Links ────────────────────────────────────────── */
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:visited {
+  color: var(--link);
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* ── Code ─────────────────────────────────────────── */
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875em;
+  background: var(--code-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+pre code span {
+  font-weight: normal !important;
+  font-style: normal !important;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85em;
+}
+
+div.sourceCode {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+div.sourceCode pre {
+  border: none;
+  margin: 0;
+}
+
+/* ── Blockquotes ──────────────────────────────────── */
+
+blockquote {
+  border-left: 3px solid var(--blockquote-border);
+  color: var(--blockquote-text);
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+/* ── Images ───────────────────────────────────────── */
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* ── Tables ───────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  width: fit-content;
+  margin: 1.5rem auto;
+  font-size: 0.95rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--table-border);
+  text-align: left;
+}
+
+th {
+  background: var(--table-header-bg);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: var(--table-stripe);
+}
+
+/* ── Lists ────────────────────────────────────────── */
+
+ul,
+ol {
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
+
+/* ── Misc ─────────────────────────────────────────── */
+
+p {
+  margin: 1rem 0;
+}
+
+strong {
+  font-weight: 600;
+}
+
+em {
+  font-style: italic;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* ── Dark-mode syntax highlighting overrides ──────── */
+/* Overrides pandoc's --highlight-style for dark mode  */
+
+@media (prefers-color-scheme: dark) {
+  pre > code.sourceCode {
+    color: #e6edf3;
+  }
+  pre > code.sourceCode > span {
+    color: #e6edf3;
+  }
+
+  code span.kw { color: #ff7b72; } /* keywords      */
+  code span.cf { color: #ff7b72; } /* control flow   */
+  code span.op { color: #ff7b72; } /* operators      */
+  code span.dt { color: #79c0ff; } /* data types     */
+  code span.bu { color: #79c0ff; } /* built-in       */
+  code span.cn { color: #79c0ff; } /* constants      */
+  code span.dv,
+  code span.bn,
+  code span.fl { color: #79c0ff; } /* numbers        */
+  code span.st { color: #a5d6ff; } /* strings        */
+  code span.ch { color: #a5d6ff; } /* char           */
+  code span.ss { color: #a5d6ff; } /* special string */
+  code span.co { color: #8b949e; } /* comments       */
+  code span.fu { color: #d2a8ff; } /* functions      */
+  code span.va { color: #ffa657; } /* variables      */
+  code span.pp { color: #79c0ff; } /* preprocessor   */
+  code span.al { color: #f85149; } /* alert          */
+  code span.ot { color: #79c0ff; } /* other          */
+
+  div.sourceCode {
+    background: var(--code-bg);
+    border-color: var(--code-border);
+  }
+}
+
+/* ── Light-mode syntax highlighting overrides ─────── */
+
+@media (prefers-color-scheme: light) {
+  code span.kw { color: #cf222e; } /* keywords      */
+  code span.cf { color: #cf222e; } /* control flow   */
+  code span.op { color: #cf222e; } /* operators      */
+  code span.dt { color: #0550ae; } /* data types     */
+  code span.bu { color: #0550ae; } /* built-in       */
+  code span.cn { color: #0550ae; } /* constants      */
+  code span.dv,
+  code span.bn,
+  code span.fl { color: #0550ae; } /* numbers        */
+  code span.st { color: #0a3069; } /* strings        */
+  code span.ch { color: #0a3069; } /* char           */
+  code span.ss { color: #0a3069; } /* special string */
+  code span.co { color: #6e7781; } /* comments       */
+  code span.fu { color: #8250df; } /* functions      */
+  code span.va { color: #953800; } /* variables      */
+  code span.pp { color: #0550ae; } /* preprocessor   */
+  code span.al { color: #cf222e; } /* alert          */
+  code span.ot { color: #0550ae; } /* other          */
+}

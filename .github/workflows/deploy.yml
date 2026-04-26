@@ -33,9 +33,25 @@ jobs:
         working-directory: src/FameBoy.Web
         run: npm ci
 
-      - name: Build
+      - name: Build web app
         working-directory: src/FameBoy.Web
         run: dotnet fable --run npx vite build
+
+      - name: Build blog
+        uses: pandoc/core@2.20
+        with:
+          args: >-
+            docs/blog.md
+            -o docs/index.html
+            --standalone
+            --lua-filter=docs/pandoc-filters.lua
+            --syntax-highlighting=kate
+
+      - name: Assemble Pages output
+        run: |
+          mkdir -p src/FameBoy.Web/dist/building-a-game-boy-emulator-in-fsharp/images
+          cp docs/index.html src/FameBoy.Web/dist/building-a-game-boy-emulator-in-fsharp/index.html
+          cp docs/images/* src/FameBoy.Web/dist/building-a-game-boy-emulator-in-fsharp/images/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
