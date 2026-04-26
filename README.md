@@ -15,15 +15,13 @@ A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https:
 
 ### About
 
-This started as a way for me to learn more about computer hardware. The original Game Boy felt like the perfect target: well-defined in
+I wrote about the architecture and my general experience in a blog post: [I built a Game Boy emulator in F#](https://nickkossolapov.github.io/fame-boy/building-a-game-boy-emulator-in-fsharp/)
+
+This project was a way for me to learn more about computer hardware. The original Game Boy felt like the perfect target: well-defined in
 scope while still complex enough to learn about a real system, and chock-full of nostalgia.
 
 Along the way, I mostly optimised for readability, idiomatic F#, and having fun in the process, rather than chasing perfect hardware
 accuracy or maximum performance.
-
-I did use AI for a lot of the test cases, some code review, occasionally helping me understand bits of the hardware (looking at you, APU), 
-and a particularly unhinged performance optimization session at the end. But most of the code was still (unfortunately?) meticulously 
-crafted by me.
 
 ### Limitations
 
@@ -83,7 +81,9 @@ dotnet test
 
 ### Benchmarks
 
-#### Native
+More details on the benchmarks and results in my [blog post](https://nickkossolapov.github.io/fame-boy/building-a-game-boy-emulator-in-fsharp/#benchmarks).
+
+#### Desktop
 
 The benchmark includes a few ROMs to run the emulator with in headless mode with [BenchmarkDotNet](https://benchmarkdotnet.org/).
 
@@ -100,7 +100,7 @@ dotnet run -c release
 
 #### Web
 
-There is also a basic Node.js benchmarking project using the same test ROMs and structure as the native benchmarking ﻿to better estimate
+There is also a basic Node.js benchmarking project using the same test ROMs and structure as the native benchmarking to better estimate
 browser performance.
 
 ``` sh

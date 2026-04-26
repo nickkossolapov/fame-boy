@@ -6,7 +6,7 @@ I spent hundreds of hours as a kid catching Pokémon, so the Game Boy was the pe
 
 Instead of jumping straight into it, I first did [From NAND to Tetris](https://www.nand2tetris.org/). It was a great course, and it made me really understand the fundamentals of computers, like registers, memory, and the ALU. Then to get used to building an emulator, I built a CHIP-8 emulator in F#: [Fip-8](https://github.com/nickkossolapov/fip-8).
 
-A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and running on desktop and web.
+A few months later, and after many nights of going to bed at 2 AM even though I told myself I'd only work on it for an hour or two, I have a working Game Boy emulator: Fame Boy. Complete with sound and runs on desktop and web.
 
 <div style="text-align: center;">
   <strong><a href="https://nickkossolapov.github.io/fame-boy/" target="_blank" rel="noopener noreferrer">Play it in the browser</a></strong> | <strong><a href="https://github.com/nickkossolapov/fame-boy" target="_blank" rel="noopener noreferrer">View on GitHub</a></strong>
