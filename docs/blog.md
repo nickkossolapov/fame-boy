@@ -10,7 +10,9 @@ A few months later, and after many nights of going to bed at 2 AM even though I 
 
 **[Play it in the browser](https://nickkossolapov.github.io/fame-boy/)** | **[View on GitHub](https://github.com/nickkossolapov/fame-boy)**
 
-![Fame Boy playing Pokémon Blue](./images/pokemon.gif)
+<div style="text-align: center;">
+  <img alt="Fame Boy playing Pokémon Blue" src="./images/pokemon.gif">
+</div>
 
 ## How it works
 
@@ -22,7 +24,9 @@ The interface between the frontends and core is essentially just two arrays and 
 - `stepEmulator()` - a function that executes one CPU instruction and returns the number of cycles taken.
 - `getJoypadState(state)` - a callback for the frontend to give the emulator the joypad state, usually once a frame.
 
-![Fame Boy architecture diagram](./images/architecture.svg)
+<div style="text-align: center;">
+  <img alt="Fame Boy architecture diagram" src="./images/architecture.svg">
+</div>
 
 I tried to model Fame Boy in a similar way to the actual hardware of the Game Boy.
 
@@ -182,7 +186,9 @@ This is the part that surprised me when it came to blogs from other people who m
 
 At the start of implementing the PPU, I was a bit lost on what to do. So rather than trying to grok the pixel FIFOs and full PPU pipeline all at once, I just decided to read the tile and background map from memory, parse the data, and just put it on the screen (the right part of the screenshot below). I could finally see my CPU working, and thanks to Tetris' simplicity, I could see something that was *mostly* a real Game Boy game. It felt great seeing it for the first time.
 
-![Fame Boy debug view|400](./images/debug_view.png)
+<div style="text-align: center;">
+  <img alt="Fame Boy debug view" src="./images/debug_view.png" width="400">
+</div>
 
 And for the PPU, starting with the tile and background view was a great place to start in retrospect. It helped me at pretty much every point in the process, from implementing the actual screen to debugging the annoying little details with the sprite data. 
 
@@ -269,7 +275,9 @@ My implementation of this is far from perfect, though. Ultimately, I found the a
 
 After I had gotten the PPU somewhat working and could see some things happening on the screen on the desktop, I was excited to try to move Fame Boy to the web. I hopped onto the [Fable](https://fable.io/) docs, installed a package, set up the main loop, added some styling, and within an hour or two I was ready to try and run it. I hit enter, and then:
 
-![Tetris, allegedly|340](./images/tetris_allegedly.png)
+<div style="text-align: center;">
+  <img alt="Tetris, allegedly" src="./images/tetris_allegedly.png" width="340">
+</div>
 
 Maybe this version of Tetris set in winter in Siberia. I tried debugging the issue for a bit, but instead of spending too much time on it I just moved on to trying WebAssembly with [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor). It was also similarly easy to get up and running, and this time it actually worked. 
 
@@ -277,13 +285,23 @@ But there was a problem, it was nigh unplayable, getting maybe 8 FPS. I'm still 
 
 To my surprise, Fable puts the transpiled JS files right next to the source code, and it's actually quite readable.
 
-![Fame Boy's transpiled code](./images/transpiled_fs.png)
+<div style="text-align: center;">
+  <picture>
+    <source srcset="./images/transpiled_fs_dark.png" media="(prefers-color-scheme: dark)">
+    <img alt="Fame Boy's transpiled code" src="./images/transpiled_fs.png">
+  </picture>
+</div>
 
 This made understanding the new code, and also debugging in the browser dev tools, quite straightforward. And when looking at the dev tools I noticed something was a bit wrong.
 
-![The CPU state in the browser's dev tools|350](./images/web_cpu.png)
+<div style="text-align: center;">
+  <picture>
+    <source srcset="./images/web_cpu_dark.png" media="(prefers-color-scheme: dark)">
+    <img alt="The CPU state in the browser's dev tools" src="./images/web_cpu.png" width="350">
+  </picture>
+</div>
 
-The CPU registers in Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -12787958 is an 8-bit number. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
+The CPU registers in Fame Boy (and the Game Boy too) are 8-bit unsigned integers, so in the range 0-255. I'm not an expert, but I don't think -15565461 is an 8-bit number. I went through the transpiled code and the Fable docs and found [this](https://fable.io/docs/javascript/compatibility.html#numeric-types):
 
 > (non-standard) Bitwise operations for 16 bit and 8 bit integers use the underlying JavaScript 32 bit bitwise semantics. Results are not truncated as expected, and shift operands are not masked to fit the data type.
 
@@ -297,7 +315,12 @@ Once I had gotten things showing on the screen, I was curious what performance w
 
 As I added more features, performance slowly dropped, eventually reaching 45 FPS, and turning off v-sync didn't help. Later had arrived, so it was time to optimise. I fired up the profiler in JetBrains Rider, and saw this:
 
-![Spot the big number in the profiler](./images/profiling.png)
+<div style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./images/profiling_dark.png">
+    <img alt="Spot the big number in the profiler" src="./images/profiling.png" width="500">
+  </picture>
+</div>
 
 `mapAddress` looked very suspect. Virtually every component accesses the memory, but why is it so much higher than the rest? I drilled down into the other function calls (like `stepPpu`), and found everything was spending more time than I expected on accessing memory. So I went to the offending code:
 
@@ -368,7 +391,9 @@ There were two noteworthy cases with AI in my project. One was at the end where 
 
 The other was a case where AI actually saved this project when I had nearly given up. If you look through the git history in my repo, you'll find a rather large gap at one point. I call it the "timer winter".
 
-![The timer winter|350](./images/timer_winter.png)
+<div style="text-align: center;">
+  <img alt="The timer winter" src="./images/timer_winter.png" width="350">
+</div>
 
 It wasn't that I didn't work on the emulator, I was just stuck on a bug. I could never get past the copyright screen in Tetris, no matter what I tried. I probably spent over 20 hours debugging, scanning the emu-dev Discord, creating tests, and even throwing the issue at earlier AI models. Nothing worked. But then after a few weeks away from the emulator I tried Claude Opus, and it found the issue in just a few minutes. The fix?
 
