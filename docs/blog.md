@@ -354,7 +354,7 @@ type DmgMemory(arr: uint8 array) =
 	    // ... others 
 ```
 
-I was still running high on my domain-driven development rush with the CPU, and tried to extend it to the memory. This meant that every single memory read or write created a `MemoryRegion` object, resulting in tens of millions of object allocations to the heap every second. That poor garbage collector was working overtime. I removed the DU and just accessed the arrays directly, and that [one change](https://github.com/nickkossolapov/fame-boy/commit/bdb8533be647711b9e07d3bc63441b7fad3b362a) doubled my FPS. 
+I was still running high on my domain-driven development rush with the CPU, and tried to extend it to the memory. This meant that every single memory read or write created a `MemoryRegion` object that had to be mapped, which had two effects: allocating millions of objects to the heap every second, and additional branching for the JIT compiler to try and deal with. I removed the DU and map function and just accessed the arrays directly, and that [one change](https://github.com/nickkossolapov/fame-boy/commit/bdb8533be647711b9e07d3bc63441b7fad3b362a) doubled my FPS. Later benchmarking showed the bulk of the improvements seems to have been JIT optimisations around branching and localised call sites, as making `MemoryRegion` a struct only improved performance by about 15%, with the other 85% coming from the removal of the DU and map function.
 
 There were more times where I moved to structs (which live on the stack) or went with other not-as-F#-friendly approaches. The PPU was the point where optimization became necessary, and I had to abandon idiomatic F# to an extent.
 
