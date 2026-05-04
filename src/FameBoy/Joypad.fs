@@ -2,6 +2,7 @@ module FameBoy.Joypad
 
 open FameBoy.Interrupts
 
+[<Struct>]
 type JoypadState =
     { Up: bool
       Down: bool
@@ -14,7 +15,7 @@ type JoypadState =
 
 let inline private toBitFlag isPressed bit = if isPressed then 0uy else bit
 
-let toJoypadRegisterValue (state: JoypadState) (current: uint8) =
+let inline toJoypadRegisterValue (state: JoypadState) (current: uint8) =
     // Game Boy is active low for joypad inputs
     let selectButtons = (current &&& 0b100000uy) = 0uy
     let selectDPad = (current &&& 0b10000uy) = 0uy

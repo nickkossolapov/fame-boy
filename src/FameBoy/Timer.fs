@@ -7,8 +7,8 @@ open FameBoy.IoController
 [<Literal>]
 let private dividerFrequency = cpuFrequency / 16384
 
-let private getTimerFrequency =
-    function
+let inline private getTimerFrequency x =
+    match x with
     | 0b00uy -> 256
     | 0b01uy -> 4
     | 0b10uy -> 16
