@@ -38,6 +38,7 @@ jobs:
         run: dotnet fable --run npx vite build
 
       - name: Build blog
+        if: github.repository == 'nickkossolapov/fame-boy'
         uses: docker://pandoc/core:3.8
         with:
           args: >-
@@ -48,6 +49,7 @@ jobs:
             --syntax-highlighting=kate
 
       - name: Assemble Pages output
+        if: github.repository == 'nickkossolapov/fame-boy'
         run: |
           mkdir -p src/FameBoy.Web/dist/building-a-game-boy-emulator-in-fsharp/images
           cp docs/index.html src/FameBoy.Web/dist/building-a-game-boy-emulator-in-fsharp/index.html
