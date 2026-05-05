@@ -6,6 +6,10 @@ open FameBoy.Hardware
 
 let mutable scale = 4
 
+let mutable fullscreen = false
+
+let mutable linkMode = false
+
 let enableDebugView = Debugger.IsAttached
 
 let width =

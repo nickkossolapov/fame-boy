@@ -27,6 +27,7 @@
         <Compile Include="Cpu\Execute.fs" />
         <Compile Include="Ppu.fs" />
         <Compile Include="Apu.fs" />
+        <Compile Include="CgbBootPalettes.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Serial.fs" />
         <Compile Include="Timer.fs" />

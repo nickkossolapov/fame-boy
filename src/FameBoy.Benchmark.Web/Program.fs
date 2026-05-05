@@ -41,7 +41,7 @@ let runBenchmark name filename cycles iterations =
     let mutable totalMs = 0.0
 
     for _ in 1..iterations do
-        let _, _, stepEmulator, _ = createEmulator bytes 4096 (fun () -> joypadState)
+        let _, _, _, _, stepEmulator, _ = createEmulator bytes 4096 (fun () -> joypadState)
         let mutable remaining = cycles
 
         let startTime = performanceNow ()
@@ -70,7 +70,7 @@ let main _ =
 
     printfn "Warmup..."
     let warmupBytes = readRom $"{resourceDir}flag.gb"
-    let _, _, warmupStep, _ = createEmulator warmupBytes 4096 (fun () -> joypadState)
+    let _, _, _, _, warmupStep, _ = createEmulator warmupBytes 4096 (fun () -> joypadState)
     let mutable w = cpuFrequency
 
     while w > 0 do

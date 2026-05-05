@@ -47,7 +47,14 @@ let execute (cpu: Cpu) (io: IoController) (instr: DecodedInstruction) =
         | Halt ->
             cpu.Halted <- true
             false
-        | Stop -> false // NOP - Not used in any games
+        | Stop ->
+            // In CGB mode, STOP with KEY1 bit 0 set triggers a speed switch
+            if io.CgbMode && (io.Registers[Io.Key1] &&& 0x01uy <> 0uy) then
+                io.DoubleSpeed <- not io.DoubleSpeed
+                io.Registers[Io.Key1] <- io.Registers[Io.Key1] &&& 0xFEuy // Clear prepare bit
+            else
+                cpu.Halted <- true // Halt until button press (like HALT but deeper)
+            false
         | Di ->
             cpu.Ime <- false
             cpu.EnableImeNextInstr <- false

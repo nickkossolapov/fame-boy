@@ -325,9 +325,12 @@ body {
     border-radius: 15px 15px 60px 15px;
     padding: 25px 55px;
     margin-top: 30px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
 }
 
-#screen {
+#screen, #screen2 {
     image-rendering: pixelated;
     height: 180px;
     aspect-ratio: 10/9;

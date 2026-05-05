@@ -23,9 +23,30 @@ type Shade =
 module Shade =
     let ofByte (i: uint8) : Shade = LanguagePrimitives.EnumOfValue(int i)
 
+/// RGB color for GBC mode
+[<Struct>]
+type Color = { R: uint8; G: uint8; B: uint8 }
+
+module Color =
+    let white = { R = 255uy; G = 255uy; B = 255uy }
+
+    /// Convert GBC 15-bit RGB555 to 8-bit RGB
+    let fromRgb555 (low: uint8) (high: uint8) =
+        let rgb = int low ||| (int high <<< 8)
+        let r5 = rgb &&& 0x1F
+        let g5 = (rgb >>> 5) &&& 0x1F
+        let b5 = (rgb >>> 10) &&& 0x1F
+        // Approximate color correction for GBC LCD
+        { R = uint8 ((r5 * 255 + 15) / 31)
+          G = uint8 ((g5 * 255 + 15) / 31)
+          B = uint8 ((b5 * 255 + 15) / 31) }
+
 type Ppu =
     { Framebuffer: Shade array
       Backbuffer: Shade array
+      // GBC color framebuffers
+      ColorFramebuffer: Color array
+      ColorBackbuffer: Color array
       OamRam: uint8 array
       VideoRam: uint8 array
       IoController: IoController
@@ -47,13 +68,18 @@ module private Oam =
         { Priority: bool
           XFlip: bool
           YFlip: bool
-          UseObp1: bool }
+          UseObp1: bool
+          // GBC-only attributes
+          VramBank: int
+          CgbPalette: int }
 
-        static member ofByte b =
+        static member ofByte b cgbMode =
             { Priority = b &&& 0b1000_0000uy <> 0uy
               YFlip = b &&& 0b0100_0000uy <> 0uy
               XFlip = b &&& 0b0010_0000uy <> 0uy
-              UseObp1 = b &&& OBP1 <> 0uy }
+              UseObp1 = b &&& OBP1 <> 0uy
+              VramBank = if cgbMode then int ((b >>> 3) &&& 1uy) else 0
+              CgbPalette = if cgbMode then int (b &&& 0b0000_0111uy) else 0 }
 
 open Oam
 
@@ -75,6 +101,8 @@ let private bufferWidth = (Screen.width * Screen.height)
 let createPpu (memory: Memory) (io: IoController) =
     { Framebuffer = Array.create bufferWidth Shade.White
       Backbuffer = Array.create bufferWidth Shade.White
+      ColorFramebuffer = Array.create bufferWidth Color.white
+      ColorBackbuffer = Array.create bufferWidth Color.white
       OamRam = memory.OamRam
       VideoRam = memory.VideoRam
       IoController = io
@@ -109,13 +137,25 @@ module private Palettes =
     let fetchPaletteMaps (io: IoController) =
         parsePaletteData io.Registers[Io.Bgp], parsePaletteData io.Registers[Io.Obp0], parsePaletteData io.Registers[Io.Obp1]
 
+    /// Get a color from CGB palette RAM at a given palette index and color index
+    let getCgbBgColor (io: IoController) paletteNum colorIndex =
+        let offset = paletteNum * 8 + colorIndex * 2
+        Color.fromRgb555 io.BgPaletteRam[offset] io.BgPaletteRam[offset + 1]
+
+    let getCgbObjColor (io: IoController) paletteNum colorIndex =
+        let offset = paletteNum * 8 + colorIndex * 2
+        Color.fromRgb555 io.ObjPaletteRam[offset] io.ObjPaletteRam[offset + 1]
+
 open Palettes
 
 module private Scanline =
     type ObjPixel =
         { Shade: Shade
           UseObp1: bool
-          BgPriority: bool }
+          BgPriority: bool
+          // GBC fields
+          ColorIndex: int
+          CgbPalette: int }
 
     let fetchPixel vramOffset offset (vram: uint8 array) =
         let left = vram[vramOffset]
@@ -125,6 +165,31 @@ module private Scanline =
         let rightBit = (right >>> offset &&& 1uy) <<< 1
 
         leftBit ||| rightBit |> Shade.ofByte
+
+    let fetchPixelRaw vramOffset offset (vram: uint8 array) =
+        let left = vram[vramOffset]
+        let right = vram[vramOffset + 1]
+
+        let leftBit = int (left >>> offset &&& 1uy)
+        let rightBit = int ((right >>> offset &&& 1uy) <<< 1)
+
+        leftBit ||| rightBit
+
+    /// GBC BG map attributes (stored in VRAM bank 1)
+    [<Struct>]
+    type BgMapAttributes =
+        { BgPalette: int
+          VramBank: int
+          XFlip: bool
+          YFlip: bool
+          BgPriority: bool }
+
+    let parseBgMapAttributes (b: uint8) =
+        { BgPalette = int (b &&& 0b0000_0111uy)
+          VramBank = int ((b >>> 3) &&& 1uy)
+          XFlip = b &&& 0b0010_0000uy <> 0uy
+          YFlip = b &&& 0b0100_0000uy <> 0uy
+          BgPriority = b &&& 0b1000_0000uy <> 0uy }
 
     let getTileVramOffset tileX tileY areaBit (vram: uint8 array) (io: IoController) =
         let mapStart = if areaBit then 0x1C00 else 0x1800 // VRAM local addresses, actual: 0x9C00 and 0x9800
@@ -151,6 +216,37 @@ module private Scanline =
 
         fetchPixel pixelOffset bitX vram
 
+    /// GBC version: returns (colorIndex, bgAttributes)
+    let decodeTileMapPixelCgb mapX mapY areaBit (vram: uint8 array) (io: IoController) =
+        let tileX = mapX / 8
+        let tileY = mapY / 8
+
+        let mapStart = if areaBit then 0x1C00 else 0x1800
+        let mapIndex = mapStart + (tileY * 32) + tileX
+
+        // Get tile number from VRAM bank 0
+        let tileNum = vram[mapIndex]
+
+        // Get attributes from VRAM bank 1
+        let attrs = parseBgMapAttributes vram[0x2000 + mapIndex]
+
+        let getVramOffset byte =
+            if Lcdc.isEnabled Lcdc.TileDataArea io then
+                0x10 * int byte
+            else
+                0x800 + ((int byte + 0x80) &&& 0xFF) * 0x10
+
+        let tileOffset = getVramOffset tileNum
+
+        let bitX = if attrs.XFlip then mapX % 8 else 7 - mapX % 8
+        let bitY = if attrs.YFlip then 7 - mapY % 8 else mapY % 8
+
+        let vramBankOffset = attrs.VramBank * 0x2000
+        let pixelOffset = vramBankOffset + tileOffset + bitY * 2
+
+        let colorIndex = fetchPixelRaw pixelOffset bitX vram
+        (colorIndex, attrs)
+
     let fetchTileMapPixel screenX screenY windowOnLine (ppu: Ppu) =
         if windowOnLine && screenX >= int ppu.IoController.Registers[Io.Wx] - 7 then
             let wX = screenX - (int ppu.IoController.Registers[Io.Wx] - 7)
@@ -164,11 +260,24 @@ module private Scanline =
 
             decodeTileMapPixel bgX bgY areaBit ppu.VideoRam ppu.IoController
 
-    let decodeObjectPixel screenX screenY isDoubleHeight oamAddr (oam: uint8 array) (vram: uint8 array) =
+    let fetchTileMapPixelCgb screenX screenY windowOnLine (ppu: Ppu) =
+        if windowOnLine && screenX >= int ppu.IoController.Registers[Io.Wx] - 7 then
+            let wX = screenX - (int ppu.IoController.Registers[Io.Wx] - 7)
+            let areaBit = Lcdc.isEnabled Lcdc.WindowMapArea ppu.IoController
+
+            decodeTileMapPixelCgb wX ppu.WindowLine areaBit ppu.VideoRam ppu.IoController
+        else
+            let bgX = (screenX + int ppu.IoController.Registers[Io.Scx]) % 256
+            let bgY = (screenY + int ppu.IoController.Registers[Io.Scy]) % 256
+            let areaBit = Lcdc.isEnabled Lcdc.BgMapArea ppu.IoController
+
+            decodeTileMapPixelCgb bgX bgY areaBit ppu.VideoRam ppu.IoController
+
+    let decodeObjectPixel screenX screenY isDoubleHeight oamAddr (oam: uint8 array) (vram: uint8 array) cgbMode =
         let objX = int oam[oamAddr + 1]
         let objY = int oam[oamAddr]
         let tileNum = int oam[oamAddr + 2]
-        let attributes = OamAttributes.ofByte oam[oamAddr + 3]
+        let attributes = OamAttributes.ofByte oam[oamAddr + 3] cgbMode
 
         let spriteHeight = if isDoubleHeight then 16 else 8
         let spriteY = screenY - (objY - 16)
@@ -195,23 +304,28 @@ module private Scanline =
         let bitX = if attributes.XFlip then localX else 7 - localX
         let bitY = localY
 
-        let pixelOffset = tileOffset + bitY * 2
+        let vramBankOffset = attributes.VramBank * 0x2000
+        let pixelOffset = vramBankOffset + tileOffset + bitY * 2
 
-        { Shade = fetchPixel pixelOffset bitX vram
+        let colorIndex = fetchPixelRaw pixelOffset bitX vram
+
+        { Shade = Shade.ofByte (uint8 colorIndex)
           UseObp1 = attributes.UseObp1
-          BgPriority = attributes.Priority }
+          BgPriority = attributes.Priority
+          ColorIndex = colorIndex
+          CgbPalette = attributes.CgbPalette }
 
-    let fetchObjectPixel x y isDoubleHeight (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) =
-        let mutable found = ValueNone // mutable makes me sad, but this is a hot path, and it's needed for an early return
+    let fetchObjectPixel x y isDoubleHeight (filteredOam: int array) (oam: uint8 array) (vram: uint8 array) cgbMode =
+        let mutable found = ValueNone
         let mutable i = 0
 
         while i < filteredOam.Length && found.IsNone do
             let objX = int oam[filteredOam[i] + 1]
 
             if x >= objX - 8 && x < objX then
-                let pixel = decodeObjectPixel x y isDoubleHeight filteredOam[i] oam vram
+                let pixel = decodeObjectPixel x y isDoubleHeight filteredOam[i] oam vram cgbMode
 
-                if pixel.Shade <> Shade.White then
+                if pixel.ColorIndex <> 0 then
                     found <- ValueSome pixel
 
             i <- i + 1
@@ -253,7 +367,7 @@ module private Scanline =
 
         let fetchPrioritisedPixels screenX =
             let objPixel =
-                fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
+                fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram false
 
             match objPixel with
             | ValueSome p when p.Shade <> Shade.White ->
@@ -275,11 +389,146 @@ module private Scanline =
                 match objEnable, bgEnable with
                 | true, true -> fetchPrioritisedPixels screenX
                 | true, false ->
-                    fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram
+                    fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram false
                     |> ValueOption.map mapObjPixel
                     |> ValueOption.defaultValue Shade.White
                 | false, true -> bgpMap[int (fetchTileMapPixel screenX screenY windowOnLine ppu)]
                 | false, false -> Shade.White
+
+            buffer[bufferAddr] <- pixel
+
+        if windowOnLine then
+            ppu.WindowLine <- ppu.WindowLine + 1
+
+    let renderScanlineCgb (buffer: Color array) (ppu: Ppu) =
+        let vram = ppu.VideoRam
+        let oam = ppu.OamRam
+        let io = ppu.IoController
+        let screenY = int ppu.Ly
+
+        let windowOnLine =
+            Lcdc.isEnabled Lcdc.WindowEnable io
+            && screenY >= int io.Registers[Io.Wy]
+            && int io.Registers[Io.Wx] <= 166
+
+        let objEnable = Lcdc.isEnabled Lcdc.ObjEnable io
+        // In CGB mode, BgEnable bit acts as master priority: if 0, BG/Window are always behind OBJ
+        let bgMasterPriority = Lcdc.isEnabled Lcdc.BgEnable io
+
+        let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize io
+        let objBottom = if isDoubleHeight then 0 else 8
+
+        let objectsInLine =
+            oamAddresses
+            |> Array.filter (fun offset -> int ppu.Ly >= int oam[offset] - 16 && int ppu.Ly < int oam[offset] - objBottom)
+            |> Array.truncate 10 // CGB uses OAM order (no X-sort)
+
+        for screenX in 0 .. Screen.width - 1 do
+            let bufferAddr = screenY * Screen.width + screenX
+
+            let bgColorIndex, bgAttrs = fetchTileMapPixelCgb screenX screenY windowOnLine ppu
+
+            let objPixel =
+                if objEnable then
+                    fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram true
+                else
+                    ValueNone
+
+            let pixel =
+                match objPixel with
+                | ValueSome p when p.ColorIndex <> 0 ->
+                    // Determine if OBJ should display over BG
+                    let objWins =
+                        if not bgMasterPriority then
+                            true // BG disabled, OBJ always on top
+                        elif bgAttrs.BgPriority then
+                            bgColorIndex = 0 // BG tile has priority, only show OBJ if BG is transparent
+                        elif p.BgPriority then
+                            bgColorIndex = 0 // OBJ behind BG unless BG is transparent
+                        else
+                            true
+
+                    if objWins then
+                        getCgbObjColor io p.CgbPalette p.ColorIndex
+                    else
+                        getCgbBgColor io bgAttrs.BgPalette bgColorIndex
+                | _ ->
+                    getCgbBgColor io bgAttrs.BgPalette bgColorIndex
+
+            buffer[bufferAddr] <- pixel
+
+        if windowOnLine then
+            ppu.WindowLine <- ppu.WindowLine + 1
+
+    /// CGB compatibility mode: DMG game running on CGB hardware
+    /// Uses DMG-style tile rendering but maps through CGB color palettes via BGP/OBP remapping
+    let renderScanlineCgbCompat (buffer: Color array) (ppu: Ppu) =
+        let vram = ppu.VideoRam
+        let oam = ppu.OamRam
+        let io = ppu.IoController
+        let screenY = int ppu.Ly
+
+        // Parse DMG palette registers to get shade remapping
+        let bgp = io.Registers[Io.Bgp]
+        let obp0 = io.Registers[Io.Obp0]
+        let obp1 = io.Registers[Io.Obp1]
+
+        let inline remapBgColor colorIndex =
+            int ((bgp >>> (colorIndex * 2)) &&& 0b11uy)
+
+        let inline remapObjColor palette colorIndex =
+            int ((palette >>> (colorIndex * 2)) &&& 0b11uy)
+
+        let windowOnLine =
+            Lcdc.isEnabled Lcdc.WindowEnable io
+            && screenY >= int io.Registers[Io.Wy]
+            && int io.Registers[Io.Wx] <= 166
+
+        let objEnable = Lcdc.isEnabled Lcdc.ObjEnable io
+        let bgEnable = Lcdc.isEnabled Lcdc.BgEnable io
+
+        let isDoubleHeight = Lcdc.isEnabled Lcdc.ObjSize io
+        let objBottom = if isDoubleHeight then 0 else 8
+
+        let objectsInLine =
+            oamAddresses
+            |> Array.filter (fun offset -> int ppu.Ly >= int oam[offset] - 16 && int ppu.Ly < int oam[offset] - objBottom)
+            |> Array.sortBy (fun offset -> oam[offset + 1]) // DMG-compat uses X priority
+            |> Array.truncate 10
+
+        for screenX in 0 .. Screen.width - 1 do
+            let bufferAddr = screenY * Screen.width + screenX
+
+            let fetchBg () =
+                // In compat mode, no VRAM bank 1 attributes - use plain DMG decoding
+                let shade = fetchTileMapPixel screenX screenY windowOnLine ppu
+                int shade
+
+            let objPixel =
+                if objEnable then
+                    fetchObjectPixel screenX screenY isDoubleHeight objectsInLine oam vram false
+                else
+                    ValueNone
+
+            let pixel =
+                match objPixel with
+                | ValueSome p when p.ColorIndex <> 0 ->
+                    if p.BgPriority && bgEnable then
+                        let bgIdx = fetchBg ()
+                        if bgIdx <> 0 then
+                            getCgbBgColor io 0 (remapBgColor bgIdx)
+                        else
+                            let pal = if p.UseObp1 then obp1 else obp0
+                            getCgbObjColor io (if p.UseObp1 then 1 else 0) (remapObjColor pal p.ColorIndex)
+                    else
+                        let pal = if p.UseObp1 then obp1 else obp0
+                        getCgbObjColor io (if p.UseObp1 then 1 else 0) (remapObjColor pal p.ColorIndex)
+                | _ ->
+                    if bgEnable then
+                        let bgIdx = fetchBg ()
+                        getCgbBgColor io 0 (remapBgColor bgIdx)
+                    else
+                        getCgbBgColor io 0 0 // Color 0 = white/transparent
 
             buffer[bufferAddr] <- pixel
 
@@ -300,6 +549,8 @@ let private disablePpu (ppu: Ppu) =
         for i in 0 .. (bufferWidth - 1) do
             ppu.Framebuffer[i] <- Shade.White
             ppu.Backbuffer[i] <- Shade.White
+            ppu.ColorFramebuffer[i] <- Color.white
+            ppu.ColorBackbuffer[i] <- Color.white
 
 let private updateStatAndInterrupt (ppu: Ppu) =
     let stat = getUpdatedStatRegister ppu
@@ -357,6 +608,7 @@ let stepPpu (ppu: Ppu) =
                     ppu.IoController.PpuMode <- PpuMode.OamScan
 
                     Array.blit ppu.Backbuffer 0 ppu.Framebuffer 0 ppu.Framebuffer.Length
+                    Array.blit ppu.ColorBackbuffer 0 ppu.ColorFramebuffer 0 ppu.ColorFramebuffer.Length
 
                 updateStatAndInterrupt ppu
         | PpuMode.OamScan ->
@@ -366,7 +618,12 @@ let stepPpu (ppu: Ppu) =
 
         | PpuMode.Drawing ->
             if ppu.Dot = oamScanEnd + 1 then
-                renderScanline ppu.Backbuffer ppu
+                if ppu.IoController.CgbCompatMode then
+                    renderScanlineCgbCompat ppu.ColorBackbuffer ppu
+                elif ppu.IoController.CgbMode then
+                    renderScanlineCgb ppu.ColorBackbuffer ppu
+                else
+                    renderScanline ppu.Backbuffer ppu
 
             if ppu.Dot >= 253 then // Since it's scanline rendering, have the shortest drawing phase: 80+172 dots
                 ppu.IoController.PpuMode <- PpuMode.HBlank

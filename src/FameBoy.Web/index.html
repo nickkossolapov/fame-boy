@@ -19,6 +19,9 @@
                 <div class="start-overlay" id="start-overlay">Press any<br>button to start</div>
                 <span class="fps-counter" id="fps-counter"></span>
             </div>
+            <div class="screen-wrapper hidden" id="link-container">
+                <canvas aria-label="Player 2 game screen" id="screen2" role="img"></canvas>
+            </div>
         </div>
         <div class="buttons">
             <div class="d-pad" role="group">
@@ -49,7 +52,7 @@
     <div class="sidebar">
         <label class="rom-upload" for="rom-file">
             Upload your own ROM
-            <input accept=".gb" id="rom-file" type="file">
+            <input accept=".gb,.gbc" id="rom-file" type="file">
         </label>
         <fieldset aria-label="Display scale" class="scale-selector">
             <legend>Size</legend>

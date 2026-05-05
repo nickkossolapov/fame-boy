@@ -37,6 +37,17 @@ module private Helpers =
               "KeyN", Start
               "KeyB", Select ]
 
+    let p2ButtonByKeyCode =
+        Map.ofList
+            [ "ArrowUp", Up
+              "ArrowDown", Down
+              "ArrowLeft", Left
+              "ArrowRight", Right
+              "Home", A
+              "PageUp", B
+              "End", Start
+              "PageDown", Select ]
+
 open Helpers
 
 let initJoypad () =
@@ -77,6 +88,44 @@ let initJoypad () =
                 e.preventDefault ()
                 pressed <- pressed.Add button
         ))
+
+    fun () ->
+        { Up = pressed.Contains Up
+          Down = pressed.Contains Down
+          Left = pressed.Contains Left
+          Right = pressed.Contains Right
+          A = pressed.Contains A
+          B = pressed.Contains B
+          Start = pressed.Contains Start
+          Select = pressed.Contains Select }
+
+let initJoypadP2 () =
+    let mutable pressed: Set<JoypadButton> = Set.empty
+
+    window.addEventListener ("blur", fun _ -> pressed <- Set.empty)
+
+    window.addEventListener (
+        "keydown",
+        fun ev ->
+            let ke = ev :?> KeyboardEvent
+            let code = ke.code
+
+            match Map.tryFind code p2ButtonByKeyCode with
+            | Some b ->
+                ev.preventDefault ()
+                pressed <- pressed.Add b
+            | None -> ()
+    )
+
+    window.addEventListener (
+        "keyup",
+        fun ev ->
+            let code = (ev :?> KeyboardEvent).code
+
+            match Map.tryFind code p2ButtonByKeyCode with
+            | Some b -> pressed <- pressed.Remove b
+            | None -> ()
+    )
 
     fun () ->
         { Up = pressed.Contains Up

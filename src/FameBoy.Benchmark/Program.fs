@@ -21,7 +21,7 @@ let joypadState =
 let runBenchmark filename cycles =
     let bytes = Path.Combine("Resources", filename) |> File.ReadAllBytes
 
-    let _, _, stepEmulator, _ = createEmulator bytes 4096 (fun () -> joypadState)
+    let _, _, _, _, stepEmulator, _ = createEmulator bytes 4096 (fun () -> joypadState)
     let mutable remaining = cycles
 
     while remaining > 0 do

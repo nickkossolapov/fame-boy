@@ -2,13 +2,15 @@
 
 [![CI](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml/badge.svg)](https://github.com/nickkossolapov/fame-boy/actions/workflows/ci.yml)
 
-A Game Boy (DMG) emulator written in F#. Try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
+A Game Boy and Game Boy Color emulator written in F#. Try it out in the browser [here](https://nickkossolapov.github.io/fame-boy/)!
 
 ![pokemon demo](./assets/pokemon.gif) ![zelda demo](./assets/zelda.gif)
 
 ### Features
 
-- Supports most of the popular Game Boy games with sound (incl. Tetris, Pokémon, Mario, Zelda, and more!).
+- Supports most of the popular Game Boy and Game Boy Color games with sound (incl. Tetris, Pokémon, Mario, Zelda, and more!).
+- **Game Boy Color support** with full-color rendering, VRAM/WRAM banking, HDMA transfers, and compatibility palettes for DMG games.
+- **Link cable multiplayer** — run two emulator instances side-by-side with serial data exchange for local multiplayer.
 - Runs [in the browser](https://nickkossolapov.github.io/fame-boy/) with a touch-friendly fully responsive design built with [Fable](https://fable.io/).
 - Cross-platform too, it runs natively on Windows, macOS, and Linux (and others) with [Raylib](https://www.raylib.com/).
 - Zero-dependency [F# core](./src/FameBoy) with robust typing and built with functional programming in mind.
@@ -27,7 +29,6 @@ accuracy or maximum performance.
 
 There are still a few gaps with the real hardware that I may or may not get to (but would like to).
 
-- No Game Boy Color support.
 - Limited emulator configuration (no fast-forward, key remapping, or custom palettes).
 - Missing battery saves (SRAM) and save states.
 - Hardware inaccuracies (e.g. CPU instruction-level rather than M-cycle-level timing, scanline-based rendering rather than pixel FIFOs, and missing a few hardware features/bugs).
@@ -52,10 +53,20 @@ There are still a few gaps with the real hardware that I may or may not get to (
 #### Desktop
 
 ``` sh
-dotnet run --project src/FameBoy.Raylib -- <rom-file-path> [scale]
+dotnet run --project src/FameBoy.Raylib -- <rom-file-path> [--link] [scale]
 ```
 
-`scale` is an optional positive integer that controls the window size multiplier (default: 4).
+- `scale` is an optional positive integer that controls the window size multiplier (default: 4).
+- `--link` enables link cable multiplayer mode (two instances side-by-side).
+- Press **F11** to toggle fullscreen.
+
+#### Link Cable Multiplayer
+
+``` sh
+dotnet run --project src/FameBoy.Raylib -- <rom-file-path> --link
+```
+
+Runs two emulator instances in the same window connected via a simulated serial link cable. This enables local multiplayer for games that support it (e.g. Pokémon trading/battles, Tetris versus).
 
 #### Web
 
@@ -65,7 +76,7 @@ npm install
 npm run dev
 ```
 
-This starts both Fable and Vite in watch mode.
+This starts both Fable and Vite in watch mode. Use **Ctrl+C** to stop (not `q`).
 
 ### Testing
 
@@ -116,6 +127,8 @@ npm run bench
 
 ### Controls
 
+#### Player 1
+
 | Game Boy | Key           |
 |----------|---------------|
 | D-pad    | W / A / S / D |
@@ -123,6 +136,16 @@ npm run bench
 | B        | J             |
 | Start    | N             |
 | Select   | B             |
+
+#### Player 2 (link mode only)
+
+| Game Boy | Key             |
+|----------|-----------------|
+| D-pad    | Arrow keys      |
+| A        | Home            |
+| B        | Page Up         |
+| Start    | End             |
+| Select   | Page Down       |
 
 The web version also supports mouse/touch.
 
