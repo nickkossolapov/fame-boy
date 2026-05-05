@@ -1,7 +1,7 @@
 module FameBoy.Interrupts
 
 
-[<RequireQualifiedAccess>]
+[<RequireQualifiedAccess; Struct>]
 type InterruptType =
     | VBlank
     | LcdStat

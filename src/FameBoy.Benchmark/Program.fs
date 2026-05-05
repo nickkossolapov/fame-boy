@@ -74,7 +74,7 @@ type FpsColumn() =
             let name = benchmarkCase.Descriptor.WorkloadMethod.Name
 
             match summary[benchmarkCase], benchmarkCycles.TryGetValue(name) with
-            | report, (true, cycles) when report <> null ->
+            | report, (true, cycles) when not (isNull report) ->
                 let totalFrames = float cycles / mCyclesPerFrame
                 let fps = totalFrames / (report.ResultStatistics.Mean / 1_000_000_000.0)
 

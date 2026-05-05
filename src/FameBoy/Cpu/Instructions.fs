@@ -2,7 +2,7 @@
 
 open FameBoy.Cpu.State
 
-
+[<Struct>]
 type Reg8 =
     | A
     | B
@@ -35,6 +35,7 @@ type Reg8 =
         | L -> cpu.Registers.L <- value
         | F -> cpu.Registers.F <- value
 
+[<Struct>]
 type Reg16 =
     | AF
     | BC
@@ -59,16 +60,19 @@ type Reg16 =
         | SP -> cpu.Sp <- value
 
 module LoadTypes =
+    [<Struct>]
     type Condition =
         | Zero
         | NotZero
         | Carry
         | NoCarry
 
+    [<Struct>]
     type LoadA =
         | To
         | From
 
+    [<Struct>]
     type ASource =
         | AtBC
         | AtDE
@@ -76,6 +80,7 @@ module LoadTypes =
         | AtHLInc
         | AtHLDec
 
+    [<Struct>]
     type AHighSource =
         | AtCHigh
         | AtByteHigh of uint8
@@ -83,10 +88,10 @@ module LoadTypes =
 open LoadTypes
 
 module Operand =
-    [<RequireQualifiedAccess>]
+    [<RequireQualifiedAccess; Struct>]
     type Source =
-        | Immediate of uint8
-        | RegDirect of Reg8
+        | Immediate of immediate: uint8
+        | RegDirect of reg: Reg8
         | HLIndirect
 
         member this.GetFrom(cpu: Cpu) =
@@ -95,7 +100,7 @@ module Operand =
             | RegDirect reg -> reg.GetFrom cpu
             | HLIndirect -> cpu.Memory[cpu.Registers.HL]
 
-    [<RequireQualifiedAccess>]
+    [<RequireQualifiedAccess; Struct>]
     type Target =
         | RegDirect of Reg8
         | HLIndirect
@@ -189,11 +194,13 @@ type Instruction =
     | Logic of LogicInstr
     | Unknown
 
+[<Struct>]
 type ConditionalCycle = { Met: int; NotMet: int }
 
+[<Struct>]
 type MCycles =
-    | Fixed of int
-    | Conditional of ConditionalCycle
+    | Fixed of fix: int
+    | Conditional of cond: ConditionalCycle
 
 [<Struct>]
 type DecodedInstruction =

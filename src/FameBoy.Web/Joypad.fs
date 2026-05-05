@@ -5,6 +5,7 @@ open Browser.Types
 open FameBoy.Joypad
 
 module private Helpers =
+    [<Struct>]
     type JoypadButton =
         | Up
         | Down
