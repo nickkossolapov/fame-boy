@@ -127,7 +127,7 @@ Now you can do something similar in most languages, but if you've worked with a 
 
 ### Keep it simple, stupid
 
-Since the goal of this project was to learn about computer hardware rather than building the best emulator, I almost never looked at other emulators' code in depth. However, while casually browsing the source code for [CAMLBOY](https://github.com/linoscope/CAMLBOY), I spotted lines like this:
+Since the goal of this project was to learn about computer hardware rather than building the best emulator, I rarely looked at other emulators' code in depth. However, while casually browsing the source code for [CAMLBOY](https://github.com/linoscope/CAMLBOY), I spotted lines like this:
 
 ```ocaml
 set_flags ~h:false ~z:(!a = zero) ();
@@ -163,22 +163,6 @@ cpu.Flags <-
  The previous function required hoisting the values into DU types and putting them in an array, and the setFlags function was more verbose as a result. Furthermore, because the functions are inline and don't require any heap allocations, the new functions are actually much more performant, they increased the emulator's FPS by about 10%. 
  
  I think that simple 16-line Flags module is possibly my favourite F# I've ever written.
-
-### Testing
-
-I initially tackled the CPU with just this function and running the Tetris ROM:
-
-```fsharp
-match opcode with  
-| 0x00 -> Nop  
-| _ -> failwith "Unimplemented opcode"
-```
-
-And then every time it hit that exception I would implement the instruction for that opcode. I quickly hit two issues with this approach: the loop was getting a bit tedious navigating around technical references randomly instead of focusing on groups of instructions at a time, and I had no idea if I was actually implementing the instructions correctly. Fixing both of these was simple: unit tests.
-
-This is where AI really came in handy. To improve my learning I wanted to write the emulator code myself, but coming up with test cases would be tedious, and I might have tunnel vision and miss some important test cases. So I had two prompts I used where I included the spec from the technical docs, and asked AI to write tests for those specs without looking at the emulator code. While it was busy I read the spec myself, and then implemented the logic until the tests passed: true test-driven development. It even helped catch a few bugs in the existing instructions I had already implemented. 
-
-I did regularly review and improve the tests, but overall I feel it didn't detract from my learning at all, and helped me spend my energy on the things that were actually interesting to me.
 
 ## Beyond the CPU
 
@@ -394,7 +378,7 @@ Surprisingly, the APU (sound) had more of an impact on emulator performance than
 
 No code is free from the influence of AI these days, even learning projects. In general I strive to be transparent about my AI usage, and so I wanted to comment on how I used it and my experience with it in a purely learning project.
 
-Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the use of AI-written code though. I wanted to make something that I can show to people and be proud of. Code, for humans, by a human. If I wanted nothing more than an emulator I could've just shared the prompt. 
+Throughout the process I tried to mostly use AI as an aid. I regularly asked it for code reviews, generate test cases based on technical references, as a wall to bounce ideas off of, and to explain any terse technical documents. I tried to minimise the use of AI-written code though. I wanted to make something that I can show to people and be proud of. Code, for humans, by a human. If I wanted nothing more than an emulator I could've just shared the prompt. 
 
 There were two noteworthy cases with AI in my project. One was at the end where I decided to just burn some tokens, and unleashed the CLI on my repo to try to find performance improvements. I gave it some ideas, and asked it to try anything else it wanted to. It did really well, more than doubling the performance for some of the benchmarks ([PR link with details](https://github.com/nickkossolapov/fame-boy/pull/1)). It did introduce some bugs that I found and had to fix though. Notably, one of the bigger performance wins (only updating STAT on mode/LY transitions) broke some games and demos that relied on more frequent updates ([fix commit](https://github.com/nickkossolapov/fame-boy/commit/eebca397a8c81bf80c59b168e65f96e972fcb5e4)).
 
