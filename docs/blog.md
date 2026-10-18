@@ -1,6 +1,6 @@
 # I built a Game Boy emulator in F\#
 
-I've been working as a software engineer for over 8 years at this point, and admittedly I've never understood how computers actually work. So I figured I'd try to learn how they work by emulating one. Sorry Ben Eater, I'm not going to build one just yet. 
+I've been working as a software engineer for over 8 years at this point, and admittedly I've never understood how computers actually work. So I figured I'd try to learn how they work by emulating one. Sorry [Ben Eater](https://www.youtube.com/watch?v=LnzuMJLZRdU), I'm not going to build one just yet. 
 
 I spent hundreds of hours as a kid catching Pokémon, so the Game Boy was the perfect candidate: real hardware, relatively simple in scope, and something with a strong personal connection.
 
@@ -85,8 +85,8 @@ type LoadInstr =
     // ... other load instructions
 
 type ArithmeticInstr =  
-    | IncrementDirect of uint8
-    | IncrementIndirect of Register
+    | IncrementDirect of Register
+    | IncrementIndirect
     // ... other arithmetic instructions
 ```
 
@@ -200,7 +200,7 @@ Sound was the most challenging component for me conceptually. It took me a while
 
 It wasn't all sunshine and rainbows though. The CPU and PPU are basically just "once per frame, do exactly X number of things,", and you can calculate X easily. And instead of just calculations, the APU on the other hand has so many things to choose and tune. 
 
-The only easy thing to choose was the APU's sampling rate. The actual Game Boy's APU was flexible, so emulators can use whatever sampling rate they want. I went with 32768 Hz, because that comes to 1 sample every 128 CPU cycles (1 048 576 Hz, and 1 048 576 / 32 768 = 128). So my APU state can use integers and still stay perfectly in sync. 128 is also divisible by 4, so I could batch the APU steps 4 at a time and never miss alignment with a CPU instruction.
+The only easy thing to choose was the APU's sampling rate. The actual Game Boy's APU was flexible, so emulators can use whatever sampling rate they want. I went with 32768 Hz, because that comes to 1 sample every 128 CPU cycles (4 194 304 Hz, and 4 194 304 / 32 768 = 128). So my APU state can use integers and still stay perfectly in sync. 128 is also divisible by 4, so I could batch the APU steps 4 at a time and never miss alignment with a CPU instruction.
 
 All the other things though, much more wonky. I'm not a sound engineer, so I was just changing values hoping for the best. And worst of all, not only did each frontend have its own quirks, but each platform did too. I got the sound working well on PC, but when I tried it out on a MacBook it sounded like a waterfall. I fixed the MacBook, and suddenly the desktop version on PC doesn't even run because of a race condition.
 
