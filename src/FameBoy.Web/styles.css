@@ -236,10 +236,24 @@ body {
     font-weight: 600;
 }
 
-.github-link {
+.project-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.project-links a {
     color: var(--color-heading);
-    width: 35px;
-    height: 35px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.project-links a:hover {
+    color: var(--color-subtle);
 }
 
 .credit-text {
@@ -547,10 +561,13 @@ button:focus-visible {
 
     .rom-upload {
         order: 1;
+        grid-column: 1 / span 2;
+        justify-self: center;
     }
 
-    .github-link {
+    .project-links {
         order: 2;
+        grid-column: 1 / span 2;
     }
 
     .fps-toggle {
